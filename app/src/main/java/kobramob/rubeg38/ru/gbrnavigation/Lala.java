@@ -19,5 +19,7 @@ import java.util.Map;
 public class Lala {
 
     void
-    alla(){}
+    alla(){
+
+    }
 }

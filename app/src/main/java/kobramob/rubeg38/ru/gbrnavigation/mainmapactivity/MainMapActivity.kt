@@ -75,8 +75,8 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
     override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
         if(followMeEnable)
         {
-            myFollowMe.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
-            myFollowMe.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
+            /*myFollowMe.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
+            myFollowMe.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))*/
             timer.cancel()
             followMeEnable = false
         }
@@ -98,8 +98,8 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
     private var firstStart = true
     private var followMeEnable = false
 
-    private lateinit var myLocationButton:FloatingActionButton
-    private lateinit var myFollowMe:FloatingActionButton
+/*    private lateinit var myLocationButton:FloatingActionButton
+    private lateinit var myFollowMe:FloatingActionButton*/
 
 
     private lateinit var timer:Timer
@@ -122,6 +122,8 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
             )
         }
     }
+
+
     private fun dialog_test_alert() {
         // Тут диалог для тестовой тревоги.
         // На тревоге должна быть иконка, имя объекта, адрес.
@@ -237,7 +239,7 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
         mScaleBarOverlay()
         mRotationOverlay()
 
-        myLocationButton = findViewById(R.id.my_location)
+/*        myLocationButton = findViewById(R.id.my_location)
         myFollowMe = findViewById(R.id.follow_me)
 
         myLocationButton.setOnClickListener {
@@ -267,7 +269,6 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
                     mMapView.controller.setZoom(15.0)
 
                     mMapView.mapOrientation = -currentLocation.bearing
-                    oldMapOrientation = currentLocation.bearing.toInt()
 
                     val width = this@MainMapActivity.windowManager.defaultDisplay.width
                     val height = this@MainMapActivity.windowManager.defaultDisplay.height
@@ -289,24 +290,19 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
                     }
 
                     timer = Timer()
-                    timer2= Timer()
-                    timer2.scheduleAtFixedRate(rotationCamera(),0,50)
                     timer.scheduleAtFixedRate(followMeTask(),0,1000)
                     true
                 }catch (e:java.lang.Exception) {
                     myFollowMe.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
                     myFollowMe.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
                     timer.cancel()
-                    timer2.cancel()
                     Toast.makeText(this,"Ваше месторасположение не определенно",Toast.LENGTH_SHORT).show()
                     false
                 }
             }
-        }
+        }*/
 
     }
-
-
 
     fun setCenterMap()
     {
@@ -374,26 +370,26 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
             R.id.server_setting ->{dialog_server_setting()   }
             R.id.change_map ->{dialog_change_map()}
             R.id.alert_test ->{
+
                 if (Build.VERSION.SDK_INT >= 26) {
                     (this.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
                 } else {
                     (this.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(1000)
                 }
+
                 /*val trevoga = MediaPlayer.create(this,R.raw.jojo)
                 trevoga.start()*/
-
-                lateinit var dialog_alarm:AlertDialog
 
                 val alertDialog = AlertDialog.Builder(this)
                 val view = layoutInflater.inflate(R.layout.dialog_alarm, null)
                 alertDialog.setView(view)
-                dialog_alarm = alertDialog.create()
-                dialog_alarm.show()
+                val dialog:AlertDialog = alertDialog.create()
+                dialog.show()
 
                 val acceptAlertButton:Button = view!!.findViewById(R.id.AcceptAlert)
                 acceptAlertButton.setOnClickListener {
                     println("accept")
-                    dialog_alarm.cancel()
+                    dialog.cancel()
 
                     val objectActivity = Intent(this@MainMapActivity,ObjectActivity::class.java)
                     startActivity(objectActivity)
@@ -411,97 +407,17 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
     }
 
 
-
-
-    var oldMapOrientation:Int = 0
-    var newMapOrientation:Int = 0
-
-    private inner class rotationCamera: TimerTask() {
-        override fun run() {
-            if(oldLocation.distanceToAsDouble(myLocation)>20.0)
-            {
-                runOnUiThread {
-
-
-                    if(oldMapOrientation!=newMapOrientation)
-                    {
-
-
-                        if(oldMapOrientation>270 && newMapOrientation<90)
-                        {
-                            oldMapOrientation+=1
-                            if(oldMapOrientation>360)
-                                oldMapOrientation=0
-                        }
-                        else
-                        {
-                            if(oldMapOrientation<90 && newMapOrientation>270)
-                            {
-                                oldMapOrientation-=1
-                                if(oldMapOrientation<0)
-                                    oldMapOrientation=360
-                            }
-                            else
-                            {
-                                if(oldMapOrientation<newMapOrientation)
-                                {
-                                    oldMapOrientation+=1
-                                }
-                                else
-                                {
-                                    oldMapOrientation-=1
-                                }
-                            }
-                        }
-                        println("Now $oldMapOrientation new $newMapOrientation")
-
-
-                        runOnUiThread {
-                            mMapView.controller.setCenter(myLocation)
-                            mMapView.mapOrientation = (-oldMapOrientation).toFloat()
-                            mMapView.controller.animateTo(myLocation.destinationPoint(
-                            (3*mScaleBarOverlay.screenHeight/4).toDouble(),
-                            ((oldMapOrientation)).toDouble()
-                            ))
-                            /*mMapView.controller.animateTo(myLocation)
-                            mMapView.mapOrientation = (-oldMapOrientation).toFloat()*/
-                        }
-                    }
-                    else
-                    {
-                        if(newMapOrientation!=currentLocation.bearing.toInt())
-                        {
-                            newMapOrientation = currentLocation.bearing.toInt()
-                        }
-
-                        runOnUiThread {
-                            mMapView.controller.setCenter(myLocation)
-                            mMapView.mapOrientation = (-oldMapOrientation).toFloat()
-                            mMapView.controller.animateTo(myLocation.destinationPoint(
-                                (3*mScaleBarOverlay.screenHeight/4).toDouble(),
-                                ((oldMapOrientation)).toDouble()
-                            ))
-                        /*mMapView.controller.animateTo(myLocation)
-
-                            mMapView.mapOrientation = (-oldMapOrientation).toFloat()*/
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     //TODO 3 потока, 1 переставляет точку, 2 обновляет угол направления, 3 поворачивает камеру
     private inner class followMeTask:TimerTask(){
 
         override fun run() {
             if(oldLocation.distanceToAsDouble(myLocation)>20.0){
                 oldLocation = myLocation
-//            newMapOrientation = currentLocation.bearing.toInt()
-                if(newMapOrientation!=currentLocation.bearing.toInt())
-                {
-                    newMapOrientation = currentLocation.bearing.toInt()
-                }
+
+                setCenterMap()
+
+                mMapView.mapOrientation = -currentLocation.bearing
+
             }
         }
 
@@ -519,6 +435,7 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
         }
 
     }
+
     /*mMapView.mapOrientation = -currentLocation.bearing
 
                         val width = this@MainMapActivity.windowManager.defaultDisplay.width
@@ -534,6 +451,8 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
                             setCenterMap()
                         }
                         oldLocation=myLocation*/
+
+
     override fun onResume() {
         super.onResume()
        //
@@ -545,7 +464,6 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
             timer = Timer()
             timer2 = Timer()
             oldLocation = myLocation
-            timer2.scheduleAtFixedRate(rotationCamera(),0,10)
             timer.scheduleAtFixedRate(followMeTask(),0,1000)
         }
     }
@@ -558,7 +476,6 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
         mMapView.onPause()
         if(followMeEnable)
         {
-            timer2.cancel()
             timer.cancel()
         }
     }
@@ -676,3 +593,81 @@ class MainMapActivity : AppCompatActivity(),LocationListener, MapEventsReceiver,
     }
 
 }
+
+//var oldMapOrientation:Int = 0
+//var newMapOrientation:Int = 0
+
+/*  private inner class rotationCamera: TimerTask() {
+      override fun run() {
+          if(oldLocation.distanceToAsDouble(myLocation)>20.0)
+          {
+              runOnUiThread {
+
+
+                  if(oldMapOrientation!=newMapOrientation)
+                  {
+
+
+                      if(oldMapOrientation>270 && newMapOrientation<90)
+                      {
+                          oldMapOrientation+=1
+                          if(oldMapOrientation>360)
+                              oldMapOrientation=0
+                      }
+                      else
+                      {
+                          if(oldMapOrientation<90 && newMapOrientation>270)
+                          {
+                              oldMapOrientation-=1
+                              if(oldMapOrientation<0)
+                                  oldMapOrientation=360
+                          }
+                          else
+                          {
+                              if(oldMapOrientation<newMapOrientation)
+                              {
+                                  oldMapOrientation+=1
+                              }
+                              else
+                              {
+                                  oldMapOrientation-=1
+                              }
+                          }
+                      }
+                      println("Now $oldMapOrientation new $newMapOrientation")
+
+
+                      runOnUiThread {
+                          mMapView.controller.setCenter(myLocation)
+                          mMapView.mapOrientation = (-oldMapOrientation).toFloat()
+                          mMapView.controller.animateTo(myLocation.destinationPoint(
+                          (3*mScaleBarOverlay.screenHeight/4).toDouble(),
+                          ((oldMapOrientation)).toDouble()
+                          ))
+                          *//*mMapView.controller.animateTo(myLocation)
+                            mMapView.mapOrientation = (-oldMapOrientation).toFloat()*//*
+                        }
+                    }
+                    else
+                    {
+                        if(newMapOrientation!=currentLocation.bearing.toInt())
+                        {
+                            newMapOrientation = currentLocation.bearing.toInt()
+                        }
+
+                        runOnUiThread {
+                            mMapView.controller.setCenter(myLocation)
+                            mMapView.mapOrientation = (-oldMapOrientation).toFloat()
+                            mMapView.controller.animateTo(myLocation.destinationPoint(
+                                (3*mScaleBarOverlay.screenHeight/4).toDouble(),
+                                ((oldMapOrientation)).toDouble()
+                            ))
+                        *//*mMapView.controller.animateTo(myLocation)
+
+                            mMapView.mapOrientation = (-oldMapOrientation).toFloat()*//*
+                        }
+                    }
+                }
+            }
+        }
+    }*/

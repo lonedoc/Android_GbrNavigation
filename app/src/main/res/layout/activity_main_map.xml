@@ -9,26 +9,8 @@
                                        android:id="@+id/toolbar_main_map"
                                        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
     />
-    <android.support.design.widget.FloatingActionButton
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:clickable="true" app:srcCompat="@drawable/ic_direction_walk"
-            android:id="@+id/follow_me" android:layout_marginEnd="10dp"
-            android:layout_alignEnd="@+id/main_map" android:layout_marginTop="15dp"
-            android:layout_below="@+id/my_location" android:focusable="true"
-            app:backgroundTint="@color/textWhite"
-            app:rippleColor="@color/colorAccent"/>
 
-    <android.support.design.widget.FloatingActionButton
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:clickable="true" app:srcCompat="@drawable/ic_gps_fixed"
-            android:id="@+id/my_location" android:layout_alignParentEnd="true"
-            android:layout_marginEnd="10dp" android:layout_marginTop="15dp"
-            android:focusable="true"
-            app:backgroundTint="@color/textWhite"
-            app:rippleColor="@color/colorAccent"
-            android:layout_below="@+id/toolbar_main_map"/>
+
 
     <org.osmdroid.views.MapView
             android:layout_marginTop="?attr/actionBarSize"
