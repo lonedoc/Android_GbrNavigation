@@ -21,6 +21,7 @@ class PollingServer : Service(),LocationListener {
     val LOG_TAG = "PollingService"
     private var currentLocation:Location? = null
     @SuppressLint("MissingPermission")
+
     private fun getLocation()
     {
         try {
@@ -80,14 +81,13 @@ class PollingServer : Service(),LocationListener {
         return null
     }
 
-    val BROADCAST_ACTION = "kobramob.ruber38.ru.gbrnavigation.startactivity"
 
    inner class MainTask : TimerTask() {
         override fun run() {
+            try{
             val intent = Intent(StartActivity.BROADCAST_ACTION)
             intent.putExtra("test","Информация пошла")
             sendBroadcast(intent)
-            try{
                 println("Lat " + currentLocation!!.latitude + " Lon " + currentLocation!!.latitude)
             }catch (e:Exception){}
 
