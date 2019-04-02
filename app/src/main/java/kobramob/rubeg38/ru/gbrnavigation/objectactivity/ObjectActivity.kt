@@ -7,12 +7,10 @@ import android.support.v7.widget.Toolbar
 import android.support.v4.app.Fragment
 import kobramob.rubeg38.ru.gbrnavigation.R
 
-
 class ObjectActivity : AppCompatActivity() {
 
-
-    private val tabFragment:TabFragment = TabFragment()
-    private val navigatorFragment:NavigatorFragment = NavigatorFragment()
+    private val tabFragment: TabFragment = TabFragment()
+    private val navigatorFragment: NavigatorFragment = NavigatorFragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,20 +27,18 @@ class ObjectActivity : AppCompatActivity() {
         supportActionBar!!.title = "Карточка объекта"
 
         bnv.setOnNavigationItemSelectedListener {
-            item->
+            item ->
 
-            when(item.itemId)
-            {
-                R.id.cardObject->{
+            when (item.itemId) {
+                R.id.cardObject -> {
                     openFragment(tabFragment)
                     supportActionBar!!.title = "Карточка объекта"
                 }
 
-                R.id.navigator ->{
+                R.id.navigator -> {
                     openFragment(navigatorFragment)
                     supportActionBar!!.title = "Навигатор"
                 }
-
             }
             true
         }

@@ -18,15 +18,12 @@ class AdapterFeedList internal constructor(private val eventList: ArrayList<Stri
         return eventList.size
     }
 
-    override fun onBindViewHolder(holder:  ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
         holder.textEvent.text = eventList[position]
-
     }
 
-    class ViewHolder(itemView: View):RecyclerView.ViewHolder(itemView)
-    {
-        var textEvent:TextView = itemView.findViewById(R.id.textEvent)
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        var textEvent: TextView = itemView.findViewById(R.id.textEvent)
     }
-
 }

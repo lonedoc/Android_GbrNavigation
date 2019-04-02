@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import kobramob.rubeg38.ru.gbrnavigation.R
 
-class ObjectFragment:Fragment() {
+class ObjectFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val bnv: BottomNavigationView = activity!!.findViewById(R.id.objectMenu)
         bnv.menu.getItem(0).isChecked = true

@@ -29,33 +29,30 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.*
 
-
-class NavigatorActivity : Activity(), LocationListener{
-
-
+class NavigatorActivity : Activity(), LocationListener {
 
     internal var mMapView: MapView? = null
-    internal var mRelativeLayout:RelativeLayout?=null
+    internal var mRelativeLayout: RelativeLayout? = null
     private var currentLocation: Location? = null
 
-    lateinit var locationManager:LocationManager
+    lateinit var locationManager: LocationManager
 
     val tileSource = TileSource()
 
-    private lateinit var myLocation:GeoPoint
+    private lateinit var myLocation: GeoPoint
 
-    lateinit var mapController:IMapController
+    lateinit var mapController: IMapController
 
-    private lateinit var mScaleBarOverlay:ScaleBarOverlay
-    private lateinit var mRotationGestureOverlay:RotationGestureOverlay
-    private lateinit var mLocationOverlay:MyLocationNewOverlay
-    private lateinit var mCompasOverlay:CompassOverlay
+    private lateinit var mScaleBarOverlay: ScaleBarOverlay
+    private lateinit var mRotationGestureOverlay: RotationGestureOverlay
+    private lateinit var mLocationOverlay: MyLocationNewOverlay
+    private lateinit var mCompasOverlay: CompassOverlay
 
     private fun showSettingsAlert() {
 
         val alertDialog = AlertDialog.Builder(this)
 
-     /*    Setting Dialog Title*/
+        /*    Setting Dialog Title*/
         alertDialog.setTitle("GPS is settings")
 
          /*Setting Dialog Message*/
@@ -67,14 +64,13 @@ class NavigatorActivity : Activity(), LocationListener{
             startActivity(intent)
         }
 
-      /*   on pressing cancel button*/
+        /*   on pressing cancel button*/
         alertDialog.setNegativeButton("Cancel"
         ) { dialog, which -> dialog.cancel() }
 
-       /*  Showing Alert Message*/
+        /*  Showing Alert Message*/
         alertDialog.show()
     }
-
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,11 +80,9 @@ class NavigatorActivity : Activity(), LocationListener{
         mRelativeLayout = findViewById(R.id.parent_container)
 
         initMyLocation()
-
     }
 
-    private fun initRotationOverlay()
-    {
+    private fun initRotationOverlay() {
         mRotationGestureOverlay = RotationGestureOverlay(mMapView)
         mRotationGestureOverlay.isEnabled = true
         mMapView!!.setMultiTouchControls(true)
@@ -115,19 +109,16 @@ class NavigatorActivity : Activity(), LocationListener{
         })*/
     }
 
-    private fun initMyLocation(){
+    private fun initMyLocation() {
 
         mMapView!!.setTileSource(TileSourceFactory.MAPNIK)
 
         mMapView!!.setHasTransientState(true)
 
-
         val g = GpsMyLocationProvider(this)
         g.locationUpdateMinTime = 0
         g.locationUpdateMinDistance = 1f
-        mLocationOverlay = MyLocationNewOverlay(g,mMapView)
-
-
+        mLocationOverlay = MyLocationNewOverlay(g, mMapView)
 
         val dm = resources.displayMetrics
 
@@ -147,17 +138,13 @@ class NavigatorActivity : Activity(), LocationListener{
 
         mMapView!!.isVerticalMapRepetitionEnabled = true
         mMapView!!.isHorizontalMapRepetitionEnabled = true
-
-
     }
 
+    private var oldDistance: Float = 0F
 
-    private var oldDistance:Float = 0F
+    private var stopUpdateRoad: Boolean = false
 
-    private var stopUpdateRoad:Boolean = false
-
-    private fun createRoad()
-    {
+    private fun createRoad() {
 
         val roadManager = OSRMRoadManager(this)
         roadManager.setService("http:192.168.1.95:5000/route/v1/driving/")
@@ -169,22 +156,19 @@ class NavigatorActivity : Activity(), LocationListener{
         val endPoint = GeoPoint(56.31585, 101.75473)
         waypoints.add(endPoint)
 
-
-
         val thread = Runnable {
 
             stopUpdateRoad = false
 
             val road = roadManager.getRoad(waypoints)
-            var roadOverlay = RoadManager.buildRoadOverlay(road,0x800000FF.toInt(),10.0f)
+            var roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
             runOnUiThread {
 
                 println(road.mRouteHigh.size)
-                if(road.mRouteHigh.size>2)
-                {
+                if (road.mRouteHigh.size> 2) {
                     mMapView!!.overlays.add(roadOverlay)
 
-                    road.mRouteHigh.add(0,myLocation)
+                    road.mRouteHigh.add(0, myLocation)
 
                     oldDistance = distance(road)
 
@@ -194,184 +178,160 @@ class NavigatorActivity : Activity(), LocationListener{
                                 try {
                                     Thread.sleep(100)
                                     runOnUiThread {
-                                        if(!stopUpdateRoad)
-                                        {
+                                        if (!stopUpdateRoad) {
 
-                                            if(road.mRouteHigh.size>2)
-                                            {
+                                            if (road.mRouteHigh.size> 2) {
                                                 mMapView!!.mapOrientation = -getRotationAngle(road)
 
-                                                if(distance(road)>oldDistance+50)
-                                                {
+                                                if (distance(road)> oldDistance + 50) {
 
                                                     road.mRouteHigh.clear()
-                                                    stopUpdateRoad=true
+                                                    stopUpdateRoad = true
 
                                                     val handler = Handler()
                                                     handler.postDelayed(
-                                                        {mMapView!!.overlays.removeAt(mMapView!!.overlays.size-1)
+                                                        { mMapView!!.overlays.removeAt(mMapView!!.overlays.size - 1)
                                                             createRoad() },
                                                         500
                                                     )
+                                                } else {
 
-                                                }
-                                                else
-                                                {
-
-                                                    if(distance(road)<55)
-                                                    {
+                                                    if (distance(road) <55) {
                                                         println("УДАЛИЛ ТОЧКУ")
                                                         road.mRouteHigh.removeAt(1)
-                                                        mMapView!!.overlays.removeAt(mMapView!!.overlays.size-1)
-                                                        roadOverlay = RoadManager.buildRoadOverlay(road,0x800000FF.toInt(),10.0f)
+                                                        mMapView!!.overlays.removeAt(mMapView!!.overlays.size - 1)
+                                                        roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
                                                         mMapView!!.overlays.add(roadOverlay)
-                                                        oldDistance=distance(road)
+                                                        oldDistance = distance(road)
                                                         /* if(mLocationOverlay.isFollowLocationEnabled)
                                                          {*/
-
 
                                                          /*}
                                                           else
                                                               mMapView!!.mapOrientation = 0F*/
-
-                                                    }
-                                                    else
-                                                    {
+                                                    } else {
                                                         mMapView!!.controller.setCenter(road.mRouteHigh[0])
 
                                                         when {
-                                                            -getRotationAngle(road)<-100 -> mMapView!!.controller.setCenter( mMapView!!.projection.fromPixels(mMapView!!.width,2*mMapView!!.height/3))
+                                                            -getRotationAngle(road) <-100 -> mMapView!!.controller.setCenter(mMapView!!.projection.fromPixels(mMapView!!.width, 2*mMapView!!.height / 3))
 
-                                                            -getRotationAngle(road)<-80 -> mMapView!!.controller.setCenter( mMapView!!.projection.fromPixels(mMapView!!.width,mMapView!!.height/3))
+                                                            -getRotationAngle(road) <-80 -> mMapView!!.controller.setCenter(mMapView!!.projection.fromPixels(mMapView!!.width, mMapView!!.height / 3))
 
-                                                            -getRotationAngle(road)<-65 -> mMapView!!.controller.setCenter( mMapView!!.projection.fromPixels(mMapView!!.width,mMapView!!.height/3))
+                                                            -getRotationAngle(road) <-65 -> mMapView!!.controller.setCenter(mMapView!!.projection.fromPixels(mMapView!!.width, mMapView!!.height / 3))
 
-                                                            -getRotationAngle(road)<-50 -> mMapView!!.controller.setCenter(mMapView!!.projection.fromPixels(3*mMapView!!.width/4,mMapView!!.height/3))
+                                                            -getRotationAngle(road) <-50 -> mMapView!!.controller.setCenter(mMapView!!.projection.fromPixels(3*mMapView!!.width / 4, mMapView!!.height / 3))
 
-                                                            -getRotationAngle(road)<-25 -> mMapView!!.controller.setCenter( mMapView!!.projection.fromPixels(2*mMapView!!.width/3,mMapView!!.height/3))
+                                                            -getRotationAngle(road) <-25 -> mMapView!!.controller.setCenter(mMapView!!.projection.fromPixels(2*mMapView!!.width / 3, mMapView!!.height / 3))
 
-                                                            -getRotationAngle(road)<0 -> mMapView!!.controller.setCenter( mMapView!!.projection.fromPixels(mMapView!!.width/2,mMapView!!.height/3))
+                                                            -getRotationAngle(road) <0 -> mMapView!!.controller.setCenter(mMapView!!.projection.fromPixels(mMapView!!.width / 2, mMapView!!.height / 3))
 
-                                                            -getRotationAngle(road)>80 -> mMapView!!.controller.setCenter( mMapView!!.projection.fromPixels(0,mMapView!!.height/3))
+                                                            -getRotationAngle(road)> 80 -> mMapView!!.controller.setCenter(mMapView!!.projection.fromPixels(0, mMapView!!.height / 3))
 
-                                                            -getRotationAngle(road)>65 -> mMapView!!.controller.setCenter( mMapView!!.projection.fromPixels(0,mMapView!!.height/3))
+                                                            -getRotationAngle(road)> 65 -> mMapView!!.controller.setCenter(mMapView!!.projection.fromPixels(0, mMapView!!.height / 3))
 
-                                                            -getRotationAngle(road)>25-> mMapView!!.controller.setCenter( mMapView!!.projection.fromPixels(mMapView!!.width/3,mMapView!!.height/3))
+                                                            -getRotationAngle(road)> 25 -> mMapView!!.controller.setCenter(mMapView!!.projection.fromPixels(mMapView!!.width / 3, mMapView!!.height / 3))
 
-                                                            -getRotationAngle(road)>0 -> mMapView!!.controller.setCenter( mMapView!!.projection.fromPixels(mMapView!!.width/3,mMapView!!.height/3))
+                                                            -getRotationAngle(road)> 0 -> mMapView!!.controller.setCenter(mMapView!!.projection.fromPixels(mMapView!!.width / 3, mMapView!!.height / 3))
                                                         }
 
-
-
                                                         road.mRouteHigh.removeAt(0)
-                                                        road.mRouteHigh.add(0,myLocation)
-                                                        mMapView!!.overlays.removeAt(mMapView!!.overlays.size-1)
-                                                        roadOverlay = RoadManager.buildRoadOverlay(road,0x800000FF.toInt(),10.0f)
+                                                        road.mRouteHigh.add(0, myLocation)
+                                                        mMapView!!.overlays.removeAt(mMapView!!.overlays.size - 1)
+                                                        roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
                                                         mMapView!!.overlays.add(roadOverlay)
                                                         mMapView!!.invalidate()
                                                     }
                                                 }
-                                            }
-                                            else
-                                            {
+                                            } else {
                                                 road.mRouteHigh.clear()
-                                                stopUpdateRoad=true
+                                                stopUpdateRoad = true
                                                 Toast.makeText(this@NavigatorActivity, "Конец пути", Toast.LENGTH_SHORT).show()
-                                                mMapView!!.overlays.removeAt(mMapView!!.overlays.size-1)
+                                                mMapView!!.overlays.removeAt(mMapView!!.overlays.size - 1)
                                             }
                                         }
-
-
-
                                     }
                                 } catch (e: InterruptedException) {
                                     e.printStackTrace()
                                 }
-
                             }
                         }
                     }
 
                     updateRoadThread.start()
-                }
-                else
+                } else
                     createRoad()
-
             }
         }
         Thread(thread).start()
     }
 
-    private fun portrait(road:Road)
-    {
+    private fun portrait(road: Road) {
 
         println("Направление " + (-getRotationAngle(road)))
-        when
-        {
-            -getRotationAngle(road)<-100 ->
+        when {
+            -getRotationAngle(road) <-100 ->
                 centerMap(
                     road.mRouteHigh[0],
                     mMapView!!.width,
                     mMapView!!.height
                 )
-            -getRotationAngle(road)<-80 ->
+            -getRotationAngle(road) <-80 ->
                 centerMap(
                     road.mRouteHigh[0],
                     mMapView!!.width,
-                    mMapView!!.height/3
+                    mMapView!!.height / 3
                 )
-            -getRotationAngle(road)<-65 ->
+            -getRotationAngle(road) <-65 ->
                 centerMap(
                     road.mRouteHigh[0],
                     mMapView!!.width,
-                    mMapView!!.height/3
+                    mMapView!!.height / 3
                 )
-            -getRotationAngle(road)<-50 ->
+            -getRotationAngle(road) <-50 ->
                 centerMap(
                     road.mRouteHigh[0],
-                    3*mMapView!!.width/4,
-                    mMapView!!.height/3
+                    3*mMapView!!.width / 4,
+                    mMapView!!.height / 3
                 )
-            -getRotationAngle(road)<-25 ->
+            -getRotationAngle(road) <-25 ->
                 centerMap(
                     road.mRouteHigh[0],
-                    -mMapView!!.height/2,
+                    -mMapView!!.height / 2,
                     0
 
                 )
-            -getRotationAngle(road)<0 ->
+            -getRotationAngle(road) <0 ->
                 centerMap(
                     road.mRouteHigh[0],
-                    mMapView!!.width/2,
-                    mMapView!!.height/3
+                    mMapView!!.width / 2,
+                    mMapView!!.height / 3
                 )
-            -getRotationAngle(road)>80 ->
+            -getRotationAngle(road)> 80 ->
                 centerMap(
                     road.mRouteHigh[0],
                     -mMapView!!.width,
-                    mMapView!!.height/3
+                    mMapView!!.height / 3
                 )
-            -getRotationAngle(road)>65 ->
+            -getRotationAngle(road)> 65 ->
                 centerMap(
                     road.mRouteHigh[0],
                     0,
-                    mMapView!!.height/3
+                    mMapView!!.height / 3
                 )
-            -getRotationAngle(road)>25 ->
+            -getRotationAngle(road)> 25 ->
                 centerMap(
                     road.mRouteHigh[0],
-                    mMapView!!.width/3,
-                    mMapView!!.height/3
+                    mMapView!!.width / 3,
+                    mMapView!!.height / 3
                 )
-            -getRotationAngle(road)>0 ->
+            -getRotationAngle(road)> 0 ->
                 centerMap(
                     road.mRouteHigh[0],
-                    mMapView!!.width/3,
-                    mMapView!!.height/3
+                    mMapView!!.width / 3,
+                    mMapView!!.height / 3
                 )
         }
     }
-
 
     private fun centerMap(center: GeoPoint, offX: Int, offY: Int) {
         val tl = mMapView!!.projection.fromPixels(0, 0)
@@ -381,31 +341,29 @@ class NavigatorActivity : Activity(), LocationListener{
         val newLat = offY * (br.latitude - tl.latitude) / mMapView!!.height + center.latitude
 
         mMapView!!.controller.setCenter(GeoPoint(newLat, newLon))
-
     }
 
     fun width(): Float {
-        return  mScaleBarOverlay.xdpi
+        return mScaleBarOverlay.xdpi
     }
 
     fun height(): Float {
         return mScaleBarOverlay.ydpi
     }
 
-    fun getRotationAngle(road:Road): Float {
+    fun getRotationAngle(road: Road): Float {
         val x1 = road.mRouteHigh[0].latitude
         val y1 = road.mRouteHigh[0].longitude
         val x2 = road.mRouteHigh[1].latitude
-        val y2 =  road.mRouteHigh[1].longitude
+        val y2 = road.mRouteHigh[1].longitude
 
         val xDiff = (x2 - x1).toFloat()
         val yDiff = (y2 - y1).toFloat()
 
         return (Math.atan2(yDiff.toDouble(), xDiff.toDouble()) * 180.0 / Math.PI).toFloat()
-
     }
 
-    private fun distance(road:Road): Float {
+    private fun distance(road: Road): Float {
         val locationA = Location("point A")
         locationA.latitude = road.mRouteHigh[0].latitude
         locationA.longitude = road.mRouteHigh[0].longitude
@@ -415,7 +373,7 @@ class NavigatorActivity : Activity(), LocationListener{
         return locationA.distanceTo(locationB)
     }
 
-    var createRoad:Int = 0
+    var createRoad: Int = 0
 
     private fun checkPermission() {
         if (ContextCompat.checkSelfPermission(
@@ -423,7 +381,7 @@ class NavigatorActivity : Activity(), LocationListener{
                 android.Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                 applicationContext, android.Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED      ) {
+            ) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(
@@ -436,7 +394,7 @@ class NavigatorActivity : Activity(), LocationListener{
     }
 
     private fun getLocation() {
-        val time:Float = 0F
+        val time: Float = 0F
         try {
             locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
@@ -445,30 +403,26 @@ class NavigatorActivity : Activity(), LocationListener{
             } catch (ex: Exception) {
             }
 
-
             try {
                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0L, 0f, this)
             } catch (ex: Exception) {
             }
-
         } catch (e: SecurityException) {
             e.printStackTrace()
         }
-
     }
 
     override fun onLocationChanged(location: Location) {
 
         currentLocation = location
 
-        myLocation = GeoPoint(location.latitude,location.longitude)
+        myLocation = GeoPoint(location.latitude, location.longitude)
 
         mLocationOverlay.enableMyLocation()
-        if(createRoad==0)
-        {
+        if (createRoad == 0) {
             mMapView!!.controller.setCenter(myLocation)
             createRoad()
-            createRoad=1
+            createRoad = 1
         }
 
        /* Toast.makeText(this@NavigatorActivity, "Longitude " + location.longitude + " Latitude " + location.latitude, Toast.LENGTH_SHORT).show()*/
@@ -479,7 +433,6 @@ class NavigatorActivity : Activity(), LocationListener{
     }
 
     override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {
-
     }
 
     override fun onProviderEnabled(provider: String) {
@@ -489,7 +442,6 @@ class NavigatorActivity : Activity(), LocationListener{
         ).show()*/
     }
 
-
     public override fun onResume() {
         super.onResume()
 
@@ -497,14 +449,11 @@ class NavigatorActivity : Activity(), LocationListener{
 
         /*mLocationOverlay.enableFollowLocation()*/
 
-
         mScaleBarOverlay.disableScaleBar()
 
-        if(stopUpdateRoad)
-        {
+        if (stopUpdateRoad) {
             createRoad()
         }
-
     }
 
     public override fun onPause() {
@@ -516,11 +465,9 @@ class NavigatorActivity : Activity(), LocationListener{
         mLocationOverlay.disableMyLocation()
         mScaleBarOverlay.enableScaleBar()
 
-        stopUpdateRoad=true
-        mMapView!!.overlays.removeAt(mMapView!!.overlays.size-1)
+        stopUpdateRoad = true
+        mMapView!!.overlays.removeAt(mMapView!!.overlays.size - 1)
     }
-
-
 }
 
 /*private val locationListener = object : LocationListener {
@@ -584,7 +531,6 @@ private fun checkEnabled() {
     }
 }*/
 
-
 /*  if(ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
 
@@ -643,8 +589,6 @@ private fun checkEnabled() {
                     }
                 }
         }*/
-
-
 
 /*do {
                      for(i in 0 until road.mRouteHigh.size-1)
@@ -713,7 +657,6 @@ private fun checkEnabled() {
 
 TODO удаление точки с карты ( надо придумать как это прикрутить к месту расположения )*/
 
-
 /* TileSourceFactory.addTileSource(YandexMaps)
  mMapView!!.setTileSource(YandexMaps)
  road.mRouteHigh.removeAt(0)
@@ -746,7 +689,6 @@ TileSourceFactory.addTileSource(YandexMaps)
                     println(location.longitude)
                 }
             }*/
-
 
 /*val thread = Runnable {
             val mURL =

@@ -4,7 +4,7 @@ import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.MapTileIndex
 
-class TileSource{
+class TileSource {
 
     val GoogleSat: OnlineTileSourceBase = object : XYTileSource(
         "Google-Sat",
@@ -51,9 +51,8 @@ class TileSource{
         19,
         256,
         ".png",
-        arrayOf("http://vec01.maps.yandex.net/","http://vec02.maps.yandex.net/","http://vec03.maps.yandex.net/","http://vec04.maps.yandex.net/")
-    )
-    {
+        arrayOf("http://vec01.maps.yandex.net/", "http://vec02.maps.yandex.net/", "http://vec03.maps.yandex.net/", "http://vec04.maps.yandex.net/")
+    ) {
         override fun getTileURLString(aTile: Long): String {
             return baseUrl + "tiles?l=map&v=4.24.2&x=" + MapTileIndex.getX(aTile) + "&y=" + MapTileIndex.getY(aTile) + "&z=" + MapTileIndex.getZoom(aTile)
         }

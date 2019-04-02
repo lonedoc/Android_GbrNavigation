@@ -17,13 +17,13 @@ import java.lang.Exception
 
 class AdapterResponsibleList internal constructor(
     private val fioList: ArrayList<String>,
-    private val addressList:ArrayList<String>,
-    private val positionList:ArrayList<String>,
+    private val addressList: ArrayList<String>,
+    private val positionList: ArrayList<String>,
     private val phoneList: ArrayList<String>,
-    private val homeList:ArrayList<String>,
-    private val workList:ArrayList<String>,
+    private val homeList: ArrayList<String>,
+    private val workList: ArrayList<String>,
     private val context: Context?
-):RecyclerView.Adapter<AdapterResponsibleList.ViewHolder>() {
+) : RecyclerView.Adapter<AdapterResponsibleList.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, p1: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_responsible, parent, false)
@@ -34,56 +34,52 @@ class AdapterResponsibleList internal constructor(
         return fioList.size
     }
 
-    override fun onBindViewHolder(holder:  ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
         holder.textFIO.text = fioList[position]
         holder.textAddress.text = addressList[position]
         holder.textPosition.text = positionList[position]
 
-        if(phoneList[position]=="empty") {
+        if (phoneList[position] == "empty") {
             holder.buttonPhone.visibility = View.GONE
-            holder.additionalContainer.visibility=View.VISIBLE
+            holder.additionalContainer.visibility = View.VISIBLE
         }
 
-        if(homeList[position]=="empty")
-            holder.buttonHome.visibility=View.GONE
+        if (homeList[position] == "empty")
+            holder.buttonHome.visibility = View.GONE
         else
-            holder.buttonHome.text=homeList[position]
+            holder.buttonHome.text = homeList[position]
 
-        if(workList[position] == "empty")
-            holder.buttonWork.visibility =View.GONE
+        if (workList[position] == "empty")
+            holder.buttonWork.visibility = View.GONE
         else
-            holder.buttonWork.text=workList[position]
-
+            holder.buttonWork.text = workList[position]
 
         holder.buttonPhone.setOnClickListener {
-                try{
+                try {
                     val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phoneList[position]))
                     context!!.startActivity(intent)
-                }catch (e:Exception)
-                {
-                    Toast.makeText(context,"Ваше устройство не поддерживает функцию звонка или не установлена сим-карта",Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
                 }
             }
         holder.buttonHome.setOnClickListener {
-            try{
+            try {
             val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + homeList[position]))
             context!!.startActivity(intent)
-        }catch (e:Exception)
-        {
-            Toast.makeText(context,"Ваше устройство не поддерживает функцию звонка или не установлена сим-карта",Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
         } }
         holder.buttonWork.setOnClickListener {
-            try{
+            try {
             val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + workList[position]))
             context!!.startActivity(intent)
-        }catch (e:Exception)
-        {
-            Toast.makeText(context,"Ваше устройство не поддерживает функцию звонка или не установлена сим-карта",Toast.LENGTH_SHORT).show()
-        }  }
+        } catch (e: Exception) {
+            Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
+        } }
 
         holder.parentContainer.setOnClickListener {
-            if(holder.additionalContainer.visibility == View.VISIBLE)
+            if (holder.additionalContainer.visibility == View.VISIBLE)
                 holder.additionalContainer.visibility = View.GONE
             else
                 holder.additionalContainer.visibility = View.VISIBLE
@@ -97,18 +93,16 @@ class AdapterResponsibleList internal constructor(
                     Toast.makeText(context,"Ваше устройство не поддерживает функцию звонка или не установлена сим-карта",Toast.LENGTH_SHORT).show()
                 }
             }*/
-
     }
 
-    class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView)
-    {
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var textFIO: TextView = itemView.findViewById(R.id.textFIO)
-        var textAddress:TextView = itemView.findViewById(R.id.Address)
-        var textPosition:TextView = itemView.findViewById(R.id.Position)
+        var textAddress: TextView = itemView.findViewById(R.id.Address)
+        var textPosition: TextView = itemView.findViewById(R.id.Position)
         var buttonPhone: Button = itemView.findViewById(R.id.phone_button)
-        var buttonHome:Button = itemView.findViewById(R.id.home_button)
-        var buttonWork:Button = itemView.findViewById(R.id.work_button)
+        var buttonHome: Button = itemView.findViewById(R.id.home_button)
+        var buttonWork: Button = itemView.findViewById(R.id.work_button)
         var parentContainer: CardView = itemView.findViewById(R.id.parent_container)
-        var additionalContainer:LinearLayout = itemView.findViewById(R.id.additionalInformation)
+        var additionalContainer: LinearLayout = itemView.findViewById(R.id.additionalInformation)
     }
 }

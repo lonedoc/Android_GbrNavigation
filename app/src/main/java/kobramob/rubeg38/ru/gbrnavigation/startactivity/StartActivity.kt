@@ -50,20 +50,19 @@ class StartActivity : AppCompatActivity() {
         const val BROADCAST_ACTION = "kobramob.ruber38.ru.gbrnavigation.startactivity"
     }
 
-    val startActivityModel:StartActivityModel = StartActivityModel()
+    val startActivityModel: StartActivityModel = StartActivityModel()
 
     private val tileSource: TileSource =
         TileSource()
 
     private var timer = Timer()
-    lateinit var followButton:FloatingActionButton
-    lateinit var centerButton:FloatingActionButton
+    lateinit var followButton: FloatingActionButton
+    lateinit var centerButton: FloatingActionButton
 
-    private lateinit var mMapView:MapView
+    private lateinit var mMapView: MapView
     private lateinit var rotationGestureOverlay: RotationGestureOverlay
     private lateinit var locationOverlay: MyLocationNewOverlay
     private lateinit var scaleBarOverlay: ScaleBarOverlay
-
 
     var enableFollowMe = false
     private fun checkPermission() {
@@ -72,7 +71,7 @@ class StartActivity : AppCompatActivity() {
                 android.Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                 applicationContext, android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED      ) {
+            ) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(
@@ -84,13 +83,12 @@ class StartActivity : AppCompatActivity() {
         }
     }
 
-    private fun dialog_change_map()
-    {
+    private fun dialog_change_map() {
         val dialog_cm = AlertDialog.Builder(this)
-        val view = layoutInflater.inflate(R.layout.change_map_dialog,null)
+        val view = layoutInflater.inflate(R.layout.change_map_dialog, null)
         val spinnerMap = view.findViewById(R.id.spinner_map) as Spinner
         spinnerMap.prompt = "Список карт"
-        val arrayMap=ArrayList<String>()
+        val arrayMap = ArrayList<String>()
         arrayMap.add("OpenStreetMap")
         arrayMap.add("GoogleRoad")
         arrayMap.add("GoogleSat")
@@ -100,14 +98,12 @@ class StartActivity : AppCompatActivity() {
             R.layout.simple_spinner_item,
             arrayMap
         )
-        var mapType:String = ""
+        var mapType: String = ""
         var mapTile: OnlineTileSourceBase = TileSourceFactory.MAPNIK
         spinnerAdapter.setDropDownViewResource(R.layout.spinner_item)
         spinnerMap.adapter = spinnerAdapter
-        spinnerMap.onItemSelectedListener = object: AdapterView.OnItemSelectedListener
-        {
+        spinnerMap.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
-
             }
 
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
@@ -117,38 +113,32 @@ class StartActivity : AppCompatActivity() {
         }
         dialog_cm.setView(view)
         dialog_cm.setTitle("Список карт")
-        dialog_cm.setPositiveButton("Выбрать")
-        {dialog, which ->
+        dialog_cm.setPositiveButton("Выбрать") { dialog, which ->
             println(mapType)
-            when(mapType){
-                "OpenStreetMap"->{mapTile = TileSourceFactory.MAPNIK}
-                "GoogleRoad"->{mapTile = tileSource.GoogleRoads}
-                "GoogleSat"->{mapTile = tileSource.GoogleSat}
-                "GoogleHybrid"->{mapTile = tileSource.GoogleHybrid}
+            when (mapType) {
+                "OpenStreetMap" -> { mapTile = TileSourceFactory.MAPNIK }
+                "GoogleRoad" -> { mapTile = tileSource.GoogleRoads }
+                "GoogleSat" -> { mapTile = tileSource.GoogleSat }
+                "GoogleHybrid" -> { mapTile = tileSource.GoogleHybrid }
             }
             TileSourceFactory.addTileSource(mapTile)
             mMapView.setTileSource(mapTile)
         }.show()
-
     }
 
-    private fun dialog_server_setting()
-    {
+    private fun dialog_server_setting() {
         val dialog_ss = AlertDialog.Builder(this)
-        val view = layoutInflater.inflate(R.layout.server_setting_dialog,null)
+        val view = layoutInflater.inflate(R.layout.server_setting_dialog, null)
 
-        val ip_server =view.findViewById(R.id.ip_server) as EditText
+        val ip_server = view.findViewById(R.id.ip_server) as EditText
         val port_server = view.findViewById(R.id.port_server) as EditText
-
 
         dialog_ss.setView(view)
         dialog_ss.setTitle("Настройки сервера")
-        dialog_ss.setPositiveButton("Сохранить")
-        {dialog, which ->
+        dialog_ss.setPositiveButton("Сохранить") { dialog, which ->
 
-            if(ip_server.text.toString() == "" || port_server.text.toString() == "")
-            {
-                Toast.makeText(this,"Все поля должны быть заполнены",Toast.LENGTH_SHORT).show()
+            if (ip_server.text.toString() == "" || port_server.text.toString() == "") {
+                Toast.makeText(this, "Все поля должны быть заполнены", Toast.LENGTH_SHORT).show()
                 ip_server.setText("")
                 port_server.setText("")
                 dialog.cancel()
@@ -157,14 +147,13 @@ class StartActivity : AppCompatActivity() {
         }.show()
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start)
 
         checkPermission()
 
-        val toolbar:Toolbar = findViewById(R.id.startToolbar)
+        val toolbar: Toolbar = findViewById(R.id.startToolbar)
         setSupportActionBar(toolbar)
         supportActionBar!!.title = getString(R.string.app_name)
 
@@ -175,7 +164,7 @@ class StartActivity : AppCompatActivity() {
 
         mMapView.addMapListener(object : MapListener {
             override fun onScroll(event: ScrollEvent): Boolean {
-                //TODO слушатель на карту
+                // TODO слушатель на карту
               /*  if(enableFollowMe){
                     timer.cancel()
                     followButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
@@ -187,8 +176,8 @@ class StartActivity : AppCompatActivity() {
             }
 
             override fun onZoom(event: ZoomEvent): Boolean {
-                //TODO слушатель на карту
-                if(enableFollowMe){
+                // TODO слушатель на карту
+                if (enableFollowMe) {
                     timer.cancel()
                     followButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
                     followButton.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
@@ -202,7 +191,7 @@ class StartActivity : AppCompatActivity() {
 
         centerButton.setOnClickListener {
             try {
-                if(enableFollowMe){
+                if (enableFollowMe) {
                     timer.cancel()
                     followButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
                     followButton.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
@@ -212,58 +201,48 @@ class StartActivity : AppCompatActivity() {
                 mMapView.controller.animateTo(locationOverlay.myLocation)
                 SharedPreferencesState.init(this)
                 SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
-                SharedPreferencesState.addPropertyFloat("lon",locationOverlay.myLocation.longitude.toFloat())
-            }catch (e:Exception)
-            {
-                Toast.makeText(this,"Ваше месторасположение не определено",Toast.LENGTH_SHORT).show()
+                SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
+            } catch (e: Exception) {
+                Toast.makeText(this, "Ваше месторасположение не определено", Toast.LENGTH_SHORT).show()
             }
         }
 
         followButton = findViewById(R.id.follow_me)
         followButton.setOnClickListener {
-            if(enableFollowMe)
-            {
+            if (enableFollowMe) {
 
                     /*startActivityModel.stopFollowMe()*/
                     timer.cancel()
                     followButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
                     followButton.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
                     enableFollowMe = false
-            }
-            else
-            {
+            } else {
                     /*startActivityModel.followMe(mMapView,locationOverlay)*/
-                    try{
+                    try {
                         oldLocation = locationOverlay.myLocation
                         setCenter()
                         mMapView.controller.setZoom(15.0)
                         mMapView.mapOrientation = - locationOverlay.lastFix.bearing
 
                         timer = Timer()
-                        timer.scheduleAtFixedRate(NavigatorTask(),0,1000)
+                        timer.scheduleAtFixedRate(NavigatorTask(), 0, 1000)
                         followButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.colorAccent))
                         followButton.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
 
                         enableFollowMe = true
-
-                    }catch (e:Exception){}
+                    } catch (e: Exception) {}
             }
-
-
         }
 
         try {
             mMapView.controller.animateTo(
                 GeoPoint(
-                    getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lat",0f).toDouble(),
-                    getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lon",0f).toDouble())
+                    getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lat", 0f).toDouble(),
+                    getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lon", 0f).toDouble())
             )
+        } catch (e: Exception) {
+            Toast.makeText(this, "Ваше месторасположение не определено", Toast.LENGTH_SHORT).show()
         }
-        catch (e:Exception)
-        {
-            Toast.makeText(this,"Ваше месторасположение не определено",Toast.LENGTH_SHORT).show()
-        }
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -272,10 +251,10 @@ class StartActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId){
-            R.id.server_setting ->{dialog_server_setting()   }
-            R.id.change_map ->{dialog_change_map()}
-            R.id.alert_test ->{
+        when (item.itemId) {
+            R.id.server_setting -> { dialog_server_setting() }
+            R.id.change_map -> { dialog_change_map() }
+            R.id.alert_test -> {
 
                 if (Build.VERSION.SDK_INT >= 26) {
                     (this.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
@@ -299,10 +278,9 @@ class StartActivity : AppCompatActivity() {
 
                     val objectActivity = Intent(this@StartActivity, ObjectActivity::class.java)
                     startActivity(objectActivity)
-
                 }
 
-                //val et_name = view!!.findViewById(R.id.new_name) as EditText
+                // val et_name = view!!.findViewById(R.id.new_name) as EditText
                 /*val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=55.70&lon_to=37.64")
                 val intent = Intent(Intent.ACTION_VIEW, uri)
                 intent.setPackage("ru.yandex.yandexnavi")
@@ -312,97 +290,95 @@ class StartActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    lateinit var oldLocation:GeoPoint
+    lateinit var oldLocation: GeoPoint
 
     private inner class NavigatorTask : TimerTask() {
 
         override fun run() {
             runOnUiThread {
-                try{
-                    if(oldLocation.distanceToAsDouble(locationOverlay.myLocation)>20.0)
-                    {
+                try {
+                    if (oldLocation.distanceToAsDouble(locationOverlay.myLocation)> 20.0) {
                         mMapView.mapOrientation = - locationOverlay.lastFix.bearing
                         setCenter()
                         oldLocation = locationOverlay.myLocation
                     }
-                }catch (e:Exception){}
+                } catch (e: Exception) {}
             }
         }
     }
 
-    private fun setCenter()
-    {
+    private fun setCenter() {
         val density = resources.displayMetrics.densityDpi
         println("Плотность пикселей $density")
         when (density) {
-            480->{
+            480 -> {
                 mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
-                    (2*scaleBarOverlay.screenHeight/4).toDouble(),
+                    (2*scaleBarOverlay.screenHeight / 4).toDouble(),
                     ((locationOverlay.lastFix.bearing)).toDouble()
                 ))
             }
-            320->{
+            320 -> {
                 mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
-                    (2*scaleBarOverlay.screenHeight/4).toDouble(),
+                    (2*scaleBarOverlay.screenHeight / 4).toDouble(),
                     ((locationOverlay.lastFix.bearing)).toDouble()
                 ))
             }
             DisplayMetrics.DENSITY_LOW ->
             {
                 mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
-                    (3*scaleBarOverlay.screenHeight/4).toDouble(),
+                    (3*scaleBarOverlay.screenHeight / 4).toDouble(),
                     ((locationOverlay.lastFix.bearing)).toDouble()
                 ))
             }
             DisplayMetrics.DENSITY_MEDIUM -> {
                 mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
-                    (3*scaleBarOverlay.screenHeight/4).toDouble(),
+                    (3*scaleBarOverlay.screenHeight / 4).toDouble(),
                     ((locationOverlay.lastFix.bearing)).toDouble()
                 ))
             }
             DisplayMetrics.DENSITY_HIGH -> {
                 mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
-                    (3*scaleBarOverlay.screenHeight/4).toDouble(),
+                    (3*scaleBarOverlay.screenHeight / 4).toDouble(),
                     ((locationOverlay.lastFix.bearing)).toDouble()
                 ))
             }
             DisplayMetrics.DENSITY_XHIGH -> {
                 mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
-                    (3*scaleBarOverlay.screenHeight/4).toDouble(),
+                    (3*scaleBarOverlay.screenHeight / 4).toDouble(),
                     ((locationOverlay.lastFix.bearing)).toDouble()
                 ))
             }
-            DisplayMetrics.DENSITY_XXHIGH-> {
+            DisplayMetrics.DENSITY_XXHIGH -> {
                 mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
-                    (3*scaleBarOverlay.screenHeight/4).toDouble(),
+                    (3*scaleBarOverlay.screenHeight / 4).toDouble(),
                     ((locationOverlay.lastFix.bearing)).toDouble()
                 ))
             }
-            DisplayMetrics.DENSITY_XXXHIGH->
+            DisplayMetrics.DENSITY_XXXHIGH ->
             {
                 mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
-                    (3*scaleBarOverlay.screenHeight/4).toDouble(),
+                    (3*scaleBarOverlay.screenHeight / 4).toDouble(),
                     ((locationOverlay.lastFix.bearing)).toDouble()
                 ))
             }
-            DisplayMetrics.DENSITY_TV->{
+            DisplayMetrics.DENSITY_TV -> {
                 mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
-                    (3*scaleBarOverlay.screenHeight/4).toDouble(),
+                    (3*scaleBarOverlay.screenHeight / 4).toDouble(),
                     ((locationOverlay.lastFix.bearing)).toDouble()
                 ))
             }
-            else -> {mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
-                (scaleBarOverlay.screenHeight/3).toDouble(),
+            else -> { mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
+                (scaleBarOverlay.screenHeight / 3).toDouble(),
                 ((locationOverlay.lastFix.bearing)).toDouble()
-            ))}
+            )) }
         }
     }
 
-    private lateinit var br:BroadcastReceiver
-    private  var lon:Double? = 0.0
-    private  var lat:Double? = 0.0
+    private lateinit var br: BroadcastReceiver
+    private var lon: Double? = 0.0
+    private var lat: Double? = 0.0
 
-    private fun broadcastReceiver (){
+    private fun broadcastReceiver() {
         br = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 val request = intent?.getStringExtra("test")
@@ -410,7 +386,7 @@ class StartActivity : AppCompatActivity() {
             }
         }
         val intentFilter = IntentFilter(BROADCAST_ACTION)
-        registerReceiver(br,intentFilter)
+        registerReceiver(br, intentFilter)
     }
 
     override fun onResume() {
@@ -419,7 +395,7 @@ class StartActivity : AppCompatActivity() {
         locationOverlay.enableMyLocation()
         scaleBarOverlay.enableScaleBar()
         broadcastReceiver()
-        startService(Intent(this,PollingServer::class.java))
+        startService(Intent(this, PollingServer::class.java))
     }
 
     override fun onPause() {
@@ -433,27 +409,24 @@ class StartActivity : AppCompatActivity() {
         super.onStop()
         SharedPreferencesState.init(this)
         SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
-        SharedPreferencesState.addPropertyFloat("lon",locationOverlay.myLocation.longitude.toFloat())
+        SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
         unregisterReceiver(br)
-        stopService(Intent(this,PollingServer::class.java))
+        stopService(Intent(this, PollingServer::class.java))
     }
 
-    private fun initMapView(MapView:MapView){
+    private fun initMapView(MapView: MapView) {
         org.osmdroid.config.Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
         MapView.setTileSource(TileSourceFactory.MAPNIK)
         MapView.setHasTransientState(true)
         MapView.controller.setZoom(15.0)
         MapView.isTilesScaledToDpi = true
         MapView.isFlingEnabled = true
-
-
     }
 
-    private fun addOverlays(MapView:MapView){
-        addOverlays(MapView,initLocationOverlay(MapView))
-        addOverlays(MapView,initScaleBarOverlay(MapView))
-        addOverlays(MapView,initRotationGestureOverlay(MapView))
-
+    private fun addOverlays(MapView: MapView) {
+        addOverlays(MapView, initLocationOverlay(MapView))
+        addOverlays(MapView, initScaleBarOverlay(MapView))
+        addOverlays(MapView, initRotationGestureOverlay(MapView))
     }
 
     private fun initRotationGestureOverlay(MapView: MapView): RotationGestureOverlay {
@@ -463,10 +436,10 @@ class StartActivity : AppCompatActivity() {
         return rotationGestureOverlay
     }
 
-    private fun initScaleBarOverlay(MapView:MapView): ScaleBarOverlay {
-        scaleBarOverlay= ScaleBarOverlay(MapView)
+    private fun initScaleBarOverlay(MapView: MapView): ScaleBarOverlay {
+        scaleBarOverlay = ScaleBarOverlay(MapView)
         scaleBarOverlay.setCentred(true)
-        scaleBarOverlay.setScaleBarOffset(resources.displayMetrics.widthPixels/2,10)
+        scaleBarOverlay.setScaleBarOffset(resources.displayMetrics.widthPixels / 2, 10)
         return scaleBarOverlay
     }
 
@@ -474,21 +447,20 @@ class StartActivity : AppCompatActivity() {
         val gpsMyLocationProvider = GpsMyLocationProvider(this)
         gpsMyLocationProvider.locationUpdateMinDistance = 0f
         gpsMyLocationProvider.locationUpdateMinTime = 0
-        locationOverlay = MyLocationNewOverlay(gpsMyLocationProvider,MapView)
-        locationOverlay.setDirectionArrow(customIcon(R.drawable.navigator),customIcon(R.drawable.navigator))
+        locationOverlay = MyLocationNewOverlay(gpsMyLocationProvider, MapView)
+        locationOverlay.setDirectionArrow(customIcon(R.drawable.navigator), customIcon(R.drawable.navigator))
         locationOverlay.isDrawAccuracyEnabled = false
         return locationOverlay
     }
 
-    private fun addOverlays(MapView:MapView,overlay:Overlay) {
+    private fun addOverlays(MapView: MapView, overlay: Overlay) {
         MapView.overlays.add(overlay)
     }
 
-    private fun customIcon(drawable:Int): Bitmap? {
+    private fun customIcon(drawable: Int): Bitmap? {
         return BitmapFactory.decodeResource(
             resources,
             drawable
         )
     }
-
 }

@@ -10,22 +10,21 @@ import android.support.v4.app.Fragment
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.views.MapView
 
-class NavigatorFragment:Fragment() {
+class NavigatorFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
-        val rootView =inflater.inflate(R.layout.navigator_fragment, container, false)
+        val rootView = inflater.inflate(R.layout.navigator_fragment, container, false)
         initMapView(rootView)
 
-        val bnv:BottomNavigationView = activity!!.findViewById(R.id.objectMenu)
+        val bnv: BottomNavigationView = activity!!.findViewById(R.id.objectMenu)
         bnv.menu.getItem(1).isChecked = true
 
         return rootView
     }
 
-    private fun initMapView(rootView:View)
-    {
-        val mMapView:MapView = rootView.findViewById(R.id.navigator_view)
+    private fun initMapView(rootView: View) {
+        val mMapView: MapView = rootView.findViewById(R.id.navigator_view)
         mMapView.setTileSource(TileSourceFactory.MAPNIK)
     }
 

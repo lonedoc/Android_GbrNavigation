@@ -30,14 +30,11 @@ object SharedPreferencesState {
         editor!!.putString(name, value)
         editor!!.apply()
     }
-    fun addPropertyFloat(name:String, value:Float)
-    {
-        if(settings == null)
-        {
+    fun addPropertyFloat(name: String, value: Float) {
+        if (settings == null) {
             init()
         }
-        editor!!.putFloat(name,value)
+        editor!!.putFloat(name, value)
         editor!!.apply()
     }
-
 }
