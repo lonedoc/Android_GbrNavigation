@@ -8,22 +8,31 @@ import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.location.Location
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.support.design.widget.FloatingActionButton
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.Toolbar
 import android.util.DisplayMetrics
-import android.widget.Toast
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.*
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.SharedPreferencesState
+import kobramob.rubeg38.ru.gbrnavigation.TileSource
+import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
-import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
+import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -42,6 +51,9 @@ class StartActivity : AppCompatActivity() {
     }
 
     val startActivityModel:StartActivityModel = StartActivityModel()
+
+    private val tileSource: TileSource =
+        TileSource()
 
     private var timer = Timer()
     lateinit var followButton:FloatingActionButton
@@ -72,13 +84,89 @@ class StartActivity : AppCompatActivity() {
         }
     }
 
+    private fun dialog_change_map()
+    {
+        val dialog_cm = AlertDialog.Builder(this)
+        val view = layoutInflater.inflate(R.layout.change_map_dialog,null)
+        val spinnerMap = view.findViewById(R.id.spinner_map) as Spinner
+        spinnerMap.prompt = "Список карт"
+        val arrayMap=ArrayList<String>()
+        arrayMap.add("OpenStreetMap")
+        arrayMap.add("GoogleRoad")
+        arrayMap.add("GoogleSat")
+        arrayMap.add("GoogleHybrid")
+        val spinnerAdapter: ArrayAdapter<String> = ArrayAdapter(
+            this@StartActivity,
+            R.layout.simple_spinner_item,
+            arrayMap
+        )
+        var mapType:String = ""
+        var mapTile: OnlineTileSourceBase = TileSourceFactory.MAPNIK
+        spinnerAdapter.setDropDownViewResource(R.layout.spinner_item)
+        spinnerMap.adapter = spinnerAdapter
+        spinnerMap.onItemSelectedListener = object: AdapterView.OnItemSelectedListener
+        {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+
+            }
+
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                val item = parent.getItemAtPosition(position)
+                mapType = item.toString()
+            }
+        }
+        dialog_cm.setView(view)
+        dialog_cm.setTitle("Список карт")
+        dialog_cm.setPositiveButton("Выбрать")
+        {dialog, which ->
+            println(mapType)
+            when(mapType){
+                "OpenStreetMap"->{mapTile = TileSourceFactory.MAPNIK}
+                "GoogleRoad"->{mapTile = tileSource.GoogleRoads}
+                "GoogleSat"->{mapTile = tileSource.GoogleSat}
+                "GoogleHybrid"->{mapTile = tileSource.GoogleHybrid}
+            }
+            TileSourceFactory.addTileSource(mapTile)
+            mMapView.setTileSource(mapTile)
+        }.show()
+
+    }
+
+    private fun dialog_server_setting()
+    {
+        val dialog_ss = AlertDialog.Builder(this)
+        val view = layoutInflater.inflate(R.layout.server_setting_dialog,null)
+
+        val ip_server =view.findViewById(R.id.ip_server) as EditText
+        val port_server = view.findViewById(R.id.port_server) as EditText
+
+
+        dialog_ss.setView(view)
+        dialog_ss.setTitle("Настройки сервера")
+        dialog_ss.setPositiveButton("Сохранить")
+        {dialog, which ->
+
+            if(ip_server.text.toString() == "" || port_server.text.toString() == "")
+            {
+                Toast.makeText(this,"Все поля должны быть заполнены",Toast.LENGTH_SHORT).show()
+                ip_server.setText("")
+                port_server.setText("")
+                dialog.cancel()
+                dialog_server_setting()
+            }
+        }.show()
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start)
 
         checkPermission()
 
-
+        val toolbar:Toolbar = findViewById(R.id.startToolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar!!.title = getString(R.string.app_name)
 
         mMapView = findViewById(R.id.startMap)
 
@@ -178,6 +266,52 @@ class StartActivity : AppCompatActivity() {
 
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.main_map, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+            R.id.server_setting ->{dialog_server_setting()   }
+            R.id.change_map ->{dialog_change_map()}
+            R.id.alert_test ->{
+
+                if (Build.VERSION.SDK_INT >= 26) {
+                    (this.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    (this.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(1000)
+                }
+
+                /*val trevoga = MediaPlayer.create(this,R.raw.jojo)
+                trevoga.start()*/
+
+                val alertDialog = AlertDialog.Builder(this)
+                val view = layoutInflater.inflate(R.layout.dialog_alarm, null)
+                alertDialog.setView(view)
+                val dialog: AlertDialog = alertDialog.create()
+                dialog.show()
+
+                val acceptAlertButton: Button = view!!.findViewById(R.id.AcceptAlert)
+                acceptAlertButton.setOnClickListener {
+                    println("accept")
+                    dialog.cancel()
+
+                    val objectActivity = Intent(this@StartActivity, ObjectActivity::class.java)
+                    startActivity(objectActivity)
+
+                }
+
+                //val et_name = view!!.findViewById(R.id.new_name) as EditText
+                /*val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=55.70&lon_to=37.64")
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                intent.setPackage("ru.yandex.yandexnavi")
+                startActivity(intent)*/
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     lateinit var oldLocation:GeoPoint
 
     private inner class NavigatorTask : TimerTask() {
@@ -191,7 +325,7 @@ class StartActivity : AppCompatActivity() {
                         setCenter()
                         oldLocation = locationOverlay.myLocation
                     }
-                }catch (e:Exception){e.printStackTrace()}
+                }catch (e:Exception){}
             }
         }
     }
@@ -199,7 +333,20 @@ class StartActivity : AppCompatActivity() {
     private fun setCenter()
     {
         val density = resources.displayMetrics.densityDpi
+        println("Плотность пикселей $density")
         when (density) {
+            480->{
+                mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
+                    (2*scaleBarOverlay.screenHeight/4).toDouble(),
+                    ((locationOverlay.lastFix.bearing)).toDouble()
+                ))
+            }
+            320->{
+                mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
+                    (2*scaleBarOverlay.screenHeight/4).toDouble(),
+                    ((locationOverlay.lastFix.bearing)).toDouble()
+                ))
+            }
             DisplayMetrics.DENSITY_LOW ->
             {
                 mMapView.controller.animateTo(locationOverlay.myLocation.destinationPoint(
@@ -344,8 +491,4 @@ class StartActivity : AppCompatActivity() {
         )
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-
-    }
 }

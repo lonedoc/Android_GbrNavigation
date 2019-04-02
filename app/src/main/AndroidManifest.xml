@@ -3,13 +3,13 @@
           xmlns:tools="http://schemas.android.com/tools"
           package="kobramob.rubeg38.ru.gbrnavigation">
 
-    <uses-permission
-            android:name="android.permission.ACCESS_FINE_LOCATION"/> <!-- <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.CALL_PHONE" />
 
     <uses-feature
             android:name="android.hardware.location"
@@ -29,11 +29,14 @@
             android:theme="@style/AppTheme"
             android:usesCleartextTraffic="true"
             tools:ignore="GoogleAppIndexingWarning"
-            tools:targetApi="m">
+            tools:targetApi="m"
+    >
+
+
         <service
                 android:name=".service.PollingServer"
                 android:enabled="true"
-                android:exported="true">
+                android:exported="false">
         </service>
 
         <activity android:name=".startactivity.StartActivity">
@@ -46,15 +49,9 @@
         <activity android:name=".objectactivity.ObjectActivity">
         </activity>
         <activity android:name=".mainmapactivity.MainMapActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
         </activity>
         <activity android:name=".NavigatorActivity">
         </activity>
-        <activity android:name=".objectactivity.FeedFragment"/>
     </application>
 
 </manifest>

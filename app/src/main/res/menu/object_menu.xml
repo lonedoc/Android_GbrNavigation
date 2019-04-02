@@ -6,7 +6,7 @@
             android:title="Объект"
 
     />
-    <item
+<!--    <item
             android:icon="@drawable/ic_feed"
             android:id="@+id/feedList"
             android:title="Лента событий"
@@ -20,7 +20,7 @@
             android:icon="@drawable/ic_plan"
             android:id="@+id/planDiagram"
             android:title="План-схема"
-    />
+    />-->
     <item
             android:icon="@drawable/ic_navigator"
             android:id="@+id/navigator"

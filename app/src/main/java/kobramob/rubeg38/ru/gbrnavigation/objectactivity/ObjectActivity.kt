@@ -10,10 +10,8 @@ import kobramob.rubeg38.ru.gbrnavigation.R
 
 class ObjectActivity : AppCompatActivity() {
 
-    private val objectFragment:ObjectFragment = ObjectFragment()
-    private val feedFragment:FeedFragment = FeedFragment()
-    private val responsibleFragment:ResponsibleFragment = ResponsibleFragment()
-    private val planFragment:PlanFragment = PlanFragment()
+
+    private val tabFragment:TabFragment = TabFragment()
     private val navigatorFragment:NavigatorFragment = NavigatorFragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,29 +24,18 @@ class ObjectActivity : AppCompatActivity() {
 
         val bnv: BottomNavigationView = findViewById(R.id.objectMenu)
         bnv.menu.getItem(0).isChecked = true
+
+        openFragment(tabFragment)
+        supportActionBar!!.title = "Карточка объекта"
+
         bnv.setOnNavigationItemSelectedListener {
             item->
 
             when(item.itemId)
             {
                 R.id.cardObject->{
-                    openFragment(objectFragment)
+                    openFragment(tabFragment)
                     supportActionBar!!.title = "Карточка объекта"
-                }
-
-                R.id.feedList->{
-                    openFragment(feedFragment)
-                    supportActionBar!!.title = "Лента событий"
-                }
-
-                R.id.responsible->{
-                    openFragment(responsibleFragment)
-                    supportActionBar!!.title = "Список отвественных"
-                }
-
-                R.id.planDiagram->{
-                    openFragment(planFragment)
-                    supportActionBar!!.title = "План-схема здания"
                 }
 
                 R.id.navigator ->{

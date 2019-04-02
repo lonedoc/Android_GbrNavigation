@@ -6,12 +6,15 @@ import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import com.github.chrisbanes.photoview.PhotoViewAttacher
 import kobramob.rubeg38.ru.gbrnavigation.R
 
 class PlanFragment:Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val bnv: BottomNavigationView = activity!!.findViewById(R.id.objectMenu)
-        bnv.menu.getItem(2).isChecked = true
-        return inflater.inflate(R.layout.plang_fragment, container, false)
+        val rootView = inflater.inflate(R.layout.plang_fragment, container, false)
+
+
+        return rootView
     }
 }

@@ -12,39 +12,15 @@
                                        android:id="@+id/toolbar_main_map"
                                        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
     />
+
     <FrameLayout
             android:id="@+id/fragment_container"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
     >
-<!--        <fragment
-                android:name="kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectFragment"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/objectFragment"/>
-        <fragment
-                android:name="kobramob.rubeg38.ru.gbrnavigation.objectactivity.FeedFragment"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/feedFragment"/>
-        <fragment
-                android:name="kobramob.rubeg38.ru.gbrnavigation.objectactivity.ResponsibleFragment"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/responsibleFragment"/>
-        <fragment
-                android:name="kobramob.rubeg38.ru.gbrnavigation.objectactivity.PlanFragment"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/planFragment"/>
-        <fragment
-                android:name="kobramob.rubeg38.ru.gbrnavigation.objectactivity.NavigatorFragment"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/navigatorFragment"/>-->
-
     </FrameLayout>
+
 
     <android.support.design.widget.BottomNavigationView
             android:id="@+id/objectMenu"

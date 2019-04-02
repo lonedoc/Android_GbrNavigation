@@ -18,7 +18,7 @@ class NavigatorFragment:Fragment() {
         initMapView(rootView)
 
         val bnv:BottomNavigationView = activity!!.findViewById(R.id.objectMenu)
-        bnv.menu.getItem(4).isChecked = true
+        bnv.menu.getItem(1).isChecked = true
 
         return rootView
     }
