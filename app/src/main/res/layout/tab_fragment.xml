@@ -7,6 +7,7 @@
 
 
     <android.support.design.widget.TabLayout
+            android:id="@+id/testTab"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -31,7 +32,8 @@
                 android:text="План-схема"/>
     </android.support.design.widget.TabLayout>
     <android.support.v4.view.ViewPager android:layout_width="match_parent"
-                                       android:layout_height="match_parent">
+                                       android:layout_height="match_parent"
+    android:id="@+id/pager">
 
     </android.support.v4.view.ViewPager>
 

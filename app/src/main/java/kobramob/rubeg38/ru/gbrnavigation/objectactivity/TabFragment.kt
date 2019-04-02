@@ -1,7 +1,9 @@
 package kobramob.rubeg38.ru.gbrnavigation.objectactivity
 
 import android.os.Bundle
+import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
+import android.support.v4.view.ViewPager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +21,13 @@ class TabFragment:Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView:View = inflater.inflate(R.layout.tab_fragment, container, false)
+
+        val viewPager: ViewPager = rootView.findViewById(R.id.pager)
+        viewPager.adapter = SampleFragmentPagerAdapter(childFragmentManager,context!!)
+
+        val tablLayout:TabLayout = rootView.findViewById(R.id.testTab)
+        tablLayout.setupWithViewPager(viewPager)
+
         return rootView
     }
 }

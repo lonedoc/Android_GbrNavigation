@@ -154,7 +154,7 @@ class NavigatorActivity : Activity(), LocationListener{
 
     private var oldDistance:Float = 0F
 
-    private var stopUpdateRoad:Boolean=false
+    private var stopUpdateRoad:Boolean = false
 
     private fun createRoad()
     {
