@@ -10,9 +10,12 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.IBinder
 import android.util.Log
-import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import java.lang.Exception
+import java.net.DatagramPacket
+import java.net.DatagramSocket
 import java.util.*
+import android.system.Os.socket
+import android.R.attr.port
 
 class PollingServer : Service(), LocationListener {
 
@@ -48,6 +51,7 @@ class PollingServer : Service(), LocationListener {
 //
     }
 
+    val request: Request = Request()
     override fun onCreate() {
         super.onCreate()
         getLocation()
@@ -61,7 +65,8 @@ class PollingServer : Service(), LocationListener {
     }
 
     private fun startService() {
-        timer.scheduleAtFixedRate(MainTask(), 0, 10000)
+        // timer.scheduleAtFixedRate(MainTask(), 0, 10000)
+        DataPacketReceiver().start()
     }
 
     override fun onDestroy() {
@@ -74,13 +79,66 @@ class PollingServer : Service(), LocationListener {
         return null
     }
 
-    inner class MainTask : TimerTask() {
+    inner class DataPacketReceiver : Thread() {
         override fun run() {
+            super.run()
+            // println(request.registerCar())
+            val socket: DatagramSocket = DatagramSocket()
+            println(request.register(socket))
             try {
-            val intent = Intent(StartActivity.BROADCAST_ACTION)
-            intent.putExtra("test", "Информация пошла")
-            sendBroadcast(intent)
-                println("Lat " + currentLocation!!.latitude + " Lon " + currentLocation!!.latitude)
+
+                while (true) {
+                    println("Сосить бибу")
+                    val receiverBuffer: ByteArray = kotlin.ByteArray(1041)
+                    val receiverPacket = DatagramPacket(receiverBuffer, receiverBuffer.size)
+                    socket.receive(receiverPacket)
+
+                    if (receiverPacket.data[0].toInt() != 0) {
+                        System.out.println(Arrays.toString(receiverPacket.data))
+                    }
+                    println(receiverPacket.socketAddress)
+                    val sendData = ByteArray(0)
+                    val nullPacket = DatagramPacket(sendData, sendData.size, receiverPacket.address, receiverPacket.port)
+                    socket.send(nullPacket)
+                    Thread.sleep(10000)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                println("Сосить хуй")
+            }
+        }
+    }
+
+    /*val buffer = ByteArray(512)
+    val response = DatagramPacket(buffer, buffer.size)
+    socket.receive(response)
+
+    val quote = String(buffer, 0, response.length)*/
+
+    /*   println("Цикл")
+    val ipAddr = byteArrayOf(192.toByte(), 168.toByte(), 2, 110)
+    val request = DatagramPacket(ByteArray(1), 1, InetAddress.getByAddress(ipAddr), 8301)
+    socket.send(request)*/
+
+    /*val ipAddr = byteArrayOf(192.toByte(), 168.toByte(), 2, 110)
+    val receiverBuffer:ByteArray = kotlin.ByteArray(41)
+    val packet = DatagramPacket(receiverBuffer,receiverBuffer.size,InetAddress.getByAddress(ipAddr),8301)
+    socket.receive(packet)
+    if(packet.data[0].toInt()!=0)
+    {
+        System.out.println(Arrays.toString(packet.data))
+        socket.send(packet)
+    }*/
+
+    inner class MainTask : TimerTask(), Runnable {
+        override fun run() {
+            val socket = DatagramSocket()
+            try {
+
+                /*val intent = Intent(StartActivity.BROADCAST_ACTION)
+                intent.putExtra("test", "Информация пошла")
+                sendBroadcast(intent)
+                println("Lat " + currentLocation!!.latitude + " Lon " + currentLocation!!.longitude)*/
             } catch (e: Exception) {}
         }
     }

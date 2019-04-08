@@ -55,17 +55,18 @@ class NavigatorActivity : Activity(), LocationListener {
         /*    Setting Dialog Title*/
         alertDialog.setTitle("GPS is settings")
 
-         /*Setting Dialog Message*/
+        /*Setting Dialog Message*/
         alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?")
 
-         /*On pressing Settings button*/
+        /*On pressing Settings button*/
         alertDialog.setPositiveButton("Settings") { dialog, which ->
             val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
             startActivity(intent)
         }
 
         /*   on pressing cancel button*/
-        alertDialog.setNegativeButton("Cancel"
+        alertDialog.setNegativeButton(
+            "Cancel"
         ) { dialog, which -> dialog.cancel() }
 
         /*  Showing Alert Message*/
@@ -190,8 +191,10 @@ class NavigatorActivity : Activity(), LocationListener {
 
                                                     val handler = Handler()
                                                     handler.postDelayed(
-                                                        { mMapView!!.overlays.removeAt(mMapView!!.overlays.size - 1)
-                                                            createRoad() },
+                                                        {
+                                                            mMapView!!.overlays.removeAt(mMapView!!.overlays.size - 1)
+                                                            createRoad()
+                                                        },
                                                         500
                                                     )
                                                 } else {
@@ -377,11 +380,12 @@ class NavigatorActivity : Activity(), LocationListener {
 
     private fun checkPermission() {
         if (ContextCompat.checkSelfPermission(
-                applicationContext,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+            applicationContext,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                 applicationContext, android.Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED) {
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(
@@ -425,7 +429,7 @@ class NavigatorActivity : Activity(), LocationListener {
             createRoad = 1
         }
 
-       /* Toast.makeText(this@NavigatorActivity, "Longitude " + location.longitude + " Latitude " + location.latitude, Toast.LENGTH_SHORT).show()*/
+        /* Toast.makeText(this@NavigatorActivity, "Longitude " + location.longitude + " Latitude " + location.latitude, Toast.LENGTH_SHORT).show()*/
     }
 
     override fun onProviderDisabled(provider: String) {

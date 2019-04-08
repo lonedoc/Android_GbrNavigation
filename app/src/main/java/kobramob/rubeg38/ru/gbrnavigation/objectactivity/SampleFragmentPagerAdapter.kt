@@ -8,24 +8,22 @@ import android.support.v4.app.FragmentPagerAdapter
 class SampleFragmentPagerAdapter(fm: FragmentManager?, private val context: Context) : FragmentPagerAdapter(fm) {
 
     override fun getCount(): Int {
-        return 4
+        return 3
     }
 
-    private val tabTitles = arrayOf("Карточка объекта", "Лента событий", "Ответственные", "План - схема")
+    private val tabTitles = arrayOf("Карточка объекта", "Ответственные", "План - схема")
 
     override fun getItem(position: Int): Fragment {
         var fragment: Fragment? = null
         when (position) {
             0 -> { fragment = ObjectFragment() }
-            1 -> { fragment = FeedFragment() }
-            2 -> { fragment = ResponsibleFragment() }
-            3 -> { fragment = PlanFragment() }
+            1 -> { fragment = ResponsibleFragment() }
+            2 -> { fragment = PlanFragment() }
         }
         return fragment!!
     }
 
-    override fun getPageTitle(position: Int): CharSequence {
-        // генерируем заголовок в зависимости от позиции
+    override fun getPageTitle(position: Int): CharSequence? {
         return tabTitles[position]
     }
 }

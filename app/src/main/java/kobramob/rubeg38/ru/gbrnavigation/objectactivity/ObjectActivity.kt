@@ -29,19 +29,19 @@ class ObjectActivity : AppCompatActivity() {
         bnv.setOnNavigationItemSelectedListener {
             item ->
 
-            when (item.itemId) {
-                R.id.cardObject -> {
-                    openFragment(tabFragment)
-                    supportActionBar!!.title = "Карточка объекта"
-                }
+                when (item.itemId) {
+                    R.id.cardObject -> {
+                        openFragment(tabFragment)
+                        supportActionBar!!.title = "Карточка объекта"
+                    }
 
-                R.id.navigator -> {
-                    openFragment(navigatorFragment)
-                    supportActionBar!!.title = "Навигатор"
+                    R.id.navigator -> {
+                        openFragment(navigatorFragment)
+                        supportActionBar!!.title = "Навигатор"
+                    }
                 }
+                true
             }
-            true
-        }
     }
 
     private fun openFragment(fragment: Fragment) {
@@ -49,5 +49,12 @@ class ObjectActivity : AppCompatActivity() {
         transaction.replace(kobramob.rubeg38.ru.gbrnavigation.R.id.fragment_container, fragment)
         transaction.addToBackStack(null)
         transaction.commit()
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        openFragment(tabFragment)
+        val bnv: BottomNavigationView = findViewById(R.id.objectMenu)
+        bnv.menu.getItem(0).isChecked = true
     }
 }

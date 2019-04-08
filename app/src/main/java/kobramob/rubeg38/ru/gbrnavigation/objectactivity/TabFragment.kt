@@ -27,7 +27,9 @@ class TabFragment : Fragment() {
 
         val tablLayout: TabLayout = rootView.findViewById(R.id.testTab)
         tablLayout.setupWithViewPager(viewPager)
-
+      /*  tablLayout.getTabAt(0)!!.setIcon(R.drawable.ic_object)
+        tablLayout.getTabAt(1)!!.setIcon(R.drawable.ic_responsible)
+        tablLayout.getTabAt(2)!!.setIcon(R.drawable.ic_plan)*/
         return rootView
     }
 }

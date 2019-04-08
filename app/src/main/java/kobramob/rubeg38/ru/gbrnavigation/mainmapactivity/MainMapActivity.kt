@@ -42,7 +42,11 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.*
 import kotlin.collections.ArrayList
 
-class MainMapActivity : AppCompatActivity(), LocationListener, MapEventsReceiver, SensorEventListener,
+class MainMapActivity :
+    AppCompatActivity(),
+    LocationListener,
+    MapEventsReceiver,
+    SensorEventListener,
     SoundPool.OnLoadCompleteListener {
     override fun onLoadComplete(soundPool: SoundPool?, sampleId: Int, status: Int) {
     }
@@ -64,7 +68,7 @@ class MainMapActivity : AppCompatActivity(), LocationListener, MapEventsReceiver
     }
 
     override fun longPressHelper(p: GeoPoint?): Boolean {
-    return true
+        return true
     }
 
     override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -74,7 +78,8 @@ class MainMapActivity : AppCompatActivity(), LocationListener, MapEventsReceiver
             timer.cancel()
             followMeEnable = false
         }
-    return true }
+        return true
+    }
 
     private lateinit var mMapView: MapView
     private lateinit var mScaleBarOverlay: ScaleBarOverlay
@@ -100,11 +105,12 @@ class MainMapActivity : AppCompatActivity(), LocationListener, MapEventsReceiver
 
     private fun checkPermission() {
         if (ContextCompat.checkSelfPermission(
-                applicationContext,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+            applicationContext,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
                 applicationContext, android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED) {
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(
@@ -287,53 +293,71 @@ class MainMapActivity : AppCompatActivity(), LocationListener, MapEventsReceiver
         val density = resources.displayMetrics.densityDpi
         when (density) {
             DisplayMetrics.DENSITY_LOW ->
-            {
-                mMapView.controller.animateTo(myLocation.destinationPoint(
-                    (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
-                    ((currentLocation.bearing)).toDouble()
-                ))
-            }
+                {
+                    mMapView.controller.animateTo(
+                        myLocation.destinationPoint(
+                            (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
+                            ((currentLocation.bearing)).toDouble()
+                        )
+                    )
+                }
             DisplayMetrics.DENSITY_MEDIUM -> {
-                mMapView.controller.animateTo(myLocation.destinationPoint(
-                    (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
-                    ((currentLocation.bearing)).toDouble()
-                ))
+                mMapView.controller.animateTo(
+                    myLocation.destinationPoint(
+                        (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
+                        ((currentLocation.bearing)).toDouble()
+                    )
+                )
             }
             DisplayMetrics.DENSITY_HIGH -> {
-                mMapView.controller.animateTo(myLocation.destinationPoint(
-                    (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
-                    ((currentLocation.bearing)).toDouble()
-                ))
+                mMapView.controller.animateTo(
+                    myLocation.destinationPoint(
+                        (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
+                        ((currentLocation.bearing)).toDouble()
+                    )
+                )
             }
             DisplayMetrics.DENSITY_XHIGH -> {
-                mMapView.controller.animateTo(myLocation.destinationPoint(
-                    (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
-                    ((currentLocation.bearing)).toDouble()
-                ))
+                mMapView.controller.animateTo(
+                    myLocation.destinationPoint(
+                        (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
+                        ((currentLocation.bearing)).toDouble()
+                    )
+                )
             }
             DisplayMetrics.DENSITY_XXHIGH -> {
-                mMapView.controller.animateTo(myLocation.destinationPoint(
-                    (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
-                    ((currentLocation.bearing)).toDouble()
-                ))
+                mMapView.controller.animateTo(
+                    myLocation.destinationPoint(
+                        (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
+                        ((currentLocation.bearing)).toDouble()
+                    )
+                )
             }
             DisplayMetrics.DENSITY_XXXHIGH ->
-            {
-                mMapView.controller.animateTo(myLocation.destinationPoint(
-                    (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
-                    ((currentLocation.bearing)).toDouble()
-                ))
-            }
+                {
+                    mMapView.controller.animateTo(
+                        myLocation.destinationPoint(
+                            (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
+                            ((currentLocation.bearing)).toDouble()
+                        )
+                    )
+                }
             DisplayMetrics.DENSITY_TV -> {
-                mMapView.controller.animateTo(myLocation.destinationPoint(
-                    (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
-                    ((currentLocation.bearing)).toDouble()
-                ))
+                mMapView.controller.animateTo(
+                    myLocation.destinationPoint(
+                        (3*mScaleBarOverlay.screenHeight / 4).toDouble(),
+                        ((currentLocation.bearing)).toDouble()
+                    )
+                )
             }
-            else -> { mMapView.controller.animateTo(myLocation.destinationPoint(
-                (mScaleBarOverlay.screenHeight / 3).toDouble(),
-                ((currentLocation.bearing)).toDouble()
-            )) }
+            else -> {
+                mMapView.controller.animateTo(
+                    myLocation.destinationPoint(
+                        (mScaleBarOverlay.screenHeight / 3).toDouble(),
+                        ((currentLocation.bearing)).toDouble()
+                    )
+                )
+            }
         }
     }
 
@@ -426,7 +450,7 @@ class MainMapActivity : AppCompatActivity(), LocationListener, MapEventsReceiver
 
     override fun onResume() {
         super.onResume()
-       //
+        //
         mScaleBarOverlay.enableScaleBar()
         mLocationOverlay.enableMyLocation()
         mMapView.onResume()

@@ -39,7 +39,7 @@
                     android:focusableInTouchMode="true"
                     android:marqueeRepeatLimit="marquee_forever"
                     android:scrollHorizontally="true"
-                    android:singleLine="true"
+                    android:singleLine="false"
                     android:textSize="22sp"
                     android:textColor="@color/textWhite"
             />
@@ -53,7 +53,7 @@
                     android:focusableInTouchMode="true"
                     android:marqueeRepeatLimit="marquee_forever"
                     android:scrollHorizontally="true"
-                    android:singleLine="true"
+                    android:singleLine="false"
                     android:textSize="20sp"
                     android:textColor="@color/textWhite"
             />
@@ -67,7 +67,7 @@
                     android:focusableInTouchMode="true"
                     android:marqueeRepeatLimit="marquee_forever"
                     android:scrollHorizontally="true"
-                    android:singleLine="true"
+                    android:singleLine="false"
                     android:textSize="20sp"
                     android:textColor="@color/textWhite"
             />

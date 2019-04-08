@@ -48,35 +48,37 @@ class AdapterResponsibleList internal constructor(
         if (homeList[position] == "empty")
             holder.buttonHome.visibility = View.GONE
         else
-            holder.buttonHome.text = homeList[position]
+            holder.buttonHome.text = "Дом. " + homeList[position]
 
         if (workList[position] == "empty")
             holder.buttonWork.visibility = View.GONE
         else
-            holder.buttonWork.text = workList[position]
+            holder.buttonWork.text = "Раб. " + workList[position]
 
         holder.buttonPhone.setOnClickListener {
-                try {
-                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phoneList[position]))
-                    context!!.startActivity(intent)
-                } catch (e: Exception) {
-                    Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
-                }
+            try {
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phoneList[position]))
+                context!!.startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
             }
+        }
         holder.buttonHome.setOnClickListener {
             try {
-            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + homeList[position]))
-            context!!.startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
-        } }
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + homeList[position]))
+                context!!.startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
+            }
+        }
         holder.buttonWork.setOnClickListener {
             try {
-            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + workList[position]))
-            context!!.startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
-        } }
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + workList[position]))
+                context!!.startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         holder.parentContainer.setOnClickListener {
             if (holder.additionalContainer.visibility == View.VISIBLE)
