@@ -37,4 +37,11 @@ object SharedPreferencesState {
         editor!!.putFloat(name, value)
         editor!!.apply()
     }
+    fun addPropertyBoolean(name: String, value: Boolean) {
+        if (settings == null) {
+            init()
+        }
+        editor!!.putBoolean(name, value)
+        editor!!.apply()
+    }
 }

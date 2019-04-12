@@ -30,6 +30,7 @@ import kobramob.rubeg38.ru.gbrnavigation.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.TileSource
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
+import org.json.JSONObject
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
@@ -66,6 +67,7 @@ class StartActivity : AppCompatActivity() {
     private lateinit var scaleBarOverlay: ScaleBarOverlay
 
     var enableFollowMe = false
+
     private fun checkPermission() {
         if (ContextCompat.checkSelfPermission(
             applicationContext,
@@ -420,8 +422,32 @@ class StartActivity : AppCompatActivity() {
         mMapView.onResume()
         locationOverlay.enableMyLocation()
         scaleBarOverlay.enableScaleBar()
-        broadcastReceiver()
-        startService(Intent(this, PollingServer::class.java))
+
+        registerThread()
+    }
+
+    private fun registerThread() {
+        if (!getSharedPreferences("state", Context.MODE_PRIVATE).contains("tid")) {
+            val registerThread = Runnable {
+                val registerData = startActivityModel.clientRegister()
+                runOnUiThread {
+                    when (registerData) {
+                        "TimeOut" -> { registerThread() }
+                        else -> {
+                            // println(registerData)
+                            val jsonObject = JSONObject(registerData)
+                            val jsonArray = jsonObject.getJSONArray("d")
+                            println("Tid" + JSONObject(jsonArray.getString(0)).getString("tid"))
+                            broadcastReceiver()
+                            startService(Intent(this, PollingServer::class.java))
+                        }
+                    }
+                }
+            }
+            Thread(registerThread).start()
+        } else {
+            broadcastReceiver()
+        }
     }
 
     override fun onPause() {

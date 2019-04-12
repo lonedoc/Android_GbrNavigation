@@ -14,16 +14,26 @@ import java.lang.Exception
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.util.*
-import android.system.Os.socket
-import android.R.attr.port
 
 class PollingServer : Service(), LocationListener {
 
-    private val timer: Timer = Timer()
-    val LOG_TAG = "PollingService"
-    private var currentLocation: Location? = null
-    @SuppressLint("MissingPermission")
+    val response: SingleResponse = SingleResponse()
+    val request: SingleRequest = SingleRequest()
+    private val coder: Coder = Coder()
 
+    private val timer: Timer = Timer()
+    private val LOG_TAG = "PollingService"
+    private var currentLocation: Location? = null
+
+    private var count: Long = 0
+    private val typePacket: Byte = 0
+    private val typePacket255: Byte = 255.toByte()
+
+    companion object {
+        val socket: DatagramSocket = DatagramSocket()
+    }
+
+    @SuppressLint("MissingPermission")
     private fun getLocation() {
         try {
             val locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -35,6 +45,7 @@ class PollingServer : Service(), LocationListener {
             } catch (e: Exception) {}
         } catch (e: Exception) { e.printStackTrace() }
     }
+
     override fun onLocationChanged(location: Location?) {
         currentLocation = location
     }
@@ -51,7 +62,6 @@ class PollingServer : Service(), LocationListener {
 //
     }
 
-    val request: Request = Request()
     override fun onCreate() {
         super.onCreate()
         getLocation()
@@ -65,8 +75,8 @@ class PollingServer : Service(), LocationListener {
     }
 
     private fun startService() {
-        // timer.scheduleAtFixedRate(MainTask(), 0, 10000)
-        DataPacketReceiver().start()
+        timer.scheduleAtFixedRate(MainTask(), 0, 10000)
+        // DataPacketReceiver().start()
     }
 
     override fun onDestroy() {
@@ -79,62 +89,44 @@ class PollingServer : Service(), LocationListener {
         return null
     }
 
-    inner class DataPacketReceiver : Thread() {
-        override fun run() {
-            super.run()
-            // println(request.registerCar())
-            val socket: DatagramSocket = DatagramSocket()
-            println(request.register(socket))
-            try {
-
-                while (true) {
-                    println("Сосить бибу")
-                    val receiverBuffer: ByteArray = kotlin.ByteArray(1041)
-                    val receiverPacket = DatagramPacket(receiverBuffer, receiverBuffer.size)
-                    socket.receive(receiverPacket)
-
-                    if (receiverPacket.data[0].toInt() != 0) {
-                        System.out.println(Arrays.toString(receiverPacket.data))
-                    }
-                    println(receiverPacket.socketAddress)
-                    val sendData = ByteArray(0)
-                    val nullPacket = DatagramPacket(sendData, sendData.size, receiverPacket.address, receiverPacket.port)
-                    socket.send(nullPacket)
-                    Thread.sleep(10000)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                println("Сосить хуй")
-            }
-        }
+    fun clientRegister(): String {
+        count++
+        return request.register(socket, count, typePacket)
     }
-
-    /*val buffer = ByteArray(512)
-    val response = DatagramPacket(buffer, buffer.size)
-    socket.receive(response)
-
-    val quote = String(buffer, 0, response.length)*/
-
-    /*   println("Цикл")
-    val ipAddr = byteArrayOf(192.toByte(), 168.toByte(), 2, 110)
-    val request = DatagramPacket(ByteArray(1), 1, InetAddress.getByAddress(ipAddr), 8301)
-    socket.send(request)*/
-
-    /*val ipAddr = byteArrayOf(192.toByte(), 168.toByte(), 2, 110)
-    val receiverBuffer:ByteArray = kotlin.ByteArray(41)
-    val packet = DatagramPacket(receiverBuffer,receiverBuffer.size,InetAddress.getByAddress(ipAddr),8301)
-    socket.receive(packet)
-    if(packet.data[0].toInt()!=0)
-    {
-        System.out.println(Arrays.toString(packet.data))
-        socket.send(packet)
-    }*/
 
     inner class MainTask : TimerTask(), Runnable {
         override fun run() {
-            val socket = DatagramSocket()
             try {
-
+                val sharedPreferences = getSharedPreferences("state", Context.MODE_PRIVATE)
+                val stopService = sharedPreferences.getBoolean("service", false)
+                // count++
+                if (!stopService) {
+                    request.nullPacket(socket)
+                    val ipAddress = "192.168.2.110"
+                    val receiverBuffer: ByteArray = kotlin.ByteArray(1041)
+                    val receiverPacket = DatagramPacket(receiverBuffer, receiverBuffer.size)
+                    socket.receive(receiverPacket)
+                    // println(Arrays.toString(receiverPacket.data))
+                    if (receiverPacket.data[0].toInt() != 0) {
+                        request.packetType255(socket, receiverPacket.data)
+                        println(coder.encoderPacketOne(receiverPacket.data))
+                    }
+                    /*val responseServer = response.serverReceiver(socket)
+                    when(responseServer){
+                        "255"->{
+                            println(255)
+                            request.nullPacket(socket)
+                        }
+                        "Null"->{
+                            println("Null")
+                            request.nullPacket(socket)
+                        }
+                        else->{
+                            println("Else")
+                            println(responseServer)
+                        }
+                    }*/
+                }
                 /*val intent = Intent(StartActivity.BROADCAST_ACTION)
                 intent.putExtra("test", "Информация пошла")
                 sendBroadcast(intent)
