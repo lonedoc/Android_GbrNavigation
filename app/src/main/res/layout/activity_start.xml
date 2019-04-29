@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
+        android:id="@+id/parent_layout"
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -8,6 +9,7 @@
         tools:context=".startactivity.StartActivity"
         android:orientation="vertical"
 >
+
 
     <android.support.v7.widget.Toolbar
             android:id="@+id/startToolbar"
@@ -26,23 +28,85 @@
             app:rippleColor="@color/colorAccent"/>
 
     <android.support.design.widget.FloatingActionButton
+            android:id="@+id/my_location"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:clickable="true" app:srcCompat="@drawable/ic_gps_fixed"
-            android:id="@+id/my_location" android:layout_alignParentEnd="true"
-            android:layout_marginEnd="10dp" android:layout_marginTop="15dp"
+            android:layout_below="@+id/startToolbar"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:layout_marginTop="15dp"
+            android:clickable="true"
             android:focusable="true"
+            app:srcCompat="@drawable/ic_gps_fixed"
             app:backgroundTint="@color/textWhite"
             app:rippleColor="@color/colorAccent"
-            android:layout_below="@+id/startToolbar"/>
+            />
+
+  <!--  <android.support.design.widget.FloatingActionButton
+            android:id="@+id/dinner_button"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_alignBottom="@+id/startMap"
+            android:layout_alignEnd="@+id/startMap"
+            android:layout_marginBottom="15dp"
+            android:layout_marginEnd="10dp"
+            android:clickable="true"
+            android:focusable="true"
+            app:srcCompat="@drawable/ic_dinner"
+            android:backgroundTint="@color/textWhite"
+            app:rippleColor="@color/colorAccent"
+            />-->
 
     <org.osmdroid.views.MapView
             android:id="@+id/startMap"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginTop="?attr/actionBarSize"
-    >
-    </org.osmdroid.views.MapView>
+    />
 
+    <com.github.clans.fab.FloatingActionMenu
+            android:id="@+id/parent_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            app:menu_colorNormal="@color/textWhite"
+            app:menu_colorPressed="@color/colorAccent"
+            app:menu_icon="@drawable/ic_change_status"
+            app:menu_showShadow="false"
+            android:focusable="true"
+            android:clickable="true"
+            android:layout_marginBottom="10dp"
+            android:layout_alignBottom="@+id/startMap"
+            android:layout_marginStart="10dp" android:layout_alignStart="@+id/startMap"
+            app:menu_labels_position="right"
+    >
+        <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/change_status_dinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:fab_size="mini"
+                app:fab_colorNormal="@color/textWhite"
+                app:fab_colorPressed="@color/colorAccent"
+                android:src="@drawable/ic_dinner"
+                app:fab_label="Обед"/>
+        <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/change_status_refueling"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:fab_size="mini"
+                app:fab_colorNormal="@color/textWhite"
+                app:fab_colorPressed="@color/colorAccent"
+                android:src="@drawable/ic_refueling"
+                app:fab_label="Заправка"/>
+        <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/change_status_repairs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:fab_size="mini"
+                app:fab_colorNormal="@color/textWhite"
+                app:fab_colorPressed="@color/colorAccent"
+                android:src="@drawable/ic_repairs"
+                app:fab_label="Ремонт"/>
+
+    </com.github.clans.fab.FloatingActionMenu>
 
 </RelativeLayout>

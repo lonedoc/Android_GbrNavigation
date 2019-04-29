@@ -13,7 +13,7 @@ class SingleResponse {
         val receiverPacket = DatagramPacket(receiverBuffer, receiverBuffer.size)
         socket.receive(receiverPacket)
         return if (!receiverPacket.data.isEmpty()) {
-            coder.encoderPacketOne(receiverPacket.data)
+            coder.decoderPacketOne(receiverPacket.data)
         } else {
             "Нулевой"
         }

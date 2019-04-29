@@ -1,9 +1,7 @@
 package kobramob.rubeg38.ru.gbrnavigation.startactivity
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.annotation.SuppressLint
+import android.content.*
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
@@ -24,12 +22,12 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
-import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
-import kobramob.rubeg38.ru.gbrnavigation.R
-import kobramob.rubeg38.ru.gbrnavigation.SharedPreferencesState
-import kobramob.rubeg38.ru.gbrnavigation.TileSource
+import com.github.clans.fab.FloatingActionMenu
+import kobramob.rubeg38.ru.gbrnavigation.*
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
+import kobramob.rubeg38.ru.gbrnavigation.service.Request
+import kotlinx.android.synthetic.main.dialog_alarm.*
 import org.json.JSONObject
 import org.osmdroid.events.MapListener
 import org.osmdroid.events.ScrollEvent
@@ -50,10 +48,15 @@ class StartActivity : AppCompatActivity() {
 
     companion object {
         const val BROADCAST_ACTION = "kobramob.ruber38.ru.gbrnavigation.startactivity"
+        lateinit var rotationGestureOverlay: RotationGestureOverlay
+        lateinit var locationOverlay: MyLocationNewOverlay
+
     }
 
-    val startActivityModel: StartActivityModel = StartActivityModel()
+    private val startActivityModel: StartActivityModel = StartActivityModel()
 
+    private val pollingServer: PollingServer = PollingServer()
+    private val request:Request = Request()
     private val tileSource: TileSource =
         TileSource()
 
@@ -62,10 +65,7 @@ class StartActivity : AppCompatActivity() {
     lateinit var centerButton: FloatingActionButton
 
     private lateinit var mMapView: MapView
-    private lateinit var rotationGestureOverlay: RotationGestureOverlay
-    private lateinit var locationOverlay: MyLocationNewOverlay
     private lateinit var scaleBarOverlay: ScaleBarOverlay
-
     var enableFollowMe = false
 
     private fun checkPermission() {
@@ -91,7 +91,7 @@ class StartActivity : AppCompatActivity() {
         }
     }
 
-    private fun dialog_change_map() {
+    private fun dialogChangeMap() {
         val dialog_cm = AlertDialog.Builder(this)
         val view = layoutInflater.inflate(R.layout.change_map_dialog, null)
         val spinnerMap = view.findViewById(R.id.spinner_map) as Spinner
@@ -134,7 +134,7 @@ class StartActivity : AppCompatActivity() {
         }.show()
     }
 
-    private fun dialog_server_setting() {
+    private fun dialogServerSetting() {
         val dialog_ss = AlertDialog.Builder(this)
         val view = layoutInflater.inflate(R.layout.server_setting_dialog, null)
 
@@ -143,77 +143,83 @@ class StartActivity : AppCompatActivity() {
 
         dialog_ss.setView(view)
         dialog_ss.setTitle("Настройки сервера")
-        dialog_ss.setPositiveButton("Сохранить") { dialog, which ->
+        dialog_ss.setPositiveButton("Сохранить") { dialog, _ ->
 
             if (ip_server.text.toString() == "" || port_server.text.toString() == "") {
                 Toast.makeText(this, "Все поля должны быть заполнены", Toast.LENGTH_SHORT).show()
                 ip_server.setText("")
                 port_server.setText("")
                 dialog.cancel()
-                dialog_server_setting()
+                dialogServerSetting()
+            } else {
+                SharedPreferencesState.init(this)
+                SharedPreferencesState.addPropertyString(
+                    "ip",
+                    ip_server.text.toString()
+                )
+
+                SharedPreferencesState.addPropertyInt(
+                    "port",
+                    port_server.text.toString().toInt()
+                )
+                startActivity(Intent(this,LoginActivity::class.java))
             }
         }.show()
     }
 
+    lateinit var toolbar: Toolbar
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start)
 
         checkPermission()
 
-        // TODO Device IMEI
-        /*val telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        telephonyManager.deviceId*/
-
-        val toolbar: Toolbar = findViewById(R.id.startToolbar)
-        setSupportActionBar(toolbar)
-        supportActionBar!!.title = getString(R.string.app_name)
-
+            /*// TODO Device IMEI
+            val telephonyManager = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            telephonyManager.deviceId*/
+        val actionMenu: FloatingActionMenu = findViewById(R.id.parent_menu)
+        actionMenu.isIconAnimated = false
+        toolbar = findViewById(R.id.startToolbar)
+        centerButton = findViewById(R.id.my_location)
+        followButton = findViewById(R.id.follow_me)
         mMapView = findViewById(R.id.startMap)
 
-        initMapView(mMapView)
-        addOverlays(mMapView)
-
-        mMapView.addMapListener(object : MapListener {
-            override fun onScroll(event: ScrollEvent): Boolean {
-                // TODO слушатель на карту
-                return true
-            }
-
-            override fun onZoom(event: ZoomEvent): Boolean {
-                // TODO слушатель на карту
-                if (enableFollowMe) {
-                    timer.cancel()
-                    followButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
-                    followButton.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
-                    enableFollowMe = false
-                }
-                return true
-            }
-        })
-
-        centerButton = findViewById(R.id.my_location)
-
-        centerButton.setOnClickListener {
-            try {
-                if (enableFollowMe) {
-                    timer.cancel()
-                    followButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
-                    followButton.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
-                    enableFollowMe = false
-                }
-
-                mMapView.controller.animateTo(locationOverlay.myLocation)
-                SharedPreferencesState.init(this)
-                SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
-                SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
-            } catch (e: Exception) {
-                Toast.makeText(this, "Ваше месторасположение не определено", Toast.LENGTH_SHORT).show()
-            }
+        setSupportActionBar(toolbar)
+        if (getSharedPreferences("state", Context.MODE_PRIVATE).contains("status")) {
+            val title = getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "") + " (" + getSharedPreferences("state", Context.MODE_PRIVATE).getString("status", "") + ")"
+            supportActionBar!!.title = title
+        } else {
+            val title = getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "") + " (Свободен)"
+            supportActionBar!!.title = title
         }
 
-        followButton = findViewById(R.id.follow_me)
-        followButton.setOnClickListener {
+        initFloatingMenu()
+        initMapView(mMapView)
+
+        addOverlays(mMapView)
+
+        clickListenerCenterButton(centerButton)
+
+        clickFollowButton(followButton)
+
+        centerMap()
+    }
+
+    private fun centerMap() {
+        try {
+            mMapView.controller.animateTo(
+                GeoPoint(
+                    getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lat", 0f).toDouble(),
+                    getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lon", 0f).toDouble()
+                )
+            )
+        } catch (e: Exception) {
+            Toast.makeText(this, "Ваше месторасположение не определено", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun clickFollowButton(followButton: FloatingActionButton?) {
+        followButton!!.setOnClickListener {
             if (enableFollowMe) {
 
                 /*startActivityModel.stopFollowMe()*/
@@ -238,16 +244,25 @@ class StartActivity : AppCompatActivity() {
                 } catch (e: Exception) {}
             }
         }
+    }
 
-        try {
-            mMapView.controller.animateTo(
-                GeoPoint(
-                    getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lat", 0f).toDouble(),
-                    getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lon", 0f).toDouble()
-                )
-            )
-        } catch (e: Exception) {
-            Toast.makeText(this, "Ваше месторасположение не определено", Toast.LENGTH_SHORT).show()
+    private fun clickListenerCenterButton(centerButton: FloatingActionButton?) {
+        centerButton!!.setOnClickListener {
+            try {
+                if (enableFollowMe) {
+                    timer.cancel()
+                    followButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
+                    followButton.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
+                    enableFollowMe = false
+                }
+
+                mMapView.controller.animateTo(locationOverlay.myLocation)
+                SharedPreferencesState.init(this)
+                SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
+                SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
+            } catch (e: Exception) {
+                Toast.makeText(this, "Ваше месторасположение не определено", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -258,40 +273,8 @@ class StartActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.server_setting -> { dialog_server_setting() }
-            R.id.change_map -> { dialog_change_map() }
-            R.id.alert_test -> {
-
-                if (Build.VERSION.SDK_INT >= 26) {
-                    (this.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
-                } else {
-                    (this.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(1000)
-                }
-
-                val trevoga = MediaPlayer.create(this, R.raw.trevoga)
-                trevoga.start()
-
-                val alertDialog = AlertDialog.Builder(this)
-                val view = layoutInflater.inflate(R.layout.dialog_alarm, null)
-                alertDialog.setView(view)
-                val dialog: AlertDialog = alertDialog.create()
-                dialog.show()
-
-                val acceptAlertButton: Button = view!!.findViewById(R.id.AcceptAlert)
-                acceptAlertButton.setOnClickListener {
-                    println("accept")
-                    dialog.cancel()
-                    trevoga.stop()
-                    val objectActivity = Intent(this@StartActivity, ObjectActivity::class.java)
-                    startActivity(objectActivity)
-                }
-
-                // val et_name = view!!.findViewById(R.id.new_name) as EditText
-                /*val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=55.70&lon_to=37.64")
-                val intent = Intent(Intent.ACTION_VIEW, uri)
-                intent.setPackage("ru.yandex.yandexnavi")
-                startActivity(intent)*/
-            }
+            R.id.server_setting -> { dialogServerSetting() }
+            R.id.change_map -> { dialogChangeMap() }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -403,14 +386,62 @@ class StartActivity : AppCompatActivity() {
     }
 
     private lateinit var br: BroadcastReceiver
-    private var lon: Double? = 0.0
-    private var lat: Double? = 0.0
 
     private fun broadcastReceiver() {
         br = object : BroadcastReceiver() {
+            @SuppressLint("SetTextI18n")
             override fun onReceive(context: Context?, intent: Intent?) {
-                val request = intent?.getStringExtra("test")
-                println(request)
+                /*val request = intent?.getStringExtra("test")
+                if(locationOverlay.lastFix.speed!=0f)
+                intent!!.putExtra("speed",locationOverlay.lastFix.speed)
+                println(request)*/
+                val status = intent?.getStringExtra("status")
+                SharedPreferencesState.init(this@StartActivity)
+                if (status != null) {
+                    SharedPreferencesState.addPropertyString("status", status)
+                }
+                if(status=="alarm")
+                {
+                    val serverResponse = intent.getStringExtra("info")
+                    val jsonObject = JSONObject(serverResponse)
+                    val jsonArray = jsonObject.getJSONArray("d")
+
+                    if (Build.VERSION.SDK_INT >= 26) {
+                        (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
+                    } else {
+                        (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(1000)
+                    }
+
+                    val trevoga = MediaPlayer.create(this@StartActivity, R.raw.trevoga)
+                    trevoga.start()
+
+                    val alertDialog = AlertDialog.Builder(this@StartActivity)
+                    val view = layoutInflater.inflate(R.layout.dialog_alarm, null)
+                    alertDialog.setView(view)
+                    val dialog: AlertDialog = alertDialog.create()
+                    dialog.show()
+
+                    val acceptAlertButton: Button = view!!.findViewById(R.id.AcceptAlert)
+                    val dialog_objectName:TextView = view.findViewById(R.id.dialog_objectName)
+                    val dialog_objectAddress:TextView = view.findViewById(R.id.dialog_objectAddress)
+                    dialog_objectName.text = JSONObject(jsonArray.getString(0)).getString("name")
+                    dialog_objectAddress.text = JSONObject(jsonArray.getString(0)).getString("address")
+
+                    acceptAlertButton.setOnClickListener {
+                        dialog.cancel()
+                        trevoga.stop()
+
+                        val objectActivity = Intent(this@StartActivity, ObjectActivity::class.java)
+                        objectActivity.putExtra("info",serverResponse)
+                        startActivity(objectActivity)
+                    }
+                }
+                else
+                {
+                    val title = getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "") + " (" + getSharedPreferences("state", Context.MODE_PRIVATE).getString("status", "") + ")"
+                    supportActionBar!!.title = title
+                }
+
             }
         }
         val intentFilter = IntentFilter(BROADCAST_ACTION)
@@ -419,53 +450,19 @@ class StartActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+
+        broadcastReceiver()
+
         mMapView.onResume()
-        locationOverlay.enableMyLocation()
-        scaleBarOverlay.enableScaleBar()
-
-        registerThread()
-    }
-
-    private fun registerThread() {
-        if (!getSharedPreferences("state", Context.MODE_PRIVATE).contains("tid")) {
-            val registerThread = Runnable {
-                val registerData = startActivityModel.clientRegister()
-                runOnUiThread {
-                    when (registerData) {
-                        "TimeOut" -> { registerThread() }
-                        else -> {
-                            // println(registerData)
-                            val jsonObject = JSONObject(registerData)
-                            val jsonArray = jsonObject.getJSONArray("d")
-                            println("Tid" + JSONObject(jsonArray.getString(0)).getString("tid"))
-                            broadcastReceiver()
-                            startService(Intent(this, PollingServer::class.java))
-                        }
-                    }
-                }
-            }
-            Thread(registerThread).start()
-        } else {
-            broadcastReceiver()
+        if(!locationOverlay.isEnabled)
+        {
+            locationOverlay.enableMyLocation()
+            scaleBarOverlay.enableScaleBar()
         }
-    }
 
-    override fun onPause() {
-        super.onPause()
-        mMapView.onPause()
-        // locationOverlay.disableMyLocation()
-        scaleBarOverlay.disableScaleBar()
-    }
 
-    override fun onStop() {
-        super.onStop()
-        try {
-            SharedPreferencesState.init(this)
-            SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
-            SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
-            unregisterReceiver(br)
-            stopService(Intent(this, PollingServer::class.java))
-        } catch (e: Exception) {}
+
+
     }
 
     private fun initMapView(MapView: MapView) {
@@ -475,6 +472,24 @@ class StartActivity : AppCompatActivity() {
         MapView.controller.setZoom(15.0)
         MapView.isTilesScaledToDpi = true
         MapView.isFlingEnabled = true
+
+        MapView.addMapListener(object : MapListener {
+            override fun onScroll(event: ScrollEvent): Boolean {
+                // TODO слушатель на карту
+                return true
+            }
+
+            override fun onZoom(event: ZoomEvent): Boolean {
+                // TODO слушатель на карту
+                if (enableFollowMe) {
+                    timer.cancel()
+                    followButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
+                    followButton.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
+                    enableFollowMe = false
+                }
+                return true
+            }
+        })
     }
 
     private fun addOverlays(MapView: MapView) {
@@ -516,5 +531,45 @@ class StartActivity : AppCompatActivity() {
             resources,
             drawable
         )
+    }
+
+    private fun initFloatingMenu(){
+        val floatingActionButton1:com.github.clans.fab.FloatingActionButton = findViewById(R.id.change_status_dinner)
+        val floatingActionButton2:com.github.clans.fab.FloatingActionButton = findViewById(R.id.change_status_refueling)
+        val floatingActionButton3:com.github.clans.fab.FloatingActionButton = findViewById(R.id.change_status_repairs)
+        floatingActionButton1.setOnClickListener {
+            Toast.makeText(this,"Функция смены статуса будет доступна в скором времени",Toast.LENGTH_SHORT).show()
+        }
+        floatingActionButton2.setOnClickListener {
+            Toast.makeText(this,"Функция смены статуса будет доступна в скором времени",Toast.LENGTH_SHORT).show()
+        }
+        floatingActionButton3.setOnClickListener {
+            Toast.makeText(this,"Функция смены статуса будет доступна в скором времени",Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mMapView.onPause()
+        // locationOverlay.disableMyLocation()
+        scaleBarOverlay.disableScaleBar()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        try {
+            SharedPreferencesState.init(this)
+            SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
+            SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
+            unregisterReceiver(br)
+        } catch (e: Exception) { e.printStackTrace() }
+    }
+
+    override fun onBackPressed() {
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopService(Intent(this,PollingServer::class.java))
     }
 }

@@ -7,6 +7,6 @@ class StartActivityModel {
     private val pollingServer: PollingServer = PollingServer()
 
     fun clientRegister(): String {
-        return pollingServer.clientRegister()
+        return ""
     }
 }

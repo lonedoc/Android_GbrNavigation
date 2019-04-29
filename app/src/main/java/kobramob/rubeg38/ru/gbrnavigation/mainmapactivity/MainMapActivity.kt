@@ -370,38 +370,12 @@ class MainMapActivity :
         when (item.itemId) {
             R.id.server_setting -> { dialog_server_setting() }
             R.id.change_map -> { dialog_change_map() }
-            R.id.alert_test -> {
-
-                if (Build.VERSION.SDK_INT >= 26) {
-                    (this.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
-                } else {
-                    (this.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(1000)
-                }
-
-                /*val trevoga = MediaPlayer.create(this,R.raw.jojo)
-                trevoga.start()*/
-
-                val alertDialog = AlertDialog.Builder(this)
-                val view = layoutInflater.inflate(R.layout.dialog_alarm, null)
-                alertDialog.setView(view)
-                val dialog: AlertDialog = alertDialog.create()
-                dialog.show()
-
-                val acceptAlertButton: Button = view!!.findViewById(R.id.AcceptAlert)
-                acceptAlertButton.setOnClickListener {
-                    println("accept")
-                    dialog.cancel()
-
-                    val objectActivity = Intent(this@MainMapActivity, ObjectActivity::class.java)
-                    startActivity(objectActivity)
-                }
 
                 // val et_name = view!!.findViewById(R.id.new_name) as EditText
                 /*val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=55.70&lon_to=37.64")
                 val intent = Intent(Intent.ACTION_VIEW, uri)
                 intent.setPackage("ru.yandex.yandexnavi")
                 startActivity(intent)*/
-            }
         }
         return super.onOptionsItemSelected(item)
     }

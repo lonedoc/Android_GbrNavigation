@@ -4,6 +4,8 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               tools:context=".objectactivity.ObjectFragment"
+              android:id="@+id/objectParent"
+              android:background = "@color/textWhite"
 >
 <ScrollView android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -12,7 +14,9 @@
                   android:layout_height="wrap_content"
                   android:orientation="vertical"
     >
-        <TextView android:layout_width="wrap_content"
+        <TextView
+                android:id="@+id/objectName"
+                android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:layout_marginTop="10dp"
                   android:layout_marginStart="10dp"
@@ -21,7 +25,9 @@
                   android:textColor="@color/textDark"
                   android:textStyle="bold"
         />
-        <TextView android:layout_width="wrap_content"
+        <TextView
+                android:id="@+id/objectAddress"
+                android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:textSize="20sp"
                   android:textColor="@color/textDark"
@@ -29,7 +35,9 @@
                   android:layout_marginStart="10dp"
                   android:text="Юбилейная 16"
         />
-        <TextView android:layout_width="wrap_content"
+        <TextView
+                android:id="@+id/objectAlarm"
+                android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:textSize="20sp"
                   android:textColor="@color/textDark"
@@ -38,7 +46,20 @@
                   android:text="Пожарная тревога - тревожная кнопка"
         />
 
-        <TextView android:layout_width="wrap_content"
+        <TextView
+                android:id="@+id/objectAlarmTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textColor="@color/textDark"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="10dp"
+                android:text="23:00"
+        />
+
+        <TextView
+                android:id="@+id/objectCustomer"
+                android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:textSize="20sp"
                   android:textColor="@color/textDark"
@@ -46,7 +67,9 @@
                   android:layout_marginStart="10dp"
                   android:text="Заказчик объекта: Тулин Владимир Николаевич"
         />
-        <TextView android:layout_width="wrap_content"
+        <TextView
+                android:id="@+id/objectTIP"
+                android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:textSize="20sp"
                   android:textColor="@color/textDark"
@@ -54,7 +77,8 @@
                   android:layout_marginStart="10dp"
                   android:text="ИНН: 89546878958423"
         />
-        <TextView android:layout_width="wrap_content"
+        <TextView
+                android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:textSize="20sp"
                   android:textColor="@color/textDark"
@@ -62,6 +86,7 @@
                   android:layout_marginStart="10dp"
                   android:text="Дополнительная информация по объекту:"
                   android:textStyle="bold"
+                android:visibility="gone"
         />
         <TextView android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
@@ -70,6 +95,7 @@
                   android:layout_marginTop="10dp"
                   android:layout_marginStart="10dp"
                   android:text="Осторожно злая собака!"
+                  android:visibility="gone"
         />
     </LinearLayout>
 </ScrollView>

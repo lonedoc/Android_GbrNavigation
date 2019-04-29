@@ -18,6 +18,7 @@ import android.util.DisplayMetrics
 import android.widget.Toast
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.SharedPreferencesState
+import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import kotlinx.android.synthetic.main.navigator_fragment.*
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
@@ -112,13 +113,21 @@ class NavigatorFragment : Fragment() {
             SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
         }
 
-        val yandex_api: FloatingActionButton = rootView.findViewById(R.id.yandex_api)
-        yandex_api.setOnClickListener {
-            val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=" + 56.31585 + "&lon_to=" + 101.75473 + "")
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            intent.setPackage("ru.yandex.yandexnavi")
-            startActivity(intent)
-        }
+
+            val yandex_api: FloatingActionButton = rootView.findViewById(R.id.yandex_api)
+            yandex_api.setOnClickListener {
+                try{
+                val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=" + 56.31585 + "&lon_to=" + 101.75473 + "")
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                intent.setPackage("ru.yandex.yandexnavi")
+                startActivity(intent)
+                }catch (e:Exception)
+                {
+                    Toast.makeText(activity,"На данном устройстве не установлен Яндекс.Навигатор",Toast.LENGTH_SHORT).show()
+                }
+            }
+
+
 
         return rootView
     }
@@ -129,10 +138,14 @@ class NavigatorFragment : Fragment() {
     private lateinit var locationOverlay: MyLocationNewOverlay
 
     private fun createRoad() {
+
         val roadManager = OSRMRoadManager(context)
+
         roadManager.setService("http:192.168.1.95:5000/route/v1/driving/")
         roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
+
         val waypoints = ArrayList<GeoPoint>()
+
         waypoints.add(
             GeoPoint(
                 context!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lat", 0f).toDouble(),
@@ -140,6 +153,7 @@ class NavigatorFragment : Fragment() {
             )
         )
         waypoints.add(GeoPoint(56.31585, 101.75473))
+
         val createRoad = Runnable {
             val road = roadManager.getRoad(waypoints)
             if (road.mRouteHigh.size != 2) {
@@ -280,8 +294,8 @@ class NavigatorFragment : Fragment() {
     }
 
     private fun addOverlays() {
-        addOverlays(initLocationOverlay())
-        addOverlays(initRotationGestureOverlay())
+        addOverlays(StartActivity.locationOverlay)
+        addOverlays(StartActivity.rotationGestureOverlay)
         addOverlays(initScaleBarOverlay())
     }
 
@@ -323,16 +337,21 @@ class NavigatorFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         mMapView.onResume()
-        locationOverlay.enableMyLocation()
-        scaleBarOverlay.enableScaleBar()
+        /*locationOverlay.enableMyLocation()
+        scaleBarOverlay.enableScaleBar()*/
     }
 
     override fun onStop() {
         super.onStop()
         mMapView.onPause()
-        SharedPreferencesState.init(context!!)
-        SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
-        SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
+        try{
+            SharedPreferencesState.init(context!!)
+            SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
+            SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
+        }catch (e:Exception)
+        {
+        }
+
         //  locationOverlay.disableMyLocation()
         scaleBarOverlay.disableScaleBar()
     }

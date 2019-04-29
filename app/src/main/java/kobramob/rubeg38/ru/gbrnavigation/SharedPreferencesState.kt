@@ -44,4 +44,11 @@ object SharedPreferencesState {
         editor!!.putBoolean(name, value)
         editor!!.apply()
     }
+    fun addPropertyInt(name: String, value: Int) {
+        if (settings == null) {
+            init()
+        }
+        editor!!.putInt(name, value)
+        editor!!.apply()
+    }
 }
