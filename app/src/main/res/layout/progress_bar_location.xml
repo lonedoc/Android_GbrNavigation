@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+>
+
+    <!--    <android.support.v7.widget.Toolbar
+            android:id="@+id/progress_Toolbar"
+            style="@style/Toolbar"
+            android:gravity="center"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />-->
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center">
+
+        <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="20dp">
+            <ProgressBar
+                    android:layout_marginStart="5dp"
+                    android:indeterminateDrawable="@drawable/progress_bar"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp" />
+            <TextView
+                    android:id="@+id/textDialog"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Определяем ваше месторасположение, пожалуйста, подождите..."
+                    android:textSize="16sp"
+                    android:textColor="@color/textDark"/>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

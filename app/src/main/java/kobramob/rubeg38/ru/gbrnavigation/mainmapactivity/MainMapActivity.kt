@@ -1,7 +1,6 @@
 package kobramob.rubeg38.ru.gbrnavigation.mainmapactivity
 
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.hardware.Sensor
@@ -11,10 +10,7 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.media.SoundPool
-import android.os.Build
 import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
@@ -26,7 +22,6 @@ import android.widget.*
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.TileSource
-import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
@@ -371,7 +366,7 @@ class MainMapActivity :
             R.id.server_setting -> { dialog_server_setting() }
             R.id.change_map -> { dialog_change_map() }
 
-                // val et_name = view!!.findViewById(R.id.new_name) as EditText
+            // val et_name = view!!.findViewById(R.id.new_name) as EditText
                 /*val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=55.70&lon_to=37.64")
                 val intent = Intent(Intent.ACTION_VIEW, uri)
                 intent.setPackage("ru.yandex.yandexnavi")

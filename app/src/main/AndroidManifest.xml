@@ -11,6 +11,8 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.CALL_PHONE"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <uses-feature
             android:name="android.hardware.location"
@@ -25,14 +27,17 @@
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:largeHeap="true"
+
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme"
             android:usesCleartextTraffic="true"
             tools:ignore="GoogleAppIndexingWarning"
-            tools:targetApi="m">
-        <activity android:name=".LoginActivity">
-            <intent-filter>
+            tools:targetApi="n">
+        <activity
+                android:name=".LoginActivity"
+                android:screenOrientation="landscape">
+           <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -42,16 +47,24 @@
         <service
                 android:name=".service.PollingServer"
                 android:enabled="true"
-                android:exported="false">
+                android:exported="true">
         </service>
 
-        <activity android:name=".startactivity.StartActivity">
+        <activity
+                android:name=".startactivity.StartActivity"
+                android:screenOrientation="landscape">
         </activity>
-        <activity android:name=".objectactivity.ObjectActivity">
+        <activity
+                android:name=".objectactivity.ObjectActivity"
+                android:screenOrientation="landscape">
         </activity>
-        <activity android:name=".mainmapactivity.MainMapActivity">
+        <activity
+                android:name=".mainmapactivity.MainMapActivity"
+                android:screenOrientation="landscape">
         </activity>
-        <activity android:name=".NavigatorActivity">
+        <activity
+                android:name=".NavigatorActivity"
+                android:screenOrientation="landscape">
         </activity>
     </application>
 

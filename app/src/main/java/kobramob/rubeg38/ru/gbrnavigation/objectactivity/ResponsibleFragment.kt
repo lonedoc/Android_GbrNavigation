@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import kobramob.rubeg38.ru.gbrnavigation.R
+import org.json.JSONObject
 
 class ResponsibleFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -17,35 +18,25 @@ class ResponsibleFragment : Fragment() {
 
         val responsibleList: RecyclerView = rootView.findViewById(R.id.responsibleRecyclerView)
 
+        val jsonObject = JSONObject(activity!!.intent.getStringExtra("info"))
+        val jsonArray = jsonObject.getJSONArray("d")
+        val jsonObject1 = JSONObject(jsonArray.getString(0))
+        val jsonArray1 = jsonObject1.getJSONArray("otvl")
+        val length = jsonArray1.length()
         val fioList = ArrayList<String>()
-        fioList.add("Кузнецов Евгений Владимирович")
-        fioList.add("Геть Алексей Иванович")
-        fioList.add("Краснов Ярослав Владимирович")
-
         val addressList = ArrayList<String>()
-        addressList.add("Юбиленая 17 кв.25")
-        addressList.add("Юбиленая 45 кв.30")
-        addressList.add("Южная 105 кв.22")
-
         val positionList = ArrayList<String>()
-        positionList.add("Директор")
-        positionList.add("Программист")
-        positionList.add("Уборщик")
-
         val phoneList = ArrayList<String>()
-        phoneList.add("+79041472887")
-        phoneList.add("+79645472778")
-        phoneList.add("+79041472887")
-
         val homeList = ArrayList<String>()
-        homeList.add("44-74-65")
-        homeList.add("empty")
-        homeList.add("35-05-90")
-
         val workList = ArrayList<String>()
-        workList.add("38-01-48")
-        workList.add("38-01-48")
-        workList.add("empty")
+        for (i in 0 until length) {
+            fioList.add(JSONObject(jsonArray1.getString(i)).getString("name"))
+            addressList.add(JSONObject(jsonArray1.getString(i)).getString("address"))
+            positionList.add(JSONObject(jsonArray1.getString(i)).getString("position"))
+            phoneList.add(JSONObject(jsonArray1.getString(i)).getString("phone"))
+            homeList.add("empty")
+            workList.add("empty")
+        }
 
         responsibleList.layoutManager = LinearLayoutManager(activity)
         responsibleList.adapter = AdapterResponsibleList(fioList, addressList, positionList, phoneList, homeList, workList, context)

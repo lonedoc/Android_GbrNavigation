@@ -1,16 +1,27 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
 import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.support.annotation.RequiresApi
 import android.support.v4.app.NotificationCompat
+import android.support.v4.app.NotificationCompat.PRIORITY_MIN
 import android.util.Log
+import kobramob.rubeg38.ru.gbrnavigation.LoginActivity
+import kobramob.rubeg38.ru.gbrnavigation.R
+import kobramob.rubeg38.ru.gbrnavigation.SharedPreferencesState
+import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import org.json.JSONObject
 import java.lang.Exception
@@ -27,9 +38,6 @@ class PollingServer : Service(), LocationListener {
 
     private val timer: Timer = Timer()
     private val LOG_TAG = "PollingService"
-    private var currentLocation: Location? = null
-
-
 
     private val typePacket: Byte = 0
     private val typePacket255: Byte = 255.toByte()
@@ -39,6 +47,11 @@ class PollingServer : Service(), LocationListener {
         val socket: DatagramSocket = datagramChannel.socket()
         var countReceiver: Long = 2
         var countSender: Long = 1
+        var latitude: Double = 0.toDouble()
+        var longtitude: Double = 0.toDouble()
+        var currentLocation: Location? = null
+        var serverAlive: Boolean = true
+        var tryCount = 0
     }
 
     @SuppressLint("MissingPermission")
@@ -73,19 +86,53 @@ class PollingServer : Service(), LocationListener {
     override fun onCreate() {
         super.onCreate()
         getLocation()
+        startForeground()
         Log.d(LOG_TAG, "onCreate")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(LOG_TAG, "OnStartCommand")
         startService()
-        return super.onStartCommand(intent, flags, startId)
+        return START_STICKY
+    }
+    private fun startForeground(){
+        val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                createNotificationChannel()
+            } else {
+                // If earlier version channel ID is not used
+                // https://developer.android.com/reference/android/support/v4/app/NotificationCompat.Builder.html#NotificationCompat.Builder(android.content.Context)
+                "101"
+            }
+
+        val notificationBuilder = NotificationCompat.Builder(this, channelId )
+        val notification = notificationBuilder.setOngoing(true)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(PRIORITY_MIN)
+            .setCategory(Notification.CATEGORY_SERVICE)
+            .build()
+        startForeground(channelId.toInt(), notification)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel(): String{
+        val channelId = "101"
+        val channelName = "My Background Service"
+        val chan = NotificationChannel(channelId,
+            channelName, NotificationManager.IMPORTANCE_HIGH)
+        chan.lightColor = Color.BLUE
+        chan.importance = NotificationManager.IMPORTANCE_NONE
+        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        service.createNotificationChannel(chan)
+        return channelId
     }
 
     private fun startService() {
-        timer.scheduleAtFixedRate(requestTask(), 0, 10000)
+        val timerTask:TimerTask =requestTask()
+        timer.schedule(timerTask,0,8500)
         serverReceiver()
-        // DataPacketReceiver().start()
     }
 
     override fun onDestroy() {
@@ -94,106 +141,203 @@ class PollingServer : Service(), LocationListener {
 
         Log.d(LOG_TAG, "OnDestroy")
     }
+
     override fun onBind(intent: Intent): IBinder? {
         return null
     }
 
-/*    fun clientRegister(imei: String, ip: String, port: Int, tid: String): String {
-        countSender++
-        return request.register(socket, countSender, typePacket, imei, ip, port, tid)
-    }*/
-
     inner class requestTask : TimerTask(), Runnable {
         override fun run() {
-            // runAsForeground()
-            request.nullPacket(
-                socket,
-                getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
-                getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
-            )
-        }
-    }
+            if (serverAlive) {
+                var speed: Float = 0.toFloat()
+                var lat: Double = 0.toDouble()
+                var lon: Double = 0.toDouble()
 
-    private val NOTIFICATION_ID = 42
-    private fun runAsForeground() {
-        // Intent notificationIntent = new Intent(this, RecorderMainActivity.class);
-        // PendingIntent pendingIntent=PendingIntent.getActivity(this, 0,
-        // notificationIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
-        val notification =
-            NotificationCompat.Builder(this)
-                // /.setSmallIcon(R.drawable.ic_launcher)
-                .setContentText("Я вас вижу")
-                // .setContentIntent(pendingIntent)
-                .build()
-        startForeground(NOTIFICATION_ID, notification)
+                try {
+                    speed = currentLocation!!.speed
+                    lat = currentLocation!!.latitude
+                    latitude = currentLocation!!.latitude
+                    longtitude = currentLocation!!.longitude
+                    lon = currentLocation!!.longitude
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                serverAlive = false
+                if (speed> 0.toFloat()) {
+                    request.sendLocation(
+                        socket,
+                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
+                        getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010),
+                        countSender,
+                        typePacket,
+                        lat,
+                        lon,
+                        speed,
+                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", ""),
+                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", "")
+                    )
+                } else {
+
+                    request.nullPacket(
+                        socket,
+                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
+                        getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
+                    )
+                }
+            }
+            else
+            {
+                countSender = 1
+                countReceiver = 1
+                if(tryCount<2)
+                {
+                    request.register(
+                        socket, countSender, typePacket,
+                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
+                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
+                        getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010),
+                        ""
+                    )
+                    tryCount++
+                }
+                else
+                {
+                    tryCount = 0
+
+                    try{
+                        val intentLoginActivity = Intent(LoginActivity.BROADCAST_ACTION)
+                        intentLoginActivity.putExtra("accessDenied",true)
+                        sendBroadcast(intentLoginActivity)
+                    }catch (e:Exception){
+                        e.printStackTrace()
+                    }
+
+                    try{
+                        val intentStartActivity = Intent(LoginActivity.BROADCAST_ACTION)
+                        intentStartActivity.putExtra("accessDenied",true)
+                        sendBroadcast(intentStartActivity)
+                    }catch (e:Exception){
+                        e.printStackTrace()
+                    }
+
+                    try{
+                        val intentObjectActivity = Intent(LoginActivity.BROADCAST_ACTION)
+                        intentObjectActivity.putExtra("accessDenied",true)
+                        sendBroadcast(intentObjectActivity)
+                    }catch (e:Exception){
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
     }
 
     private fun serverReceiver() {
         val receiverServer = Runnable {
             socket.soTimeout = 0
             while (true) {
-                val intent = Intent(StartActivity.BROADCAST_ACTION)
+                val intentStartActivity = Intent(StartActivity.BROADCAST_ACTION)
+                val intentLoginActivity = Intent(LoginActivity.BROADCAST_ACTION)
+                val intentObjectActivity = Intent(ObjectActivity.BROADCAST_ACTION)
                 // Создаем буффер
                 val receiverBuffer = ByteArray(1057)
                 // Создаем датаграмму для приема
                 val receiverPacket = DatagramPacket(receiverBuffer, receiverBuffer.size)
                 // Принимаем то что лежит в сокете
                 socket.receive(receiverPacket)
-                // Проверяем тип пакета
+                //Проверяем на нулевой пакет
+                if(receiverPacket.length == 0 ){
+                    serverAlive = true
+                }
+                //Принимаем пакет
                 when (coder.typePacket(receiverPacket.data)) {
-                    255 -> {
-                        println("Пакет принят")
-                    }
-                    0 -> {
-                        if (coder.countReceiver(receiverPacket.data) >= countReceiver) {
-                            request.packetType255(socket, receiverPacket.data, receiverPacket.port, receiverPacket.address)
-                            val serverResponse = coder.decoderPacketOne(receiverPacket.data)
-                            val jsonObject = JSONObject(serverResponse)
-                            val jsonArray = jsonObject.getJSONArray("d")
-                            when (JSONObject(jsonArray.getString(0)).getString("command")) {
-                                "gbrstatus" -> {
+                        255 -> {
+                            serverAlive = true
+                        }
+                        0 -> {
+                            serverAlive = true
+                            if (coder.countReceiver(receiverPacket.data) >= countReceiver) {
+                                request.packetType255(socket, receiverPacket.data, receiverPacket.port, receiverPacket.address)
+                                val serverResponse = coder.decoderPacketOne(receiverPacket.data)
+                                val jsonObject = JSONObject(serverResponse)
+                                val jsonArray = jsonObject.getJSONArray("d")
+                                when (JSONObject(jsonArray.getString(0)).getString("command")) {
+                                    "gbrstatus" -> {
+                                        try {
+                                            intentStartActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("status"))
+                                            sendBroadcast(intentStartActivity)
+                                        } catch (e: Exception) { e.printStackTrace() }
+                                        try {
+                                                intentObjectActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("status"))
+                                                sendBroadcast(intentObjectActivity)
+                                        } catch (e: Exception) { e.printStackTrace() }
 
-                                    intent.putExtra("status", JSONObject(jsonArray.getString(0)).getString("status"))
-                                    sendBroadcast(intent)
+                                    }
+                                    "alarm" -> {
+                                        try {
+                                            intentStartActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("command"))
+                                            intentStartActivity.putExtra("info", serverResponse)
+                                            sendBroadcast(intentStartActivity)
+                                        } catch (e: Exception) { e.printStackTrace() }
+                                    }
+                                    "regok" -> {
+                                        tryCount = 0
+                                        try {
+                                            intentLoginActivity.putExtra("info", serverResponse)
+                                            sendBroadcast(intentLoginActivity)
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                            val jsonObject = JSONObject(serverResponse)
+                                            val jsonArray = jsonObject.getJSONArray("d")
+                                            SharedPreferencesState.init(this@PollingServer)
+                                            SharedPreferencesState.addPropertyString(
+                                                "tid",
+                                                JSONObject(jsonArray.getString(0)).getString("tid")
+                                            )
+                                            if (JSONObject(jsonArray.getString(0)).getString("namegbr") !=
+                                                getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
+                                            ) {
+                                                SharedPreferencesState.addPropertyString(
+                                                    "namegbr",
+                                                    JSONObject(jsonArray.getString(0)).getString("namegbr")
+                                                )
+                                            }
+                                            if (JSONObject(jsonArray.getString(0)).getString("call") !=
+                                                getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "")
+                                            ) {
+                                                SharedPreferencesState.addPropertyString(
+                                                    "call",
+                                                    JSONObject(jsonArray.getString(0)).getString("call")
+                                                )
+                                            }
+                                        }
+                                    }
+                                    "alarmprok" -> {
+                                        try {
+                                            intentObjectActivity.putExtra("info", JSONObject(jsonArray.getString(0)).getString("command"))
+                                            sendBroadcast(intentObjectActivity)
+                                        } catch (e: Exception) { e.printStackTrace() }
+                                    }
+                                    "notalarm" -> {
+
+                                        try {
+                                            intentObjectActivity.putExtra("info", JSONObject(jsonArray.getString(0)).getString("command"))
+                                            sendBroadcast(intentObjectActivity)
+                                        } catch (e: Exception) { e.printStackTrace()
+                                            startActivity(Intent(this@PollingServer, StartActivity::class.java))}
+                                    }
                                 }
-                                "alarm"->{
-                                    intent.putExtra("status", JSONObject(jsonArray.getString(0)).getString("command"))
-                                    intent.putExtra("info",serverResponse)
-                                    sendBroadcast(intent)
-                                }
+                                countReceiver++
+                            } else {
                             }
-
-                            println(coder.decoderPacketOne(receiverPacket.data))
-                            countReceiver++
-                        } else {
-                            println("Пустой пакет")
                         }
                     }
                 }
-            }
         }; Thread(receiverServer).start()
     }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        Log.d(LOG_TAG, "LowMemory")
+    }
 }
-/*    try {
-        val intent = Intent(StartActivity.BROADCAST_ACTION)
-        val tid = sharedPreferences.getString("tid","")
-        val speed: Float =intent.getFloatExtra("speed",0f)
-        println("Lat " + currentLocation!!.latitude + " Lon " + currentLocation!!.longitude)
-        request.sendLocation(datagramChannel,count,typePacket,currentLocation!!.latitude,currentLocation!!.longitude,speed)
-    }catch (e:Exception){
-
-        request.nullPacket(datagramChannel)
-        val ipAddress = "192.168.2.110"
-        val receiverBuffer: ByteArray = kotlin.ByteArray(1041)
-        val receiverPacket = DatagramPacket(receiverBuffer, receiverBuffer.size)
-        datagramChannel.receive(receiverPacket)
-        // println(Arrays.toString(receiverPacket.data))
-        if (receiverPacket.data[0].toInt() != 0) {
-            request.packetType255(datagramChannel, receiverPacket.data)
-            println(coder.decoderPacketOne(receiverPacket.data))
-        }
-
-    }*/
-
-/*intent.putExtra("test", "Информация пошла")
-sendBroadcast(intent)*/

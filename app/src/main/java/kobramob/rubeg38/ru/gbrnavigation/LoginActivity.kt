@@ -1,7 +1,7 @@
 package kobramob.rubeg38.ru.gbrnavigation
 
-import android.content.Context
-import android.content.Intent
+import android.annotation.SuppressLint
+import android.content.*
 import android.content.pm.PackageManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -13,50 +13,172 @@ import android.telephony.TelephonyManager
 import android.widget.Button
 import kobramob.rubeg38.ru.gbrnavigation.service.Request
 import android.os.Build
-import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import org.json.JSONObject
+import android.os.StrictMode
+import android.view.WindowManager
+import android.widget.Toast
+import kobramob.rubeg38.ru.gbrnavigation.service.MyPollingServer
+import java.lang.Exception
+
 
 class LoginActivity : AppCompatActivity() {
 
-    val request: Request = Request()
-    val pollingServer: PollingServer = PollingServer()
-
+    private val request: Request = Request()
+    private val myPollingServer: MyPollingServer = MyPollingServer()
+    
+    lateinit var imei: String
     lateinit var ipInput: TextInputEditText
     lateinit var portInput: TextInputEditText
 
     companion object {
         var firstStart = false
+        const val BROADCAST_ACTION = "kobramob.ruber38.ru.gbrnavigation.loginactivity"
+    }
+
+    private var progressBarOpen: String = "close"
+    private lateinit var cancelDialog: AlertDialog
+
+    @SuppressLint("InflateParams")
+    private fun showProgressBar() {
+        if (progressBarOpen == "close") {
+            val dialog = AlertDialog.Builder(this)
+            val dialogView = layoutInflater.inflate(R.layout.progress_bar, null)
+            dialog.setView(dialogView)
+            dialog.setCancelable(false)
+            cancelDialog = dialog.create()
+            cancelDialog.show()
+            progressBarOpen = "open"
+        }
+    }
+
+    private fun closeProgressBar() {
+        if (progressBarOpen == "open") {
+            cancelDialog.cancel()
+            progressBarOpen = "close"
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+    }
 
-        if (getSharedPreferences("state", Context.MODE_PRIVATE).contains("ip") && getSharedPreferences("state", Context.MODE_PRIVATE).contains("port") && getSharedPreferences("state", Context.MODE_PRIVATE).contains("imei")) {
-            registerThread()
-        }
+    private var permissionGranted = PackageManager.PERMISSION_GRANTED
 
+    @SuppressLint("HardwareIds")
+    override fun onStart() {
+        super.onStart()
         checkPermission()
+        if(ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    android.Manifest.permission.CALL_PHONE,
+                    android.Manifest.permission.READ_PHONE_STATE,
+                    android.Manifest.permission.WAKE_LOCK
+                ),
+                permissionGranted
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(
 
-        ipInput = findViewById(R.id.ipInputText)
-        portInput = findViewById(R.id.portInputText)
-
-        val buttonEnterToApp: Button = findViewById(R.id.enterToApp)
-
-        val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        val imei = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            telephonyMgr.imei
-        } else {
-            telephonyMgr.deviceId
+                        android.Manifest.permission.FOREGROUND_SERVICE
+                    ),
+                    permissionGranted
+                )
+            }
         }
+        else
+        {
+            val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            imei = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                telephonyMgr.imei
+            } else {
+                telephonyMgr.deviceId
+            }
 
-        setOnClickListenerEnterToApp(buttonEnterToApp, imei)
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            if (Build.VERSION.SDK_INT >= 21) {
+                val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+                StrictMode.setThreadPolicy(policy)
+            }
+            broadcastReceiver()
+
+            if (getSharedPreferences("state", Context.MODE_PRIVATE).contains("ip") &&
+                getSharedPreferences("state", Context.MODE_PRIVATE).contains("port") &&
+                getSharedPreferences("state", Context.MODE_PRIVATE).contains("imei")
+            ) {
+                showProgressBar()
+
+                val clean = getSharedPreferences("state", Context.MODE_PRIVATE).edit()
+                clean.remove("tid")
+                clean.apply()
+
+                registerThread()
+            }
+
+            ipInput = findViewById(R.id.ipInputText)
+            portInput = findViewById(R.id.portInputText)
+
+            val buttonEnterToApp: Button = findViewById(R.id.enterToApp)
+
+            setOnClickListenerEnterToApp(buttonEnterToApp, imei)
+        }
+    }
+
+    @SuppressLint("HardwareIds")
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        when{
+            grantResults.isNotEmpty() && grantResults[3] == PackageManager.PERMISSION_GRANTED ->{
+                checkPermission()
+                val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+                imei = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    telephonyMgr.imei
+                } else {
+                    telephonyMgr.deviceId
+                }
+
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                if (Build.VERSION.SDK_INT >= 21) {
+                    val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+                    StrictMode.setThreadPolicy(policy)
+                }
+                broadcastReceiver()
+
+                if (getSharedPreferences("state", Context.MODE_PRIVATE).contains("ip") &&
+                    getSharedPreferences("state", Context.MODE_PRIVATE).contains("port") &&
+                    getSharedPreferences("state", Context.MODE_PRIVATE).contains("imei")
+                ) {
+                    showProgressBar()
+
+                    val clean = getSharedPreferences("state", Context.MODE_PRIVATE).edit()
+                    clean.remove("tid")
+                    clean.apply()
+
+                    registerThread()
+                }
+
+                ipInput = findViewById(R.id.ipInputText)
+                portInput = findViewById(R.id.portInputText)
+
+                val buttonEnterToApp: Button = findViewById(R.id.enterToApp)
+
+                setOnClickListenerEnterToApp(buttonEnterToApp, imei)
+            }
+        }
     }
 
     private fun setOnClickListenerEnterToApp(buttonEnterToApp: Button, imei: String) {
 
         buttonEnterToApp.setOnClickListener {
+            firstStart = true
+            showProgressBar()
             if (ipInput.text.toString() == "" || portInput.text.toString() == "") {
                 val dataNotEntered = AlertDialog.Builder(this)
                 dataNotEntered.setTitle("Данные не введены")
@@ -67,77 +189,18 @@ class LoginActivity : AppCompatActivity() {
                         portInput.setText("")
                     }.show()
             } else {
+              /*  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    this.startForegroundService(Intent(this@LoginActivity, myPollingServer::class.java))
+                }
+                else
+                {
+                    this.startService(Intent(this@LoginActivity, myPollingServer::class.java))
+                }*/
+
                 val registerThread = Runnable {
-                    val requestServer = request.register(PollingServer.socket,PollingServer.countSender,0,imei, ipInput.text.toString(), portInput.text.toString().toInt(), "")
-                    PollingServer.countSender++
-                    runOnUiThread {
-                        when (requestServer) {
-                            "TimeOut" -> {
-                                val dataNotEntered = AlertDialog.Builder(this)
-                                dataNotEntered.setTitle("Ошибка")
-                                    .setMessage("Сервер не отвечает или данные не верны")
-                                    .setCancelable(false)
-                                    .setPositiveButton("Ок") { _, _ ->
-                                        ipInput.setText("")
-                                        portInput.setText("")
-                                    }.show()
-                            }
-                            "{\"\$z\$\":\"s\",\"d\":[{\"reg\":\"0\",\"com\":\"accessdenied\"}]}" -> {
-                                val dataNotEntered = AlertDialog.Builder(this)
-                                dataNotEntered.setTitle("Ошибка")
-                                    .setMessage("Сервер не отвечает или данные не верны")
-                                    .setCancelable(false)
-                                    .setPositiveButton("Ок") { _, _ ->
-                                        ipInput.setText("")
-                                        portInput.setText("")
-                                    }.show()
-                            }
-                            else -> {
-
-                                println(requestServer)
-
-                                val jsonObject = JSONObject(requestServer)
-                                val jsonArray = jsonObject.getJSONArray("d")
-
-                                SharedPreferencesState.init(this)
-
-                                SharedPreferencesState.addPropertyString(
-                                    "imei",
-                                    imei
-                                )
-
-                                SharedPreferencesState.addPropertyString(
-                                    "tid",
-                                    JSONObject(jsonArray.getString(0)).getString("tid")
-                                )
-                                val jsonObject1 = JSONObject(jsonArray.getString(0))
-                                val jsonArray1 = jsonObject1.getJSONArray("routeserver")
-                                SharedPreferencesState.addPropertyString(
-                                    "routeserver",
-                                    jsonArray1.getString(0)
-                                )
-                                SharedPreferencesState.addPropertyString(
-                                    "namegbr",
-                                    JSONObject(jsonArray.getString(0)).getString("namegbr")
-                                )
-
-                                SharedPreferencesState.addPropertyString(
-                                    "ip",
-                                    ipInput.text.toString()
-                                )
-
-                                SharedPreferencesState.addPropertyInt(
-                                    "port",
-                                    portInput.text.toString().toInt()
-                                )
-
-                                startService(Intent(this, PollingServer::class.java))
-
-                                firstStart = true
-                                startActivity(Intent(this@LoginActivity, StartActivity::class.java))
-                            }
-                        }
-                    }
+                    request.register(MyPollingServer.socket, MyPollingServer.countSender, 0, imei, ipInput.text.toString(), portInput.text.toString().toInt(), "")
+                    MyPollingServer.countSender++
+                    myPollingServer.startService(this)
                 }; Thread(registerThread).start()
             }
         }
@@ -146,61 +209,116 @@ class LoginActivity : AppCompatActivity() {
     private fun registerThread() {
 
         val registerThread = Runnable {
-            val requestServer = request.register(
-                PollingServer.socket,
-                PollingServer.countSender,
+            /*val intent = Intent(this@LoginActivity, myPollingServer::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                this.startForegroundService(intent)
+            }
+            else
+            {
+                this.startService(Intent(this@LoginActivity, myPollingServer::class.java))
+            }*/
+
+
+            request.register(
+                MyPollingServer.socket,
+                MyPollingServer.countSender,
                 0,
-                getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
-                getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
+                getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", "")!!,
+                getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
                 getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0),
-                getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")
+                getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")!!
             )
-            PollingServer.countSender++
-            println(requestServer)
-            runOnUiThread {
-                when (requestServer) {
-                    "{\"\$z\$\":\"s\",\"d\":[{\"reg\":\"0\",\"com\":\"accessdenied\"}]}" -> {
-                        val dataNotEntered = AlertDialog.Builder(this)
-                        dataNotEntered.setTitle("Ошибка")
-                            .setMessage("Данные не верны")
-                            .setCancelable(false)
-                            .setPositiveButton("Ок") { _, _ ->
-                                registerThread()
-                            }.show()
-                    }
-                    "TimeOut" -> {
-                        val dataNotEntered = AlertDialog.Builder(this)
-                        dataNotEntered.setTitle("Ошибка")
-                            .setMessage("Сервер не отвечает или данные не верны")
-                            .setCancelable(false)
-                            .setPositiveButton("Ок") { _, _ ->
-                                registerThread()
-                            }.show()
-                    }
-                    else -> {
+            MyPollingServer.countSender++
+            myPollingServer.startService(this)
+        }; Thread(registerThread).start()
+    }
 
-                        val jsonObject = JSONObject(requestServer)
-                        val jsonArray = jsonObject.getJSONArray("d")
+    private lateinit var br: BroadcastReceiver
+    private fun broadcastReceiver() {
+        br = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val info = intent?.getStringExtra("info")
+                val accessDenied = intent?.getBooleanExtra("accessDenied",false)
+                if(accessDenied!!){
+                    closeProgressBar()
+                    Toast.makeText(this@LoginActivity,"Данное устройство не зарегистрировано на этом сервере",Toast.LENGTH_LONG).show()
+                }
+                else
+                if (!firstStart) {
+                    val jsonObject = JSONObject(info)
+                    val jsonArray = jsonObject.getJSONArray("d")
 
-                        SharedPreferencesState.init(this)
+                    SharedPreferencesState.init(this@LoginActivity)
+                    SharedPreferencesState.addPropertyString(
+                        "tid",
+                        JSONObject(jsonArray.getString(0)).getString("tid")
+                    )
+                    if (JSONObject(jsonArray.getString(0)).getString("namegbr") !=
+                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
+                    ) {
                         SharedPreferencesState.addPropertyString(
-                            "tid",
-                            JSONObject(jsonArray.getString(0)).getString("tid")
+                            "namegbr",
+                            JSONObject(jsonArray.getString(0)).getString("namegbr")
                         )
-                        if (JSONObject(jsonArray.getString(0)).getString("namegbr") != getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")) {
-                            SharedPreferencesState.addPropertyString(
-                                "namegbr",
-                                JSONObject(jsonArray.getString(0)).getString("namegbr")
-                            )
-                            val title = getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "") + " (Свободен)"
-                            supportActionBar!!.title = title
-                        }
-                        startService(Intent(this, PollingServer::class.java))
-                        startActivity(Intent(this@LoginActivity, StartActivity::class.java))
                     }
+                    if (JSONObject(jsonArray.getString(0)).getString("call") !=
+                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "")
+                    ) {
+                        SharedPreferencesState.addPropertyString(
+                            "call",
+                            JSONObject(jsonArray.getString(0)).getString("call")
+                        )
+                    }
+                    closeProgressBar()
+                    startActivity(Intent(this@LoginActivity, StartActivity::class.java))
+                } else
+                {
+                    val jsonObject = JSONObject(info)
+                    val jsonArray = jsonObject.getJSONArray("d")
+
+                    SharedPreferencesState.init(this@LoginActivity)
+
+                    SharedPreferencesState.addPropertyString(
+                        "imei",
+                        imei
+                    )
+
+                    SharedPreferencesState.addPropertyString(
+                        "tid",
+                        JSONObject(jsonArray.getString(0)).getString("tid")
+                    )
+                    val jsonObject1 = JSONObject(jsonArray.getString(0))
+                    val jsonArray1 = jsonObject1.getJSONArray("routeserver")
+                    SharedPreferencesState.addPropertyString(
+                        "routeserver",
+                        jsonArray1.getString(0)
+                    )
+                    SharedPreferencesState.addPropertyString(
+                        "namegbr",
+                        JSONObject(jsonArray.getString(0)).getString("namegbr")
+                    )
+
+                    SharedPreferencesState.addPropertyString(
+                        "call",
+                        JSONObject(jsonArray.getString(0)).getString("call")
+                    )
+                    SharedPreferencesState.addPropertyString(
+                        "ip",
+                        ipInput.text.toString()
+                    )
+
+                    SharedPreferencesState.addPropertyInt(
+                        "port",
+                        portInput.text.toString().toInt()
+                    )
+                    closeProgressBar()
+                    startActivity(Intent(this@LoginActivity, StartActivity::class.java))
+                    firstStart = false
                 }
             }
-        }; Thread(registerThread).start()
+        }
+        val intentFilter = IntentFilter(BROADCAST_ACTION)
+        registerReceiver(br, intentFilter)
     }
 
     override fun onBackPressed() {
@@ -208,6 +326,12 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
+        try{
+            unregisterReceiver(br)
+        }catch (e:Exception){
+            e.printStackTrace()
+        }
+
     }
 
     override fun onDestroy() {
@@ -219,14 +343,13 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun checkPermission() {
-        if (ContextCompat.checkSelfPermission(
-            applicationContext,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
-        ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                applicationContext, android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(applicationContext, android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(applicationContext, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.WAKE_LOCK) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(applicationContext,android.Manifest.permission.FOREGROUND_SERVICE) != PackageManager.PERMISSION_GRANTED
+
         ) {
             ActivityCompat.requestPermissions(
                 this,
@@ -234,7 +357,9 @@ class LoginActivity : AppCompatActivity() {
                     android.Manifest.permission.ACCESS_FINE_LOCATION,
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     android.Manifest.permission.CALL_PHONE,
-                    android.Manifest.permission.READ_PHONE_STATE
+                    android.Manifest.permission.READ_PHONE_STATE,
+                    android.Manifest.permission.WAKE_LOCK,
+                    android.Manifest.permission.FOREGROUND_SERVICE
                 ),
                 101
             )

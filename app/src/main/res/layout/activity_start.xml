@@ -96,7 +96,7 @@
                 app:fab_colorNormal="@color/textWhite"
                 app:fab_colorPressed="@color/colorAccent"
                 android:src="@drawable/ic_refueling"
-                app:fab_label="Заправка"/>
+                app:fab_label="Заправляется"/>
         <com.github.clans.fab.FloatingActionButton
                 android:id="@+id/change_status_repairs"
                 android:layout_width="wrap_content"
@@ -104,8 +104,9 @@
                 app:fab_size="mini"
                 app:fab_colorNormal="@color/textWhite"
                 app:fab_colorPressed="@color/colorAccent"
-                android:src="@drawable/ic_repairs"
-                app:fab_label="Ремонт"/>
+                android:src="@drawable/ic_freedom"
+                app:fab_label="Свободен"
+        />
 
     </com.github.clans.fab.FloatingActionMenu>
 

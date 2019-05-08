@@ -14,7 +14,7 @@ class Coder {
     fun encoderOne(message: String, count: Long, typePacket: Byte, tid: String): ByteBuffer {
 
         val messageByteArray = message.toByteArray()
-        val tidByteArray = tid.toByteArray()
+        var tidByteArray: ByteArray = tid.toByteArray()
         val length = messageByteArray.size
         val packetSize = length + 2
         val sizeFullPacket = sizeHeading + 2 + 2 + length
@@ -23,12 +23,14 @@ class Coder {
         val TPacket = 1
         val allSize: Int = sizeFullPacket
 
+        if (tid != "") {
+            tidByteArray = hexStringToByte(tid).toByteArray()
+        }
         // Формируем заголовок
         val heading: ByteBuffer = ByteBuffer.allocate(sizeHeading + 2)
         heading.order(ByteOrder.LITTLE_ENDIAN)
         xor(heading, typePacket, packetSize, 0, 0, positionOnMassive, allSize, count, allPacket, TPacket, tidByteArray)
         val headingArray = heading.array()
-        println(Arrays.toString(headingArray))
         coderZag(headingArray, mass1)
 
         // Формируем пакет
@@ -47,6 +49,17 @@ class Coder {
         request.put(packetArray)
         return request
     }
+
+    private fun hexStringToByte(tid: String): Array<Byte> {
+        val hexStr = tid.replace("-", "")
+        var result = Array<Byte>(hexStr.length / 2) { 0 }
+        for (i in 0 until hexStr.length step 2) {
+            var byte = Integer.valueOf(hexStr.substring(i, i + 2), 16).toByte()
+            result[i / 2] = byte
+        }
+        return result
+    }
+
     fun decoderPacketOne(message: ByteArray): String {
         // Декодим заголовок
         val headingArray: ByteArray = ByteArray(57)

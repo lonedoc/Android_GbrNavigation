@@ -75,6 +75,7 @@
                   android:textColor="@color/textDark"
                   android:layout_marginTop="10dp"
                   android:layout_marginStart="10dp"
+                android:layout_marginBottom="20dp"
                   android:text="ИНН: 89546878958423"
         />
         <TextView

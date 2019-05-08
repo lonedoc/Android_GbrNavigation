@@ -88,26 +88,6 @@ class NavigatorActivity : Activity(), LocationListener {
         mRotationGestureOverlay.isEnabled = true
         mMapView!!.setMultiTouchControls(true)
         mMapView!!.overlays.add(mRotationGestureOverlay)
-
-/*        mMapView!!.setOnGenericMotionListener(object : View.OnGenericMotionListener {
-            override fun onGenericMotion(v: View?, event: MotionEvent?): Boolean {
-                if (0 != event!!.source and InputDevice.SOURCE_CLASS_POINTER) {
-                    when (event.action) {
-                        MotionEvent.ACTION_SCROLL -> {
-                            if (event.getAxisValue(MotionEvent.AXIS_VSCROLL) < 0.0f)
-                                mMapView!!.controller.zoomOut()
-                            else {
-                                val iGeoPoint = mMapView!!.projection.fromPixels(event.x.toInt(), event.y.toInt())
-                                mMapView!!.controller.animateTo(iGeoPoint)
-                                mMapView!!.controller.zoomIn()
-                            }
-                            return true
-                        }
-                    }
-                }
-                return false
-            }
-        })*/
     }
 
     private fun initMyLocation() {
@@ -177,7 +157,7 @@ class NavigatorActivity : Activity(), LocationListener {
                         override fun run() {
                             while (!stopUpdateRoad) {
                                 try {
-                                    Thread.sleep(100)
+                                    sleep(100)
                                     runOnUiThread {
                                         if (!stopUpdateRoad) {
 
