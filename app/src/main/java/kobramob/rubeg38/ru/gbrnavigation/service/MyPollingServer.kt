@@ -7,9 +7,8 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
-import android.support.v4.content.ContextCompat
-import kobramob.rubeg38.ru.gbrnavigation.LoginActivity
-import kobramob.rubeg38.ru.gbrnavigation.SharedPreferencesState
+import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
+import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import org.json.JSONObject
@@ -18,7 +17,6 @@ import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.nio.channels.DatagramChannel
 import java.util.*
-import kotlin.contracts.contract
 
 class MyPollingServer:LocationListener {
 
@@ -51,9 +49,9 @@ class MyPollingServer:LocationListener {
     fun startService(context:Context){
         getLocation(context)
         /*val timerTask:TimerTask = TestTask(context)
-        timer.schedule(timerTask,0,9000)
-        val timerTask:TimerTask = RequestTask(context)
         timer.schedule(timerTask,0,9000)*/
+        val timerTask:TimerTask = RequestTask(context)
+        timer.schedule(timerTask,0,9000)
         serverReceiver(context)
     }
 

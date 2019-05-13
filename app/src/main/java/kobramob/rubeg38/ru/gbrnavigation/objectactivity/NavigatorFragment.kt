@@ -21,8 +21,8 @@ import android.util.DisplayMetrics
 import android.widget.LinearLayout
 import android.widget.Toast
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
-import kobramob.rubeg38.ru.gbrnavigation.SharedPreferencesState
-import kobramob.rubeg38.ru.gbrnavigation.service.MyPollingServer
+import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
+import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
 import kobramob.rubeg38.ru.gbrnavigation.service.Request
 import kotlinx.android.synthetic.main.navigator_fragment.*
 import org.json.JSONArray
@@ -353,8 +353,8 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
     private fun arrivedToObject(jsonArray: JSONArray) {
         val arrivedToObject = Runnable {
             request.arrivedToObject(
-                MyPollingServer.socket,
-                MyPollingServer.countSender,
+                PollingServer.socket,
+                PollingServer.countSender,
                 JSONObject(jsonArray.getString(0)).getString("number"),
                 0,
                 activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
@@ -363,7 +363,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
                 activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")
             )
         }; Thread(arrivedToObject).start()
-        MyPollingServer.countSender++
+        PollingServer.countSender++
     }
 
     private fun distance(road: Road): Float {
@@ -743,8 +743,8 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
     private fun arrivedToObject(jsonArray: JSONArray) {
         val arrivedToObject = Runnable {
             request.arrivedToObject(
-                myPollingServer.socket,
-                myPollingServer.countSender,
+                PollingServer.socket,
+                PollingServer.countSender,
                 JSONObject(jsonArray.getString(0)).getString("number"),
                 0,
                 activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
@@ -753,7 +753,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
                 activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")
             )
         }; Thread(arrivedToObject).start()
-        myPollingServer.countSender++
+        PollingServer.countSender++
     }
 
     */

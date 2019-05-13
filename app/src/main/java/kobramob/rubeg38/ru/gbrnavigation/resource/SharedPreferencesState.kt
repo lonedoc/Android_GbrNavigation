@@ -1,4 +1,4 @@
-package kobramob.rubeg38.ru.gbrnavigation
+package kobramob.rubeg38.ru.gbrnavigation.resource
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -19,7 +19,8 @@ object SharedPreferencesState {
 
     @SuppressLint("CommitPrefEdits")
     private fun init() {
-        settings = context!!.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE)
+        settings = context!!.getSharedPreferences(
+            STORAGE_NAME, Context.MODE_PRIVATE)
         editor = settings!!.edit()
     }
 

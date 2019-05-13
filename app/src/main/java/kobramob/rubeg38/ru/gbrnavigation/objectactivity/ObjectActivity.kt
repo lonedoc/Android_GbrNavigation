@@ -11,7 +11,7 @@ import android.support.v7.widget.Toolbar
 import android.support.v4.app.Fragment
 import android.widget.Toast
 import kobramob.rubeg38.ru.gbrnavigation.R
-import kobramob.rubeg38.ru.gbrnavigation.SharedPreferencesState
+import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 
 class ObjectActivity : AppCompatActivity() {
@@ -95,6 +95,7 @@ class ObjectActivity : AppCompatActivity() {
                         SharedPreferencesState.addPropertyString("status", status)
                     }
                     Toast.makeText(this@ObjectActivity, "Тревога отменена!", Toast.LENGTH_LONG).show()
+                    unregisterReceiver(br)
                     startActivity(Intent(this@ObjectActivity, StartActivity::class.java))
                 }
                 if (info == "alarmprok") {

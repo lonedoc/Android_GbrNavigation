@@ -35,7 +35,7 @@
             tools:ignore="GoogleAppIndexingWarning"
             tools:targetApi="n">
         <activity
-                android:name=".LoginActivity"
+                android:name=".loginactivity.LoginActivity"
                 android:screenOrientation="landscape">
            <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

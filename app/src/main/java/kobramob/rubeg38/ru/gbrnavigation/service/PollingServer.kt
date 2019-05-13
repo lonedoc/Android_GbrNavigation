@@ -18,9 +18,9 @@ import android.support.annotation.RequiresApi
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationCompat.PRIORITY_MIN
 import android.util.Log
-import kobramob.rubeg38.ru.gbrnavigation.LoginActivity
+import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
 import kobramob.rubeg38.ru.gbrnavigation.R
-import kobramob.rubeg38.ru.gbrnavigation.SharedPreferencesState
+import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import org.json.JSONObject
@@ -261,72 +261,78 @@ class PollingServer : Service(), LocationListener {
                                 val serverResponse = coder.decoderPacketOne(receiverPacket.data)
                                 val jsonObject = JSONObject(serverResponse)
                                 val jsonArray = jsonObject.getJSONArray("d")
-                                when (JSONObject(jsonArray.getString(0)).getString("command")) {
-                                    "gbrstatus" -> {
-                                        try {
-                                            intentStartActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("status"))
-                                            sendBroadcast(intentStartActivity)
-                                        } catch (e: Exception) { e.printStackTrace() }
-                                        try {
+                                try{
+                                    when (JSONObject(jsonArray.getString(0)).getString("command")) {
+                                        "gbrstatus" -> {
+                                            try {
+                                                intentStartActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("status"))
+                                                sendBroadcast(intentStartActivity)
+                                            } catch (e: Exception) { e.printStackTrace() }
+                                            try {
                                                 intentObjectActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("status"))
                                                 sendBroadcast(intentObjectActivity)
-                                        } catch (e: Exception) { e.printStackTrace() }
+                                            } catch (e: Exception) { e.printStackTrace() }
 
-                                    }
-                                    "alarm" -> {
-                                        try {
-                                            intentStartActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("command"))
-                                            intentStartActivity.putExtra("info", serverResponse)
-                                            sendBroadcast(intentStartActivity)
-                                        } catch (e: Exception) { e.printStackTrace() }
-                                    }
-                                    "regok" -> {
-                                        tryCount = 0
-                                        try {
-                                            intentLoginActivity.putExtra("info", serverResponse)
-                                            sendBroadcast(intentLoginActivity)
-                                        } catch (e: Exception) {
-                                            e.printStackTrace()
-                                            val jsonObject = JSONObject(serverResponse)
-                                            val jsonArray = jsonObject.getJSONArray("d")
-                                            SharedPreferencesState.init(this@PollingServer)
-                                            SharedPreferencesState.addPropertyString(
-                                                "tid",
-                                                JSONObject(jsonArray.getString(0)).getString("tid")
-                                            )
-                                            if (JSONObject(jsonArray.getString(0)).getString("namegbr") !=
-                                                getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
-                                            ) {
+                                        }
+                                        "alarm" -> {
+                                            try {
+                                                intentStartActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("command"))
+                                                intentStartActivity.putExtra("info", serverResponse)
+                                                sendBroadcast(intentStartActivity)
+                                            } catch (e: Exception) { e.printStackTrace() }
+                                        }
+                                        "regok" -> {
+                                            tryCount = 0
+                                            try {
+                                                intentLoginActivity.putExtra("info", serverResponse)
+                                                sendBroadcast(intentLoginActivity)
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                                val jsonObject = JSONObject(serverResponse)
+                                                val jsonArray = jsonObject.getJSONArray("d")
+                                                SharedPreferencesState.init(this@PollingServer)
                                                 SharedPreferencesState.addPropertyString(
-                                                    "namegbr",
-                                                    JSONObject(jsonArray.getString(0)).getString("namegbr")
+                                                    "tid",
+                                                    JSONObject(jsonArray.getString(0)).getString("tid")
                                                 )
-                                            }
-                                            if (JSONObject(jsonArray.getString(0)).getString("call") !=
-                                                getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "")
-                                            ) {
-                                                SharedPreferencesState.addPropertyString(
-                                                    "call",
-                                                    JSONObject(jsonArray.getString(0)).getString("call")
-                                                )
+                                                if (JSONObject(jsonArray.getString(0)).getString("namegbr") !=
+                                                    getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
+                                                ) {
+                                                    SharedPreferencesState.addPropertyString(
+                                                        "namegbr",
+                                                        JSONObject(jsonArray.getString(0)).getString("namegbr")
+                                                    )
+                                                }
+                                                if (JSONObject(jsonArray.getString(0)).getString("call") !=
+                                                    getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "")
+                                                ) {
+                                                    SharedPreferencesState.addPropertyString(
+                                                        "call",
+                                                        JSONObject(jsonArray.getString(0)).getString("call")
+                                                    )
+                                                }
                                             }
                                         }
-                                    }
-                                    "alarmprok" -> {
-                                        try {
-                                            intentObjectActivity.putExtra("info", JSONObject(jsonArray.getString(0)).getString("command"))
-                                            sendBroadcast(intentObjectActivity)
-                                        } catch (e: Exception) { e.printStackTrace() }
-                                    }
-                                    "notalarm" -> {
+                                        "alarmprok" -> {
+                                            try {
+                                                intentObjectActivity.putExtra("info", JSONObject(jsonArray.getString(0)).getString("command"))
+                                                sendBroadcast(intentObjectActivity)
+                                            } catch (e: Exception) { e.printStackTrace() }
+                                        }
+                                        "notalarm" -> {
 
-                                        try {
-                                            intentObjectActivity.putExtra("info", JSONObject(jsonArray.getString(0)).getString("command"))
-                                            sendBroadcast(intentObjectActivity)
-                                        } catch (e: Exception) { e.printStackTrace()
-                                            startActivity(Intent(this@PollingServer, StartActivity::class.java))}
+                                            try {
+                                                intentObjectActivity.putExtra("info", JSONObject(jsonArray.getString(0)).getString("command"))
+                                                sendBroadcast(intentObjectActivity)
+                                            } catch (e: Exception) { e.printStackTrace()
+                                                startActivity(Intent(this@PollingServer, StartActivity::class.java))}
+                                        }
                                     }
+                                }catch (e:Exception){
+                                    e.printStackTrace()
+                                    println(serverResponse)
                                 }
+
                                 countReceiver++
                             } else {
                             }

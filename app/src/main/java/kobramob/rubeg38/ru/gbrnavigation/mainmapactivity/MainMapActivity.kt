@@ -21,7 +21,7 @@ import android.view.*
 import android.widget.*
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
-import kobramob.rubeg38.ru.gbrnavigation.TileSource
+import kobramob.rubeg38.ru.gbrnavigation.resource.TileSource
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase

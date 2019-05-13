@@ -15,6 +15,7 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.widget.RelativeLayout
 import android.widget.Toast
+import kobramob.rubeg38.ru.gbrnavigation.resource.TileSource
 import org.osmdroid.api.IMapController
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.Road

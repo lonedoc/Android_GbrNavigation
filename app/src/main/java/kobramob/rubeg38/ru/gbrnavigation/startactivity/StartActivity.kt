@@ -26,9 +26,12 @@ import android.view.WindowManager
 import android.widget.*
 import com.github.clans.fab.FloatingActionMenu
 import kobramob.rubeg38.ru.gbrnavigation.*
+import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.NavigatorFragment
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
-import kobramob.rubeg38.ru.gbrnavigation.service.MyPollingServer
+import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
+import kobramob.rubeg38.ru.gbrnavigation.resource.TileSource
+import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
 import kobramob.rubeg38.ru.gbrnavigation.service.Request
 import org.json.JSONArray
 import org.json.JSONObject
@@ -502,8 +505,8 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     private fun acceptAlarm(jsonArray: JSONArray) {
         val acceptAlarm = Runnable {
             request.acceptAlarm(
-                MyPollingServer.socket,
-                MyPollingServer.countSender,
+                PollingServer.socket,
+                PollingServer.countSender,
                 JSONObject(jsonArray.getString(0)).getString("number"),
                 0,
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
@@ -512,7 +515,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")
             )
         }; Thread(acceptAlarm).start()
-        MyPollingServer.countSender++
+        PollingServer.countSender++
     }
 
     var latiduet: Double = 0.toDouble()
@@ -632,16 +635,16 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     private fun statusChanged(floatingActionButton: com.github.clans.fab.FloatingActionButton) {
         val statusChanged = Runnable {
             request.changeStatus(
-                MyPollingServer.socket,
+                PollingServer.socket,
                 floatingActionButton.labelText,
-                MyPollingServer.countSender,
+                PollingServer.countSender,
                 0,
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
                 getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0),
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")
             )
-            MyPollingServer.countSender++
+            PollingServer.countSender++
         }
         Thread(statusChanged).start()
     }
@@ -668,6 +671,5 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(br)
     }
 }

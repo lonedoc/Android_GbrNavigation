@@ -1,4 +1,4 @@
-package kobramob.rubeg38.ru.gbrnavigation
+package kobramob.rubeg38.ru.gbrnavigation.loginactivity
 
 import android.annotation.SuppressLint
 import android.content.*
@@ -18,7 +18,10 @@ import org.json.JSONObject
 import android.os.StrictMode
 import android.view.WindowManager
 import android.widget.Toast
+import kobramob.rubeg38.ru.gbrnavigation.R
+import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.service.MyPollingServer
+import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
 import java.lang.Exception
 
 
@@ -189,18 +192,18 @@ class LoginActivity : AppCompatActivity() {
                         portInput.setText("")
                     }.show()
             } else {
-              /*  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    this.startForegroundService(Intent(this@LoginActivity, myPollingServer::class.java))
+               if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    this.startForegroundService(Intent(this@LoginActivity, PollingServer::class.java))
                 }
                 else
                 {
-                    this.startService(Intent(this@LoginActivity, myPollingServer::class.java))
-                }*/
+                    this.startService(Intent(this@LoginActivity, PollingServer::class.java))
+                }
 
                 val registerThread = Runnable {
-                    request.register(MyPollingServer.socket, MyPollingServer.countSender, 0, imei, ipInput.text.toString(), portInput.text.toString().toInt(), "")
-                    MyPollingServer.countSender++
-                    myPollingServer.startService(this)
+                    request.register(PollingServer.socket, PollingServer.countSender, 0, imei, ipInput.text.toString(), portInput.text.toString().toInt(), "")
+                    PollingServer.countSender++
+                    /*PollingServer.startService(this)*/
                 }; Thread(registerThread).start()
             }
         }
@@ -209,27 +212,26 @@ class LoginActivity : AppCompatActivity() {
     private fun registerThread() {
 
         val registerThread = Runnable {
-            /*val intent = Intent(this@LoginActivity, myPollingServer::class.java)
+            val intent = Intent(this@LoginActivity, PollingServer::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                this.startForegroundService(intent)
+                startForegroundService(intent)
             }
             else
-            {
-                this.startService(Intent(this@LoginActivity, myPollingServer::class.java))
-            }*/
+            { startService(Intent(this@LoginActivity, PollingServer::class.java))
+            }
 
 
             request.register(
-                MyPollingServer.socket,
-                MyPollingServer.countSender,
+                PollingServer.socket,
+                PollingServer.countSender,
                 0,
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", "")!!,
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
                 getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0),
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")!!
             )
-            MyPollingServer.countSender++
-            myPollingServer.startService(this)
+            PollingServer.countSender++
+            /*PollingServer.startService(this)*/
         }; Thread(registerThread).start()
     }
 

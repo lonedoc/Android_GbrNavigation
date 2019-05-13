@@ -1,4 +1,4 @@
-package kobramob.rubeg38.ru.gbrnavigation
+package kobramob.rubeg38.ru.gbrnavigation.resource
 
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.XYTileSource
