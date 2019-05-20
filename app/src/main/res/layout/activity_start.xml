@@ -8,6 +8,7 @@
         android:layout_height="match_parent"
         tools:context=".startactivity.StartActivity"
         android:orientation="vertical"
+        android:background="@color/textWhite"
 >
 
 

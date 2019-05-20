@@ -6,7 +6,8 @@
         android:layout_height="match_parent"
         tools:context=".loginactivity.LoginActivity"
         android:orientation="vertical"
-        android:gravity="center">
+        android:gravity="center"
+        android:background="@color/textWhite">
     <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -32,7 +33,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
-                    android:layout_marginTop="60dp"
+                    android:layout_marginTop="25dp"
             >
                 <android.support.design.widget.TextInputEditText
                         android:id="@+id/ipInputText"

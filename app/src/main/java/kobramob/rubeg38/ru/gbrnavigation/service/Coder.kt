@@ -188,7 +188,6 @@ class Coder {
             dat.position(j)
             dat.put(v)
         }
-        // (Arrays.toString(dat));
     }
 
     private fun calculateSize(heading: ByteArray): Int {
@@ -234,7 +233,6 @@ class Coder {
             tidByteArray
         )
         headingArray = byteBuffer.array()
-        println("Подтверждаю что пакет пришел " + Arrays.toString(headingArray))
         coderZag(headingArray, mass1)
         byteBuffer.position(0)
         byteBuffer.put(headingArray)
@@ -251,121 +249,12 @@ class Coder {
     }
 
     fun countReceiver(message: ByteArray): Long {
-        val headingArray: ByteArray = ByteArray(57)
+        val headingArray = ByteArray(57)
         System.arraycopy(message, 0, headingArray, 0, headingArray.size)
         coderZag(headingArray, mass1)
         val headingBuffer: ByteBuffer = ByteBuffer.allocate(57)
+        headingBuffer.order(ByteOrder.LITTLE_ENDIAN)
         headingBuffer.put(headingArray)
         return headingBuffer.getLong(25)
     }
-
-   /* private fun shiftPackage(dat: ByteArray, razmerbyte: Int, mass1: ByteArray, mass2: ByteArray, len: Int) {
-        var d11 = dat[razmerbyte + 2].toInt() and 255
-        var d21 = dat[razmerbyte + 3].toInt() and 255
-        for (z in 0 until len) {
-            // Перезапись массива ксорами
-            dat[razmerbyte + 4 + z] = (dat[razmerbyte + 4 + z].toInt() xor mass1[d11].toInt() xor mass1[d21].toInt()).toByte()
-            // (z+4+razmerbyte );
-
-            // ("Проверка " + dat[z] + " z= " +(razmerbyte+4+ z));
-
-            // Проверка чтобы не выйти за границы
-            if (d11 < 255) {
-                d11++
-            } else
-                d11 = 0
-            if (d21 > 0) {
-                d21--
-            } else
-                d21 = 254
-        }
-        //  (Arrays.toString(dat));
-    }
-
-    private fun shiftZag(dat: ByteArray, mass1: ByteArray, mass2: ByteArray) {
-        var d1 = dat[0].toInt() and 255
-        var d2 = dat[1].toInt() and 255
-        for (x in 2..20) {
-
-            dat[x] = dat[x] xor (mass1[d1] xor mass1[d2])
-
-            if (d1 < 255) {
-                d1++
-            } else
-                d1 = 0
-            if (d2 > 0) {
-                d2--
-            } else
-                d2 = 254
-        }
-        // (Arrays.toString(dat));
-    }
-
-    fun decoder(message: String): ByteBuffer? {
-
-        val messageStringByte =
-            message.toByteArray()
-
-        val length =
-            message.length
-
-        val packageSize = length + 2
-
-        val sizeIntermediate = sizeHeading + 2 + 2 + length
-
-        val typePacket: Byte = 0
-        val positionOnMassive = 0
-        val allPacket = 1
-        val TPacket = 1
-        val allSize = sizeIntermediate
-        val count: Long = 0
-
-        val request: ByteBuffer = ByteBuffer.allocate(sizeIntermediate)
-        request.order(ByteOrder.LITTLE_ENDIAN)
-
-        xor(request, typePacket, packageSize, 0, 0, positionOnMassive, allSize, count, allPacket, TPacket)
-        var intermediate = request.array()
-
-        shiftZag(intermediate, mass1, mass2)
-        request.position(0)
-        request.put(intermediate)
-        request.position(sizeHeading + 4)
-        request.put(messageStringByte)
-        xor2(request, sizeHeading)
-
-        intermediate = request.array()
-        shiftPackage(intermediate, sizeHeading, mass1, mass2, length)
-
-        request.position(0)
-
-        return request.put(intermediate)
-    }
-
-    fun encoderHead(heading: ByteArray) {
-        return shiftZag(heading, mass1, mass2)
-    }
-
-    fun calculateSize(heading: ByteArray): Int {
-        val first = heading[5].toInt() and 255
-        val two = heading[6].toInt() and 255
-        val three = heading[7].toInt() and 255
-        val four = heading[8].toInt() and 255
-        return (first) + (two) * 256 + (three) * 256 * 256 + (four) * 256 * 256 * 256
-    }
-
-    fun encoder(packageSize: Int, message: ByteArray, packageResponse: ByteArray): String {
-        val headPackage = ByteArray(packageSize + sizeHeading + 4)
-        System.arraycopy(message, 0, headPackage, 0, sizeHeading + 2)
-        System.arraycopy(packageResponse, 0, headPackage, sizeHeading + 2, packageSize)
-
-        // Дешифруем пакет
-        shiftPackage(headPackage, sizeHeading, mass1, mass2, packageSize)
-
-        // Переписываем полученый пакет,на дешифр
-        val decodingPackage = ByteArray(packageSize - 2)
-        System.arraycopy(headPackage, sizeHeading + 4, decodingPackage, 0, packageSize - 2)
-
-        return String(decodingPackage)
-    }
-    */
 }

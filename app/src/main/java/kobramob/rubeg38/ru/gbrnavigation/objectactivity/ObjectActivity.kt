@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
 import android.support.v7.widget.Toolbar
 import android.support.v4.app.Fragment
+import android.view.WindowManager
 import android.widget.Toast
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
@@ -25,6 +26,8 @@ class ObjectActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_object)
+
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         val toolbar: Toolbar = this.findViewById(R.id.toolbar_main_map)
         setSupportActionBar(toolbar)
@@ -82,14 +85,12 @@ class ObjectActivity : AppCompatActivity() {
                 val info = intent?.getStringExtra("info")
                 val status = intent?.getStringExtra("status")
                 println(info)
-                val accessDenied = intent?.getBooleanExtra("accessDenied",false)
-                if(accessDenied!!)
-                {
-                    //Dialog Window
-                    Toast.makeText(this@ObjectActivity,"Связь с Сервером потеряна!",Toast.LENGTH_LONG).show()
+                val accessDenied = intent?.getBooleanExtra("accessDenied", false)
+                if (accessDenied!!) {
+                    // Dialog Window
+                    Toast.makeText(this@ObjectActivity, "Связь с Сервером потеряна!", Toast.LENGTH_LONG).show()
                 }
-                if(status!="На тревоге")
-                {
+                if (status != "На тревоге") {
                     SharedPreferencesState.init(this@ObjectActivity)
                     if (status != null) {
                         SharedPreferencesState.addPropertyString("status", status)
@@ -102,7 +103,12 @@ class ObjectActivity : AppCompatActivity() {
                     Toast.makeText(this@ObjectActivity, "Прибытие отмечено!!", Toast.LENGTH_LONG).show()
                 } else {
                     if (info == "notalarm") {
-                        unregisterReceiver(br)
+                        try{
+                            unregisterReceiver(br)
+                        }catch (e:Exception){
+                            e.printStackTrace()
+                        }
+
                         startActivity(Intent(this@ObjectActivity, StartActivity::class.java))
                     }
                 }

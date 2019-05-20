@@ -18,10 +18,14 @@ android {
         applicationId "kobramob.rubeg38.ru.gbrnavigation"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 3
-        versionName "1.02"
+        versionCode 6
+        versionName "1.041"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    compileOptions {
+        targetCompatibility = "8"
+        sourceCompatibility = "8"
     }
     buildTypes {
         release {
@@ -35,13 +39,14 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support:design:28.0.0'
     implementation 'com.android.support:support-v4:28.0.0'
     implementation 'com.android.support:animated-vector-drawable:28.0.0'
     implementation 'com.gabrielittner.ktlint:ktlint-rules:0.2.0'
-    /*implementation 'com.evernote:android-job:1.1.11'*/
+
     configurations {
         ktlint
     }
@@ -68,14 +73,18 @@ dependencies {
         args "--experimental", "-F", "src/**/*.kt"
     }
 
-    implementation 'com.github.MKergall:osmbonuspack:6.5.2'
-    implementation 'org.osmdroid:osmdroid-android:6.0.3'
-    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.github.MKergall:osmbonuspack:6.6.0'
+    implementation 'org.osmdroid:osmdroid-android:6.1.0'
+
+
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'org.apache.commons:commons-lang3:3.5'
+    implementation 'com.squareup.okhttp3:okhttp:3.14.2'
     implementation 'com.github.chrisbanes:PhotoView:2.1.3'
 
     implementation 'pl.charmas.android:android-reactive-location2:2.1@aar'
     implementation 'com.google.android.gms:play-services-location:16.0.0' //you can use newer GMS version if you need
-    implementation 'com.google.android.gms:play-services-places:16.0.0'
+    implementation 'com.google.android.gms:play-services-places:16.1.0'
     implementation 'com.google.android.gms:play-services-maps:16.1.0'
 
 
@@ -87,5 +96,8 @@ dependencies {
     implementation 'ru.tinkoff.decoro:decoro:1.1.1'
     implementation 'com.android.support:recyclerview-v7:28.0.0'
 
+
+
+    implementation 'org.redundent:kotlin-xml-builder:1.5.1'
 
 }

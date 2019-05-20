@@ -181,7 +181,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
 
         val yandex_api: FloatingActionButton = rootView.findViewById(R.id.yandex_api)
         yandex_api.setOnClickListener {
-            if(lat!=0.0 && lon!=0.0) {
+            if (lat != 0.0 && lon != 0.0) {
                 try {
                     val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=$lat&lon_to=$lon")
                     val intent = Intent(Intent.ACTION_VIEW, uri)
@@ -191,10 +191,8 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
                     Toast.makeText(activity, "На данном устройстве не установлен Яндекс.Навигатор", Toast.LENGTH_SHORT)
                         .show()
                 }
-            }
-            else
-            {
-                Toast.makeText(activity!!,"Не были указаны координаты до конечного объекта",Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(activity!!, "Не были указаны координаты до конечного объекта", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -215,49 +213,67 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
         }
     }
 
+    private fun createRoad() {
 
+        try{
+            val roadManager = OSRMRoadManager(context)
 
-    private fun createRoad(){
+            roadManager.setService("http:" + activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("routeserver", "") + "/route/v1/driving/")
+            /*roadManager.setService("https://router.project-osrm.org/route/v1/driving/")*/
+            roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
 
-        val roadManager = OSRMRoadManager(context)
+            val waypoints = ArrayList<GeoPoint>()
 
-        roadManager.setService("http:" + activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("routeserver", "") + "/route/v1/driving/")
-        roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
+            val startPoint = GeoPoint(
+                activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lat", 0f).toDouble(),
+                activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lon", 0f).toDouble()
+            )
+          /*  val lat1: Double = 56.14574
+            val lon1:Double = 101.60997
+            val startPoint = GeoPoint(lat1,lon1)*/
+            val endPoint = GeoPoint(lat, lon)
 
-        val waypoints = ArrayList<GeoPoint>()
+            waypoints.add(startPoint)
 
-        val startPoint = GeoPoint(
-            activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lat", 0f).toDouble(),
-            activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lon", 0f).toDouble()
-        )
-        val endPoint = GeoPoint(lat, lon)
-
-        waypoints.add(startPoint)
-
-        waypoints.add(endPoint)
-        val createRoad = Runnable {
-            val road = roadManager.getRoad(waypoints)
-            if(road.mRouteHigh.size>2){
-                val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-                activity!!.runOnUiThread {
-                    mMapView.overlays.add(0, roadOverlay)
-                    road.mRouteHigh.add(0, startPoint)
-                    //tracking
-                    tracking(road)
+            waypoints.add(endPoint)
+            val createRoad = Runnable {
+                lateinit var road: Road
+                try {
+                    road = roadManager.getRoad(waypoints)
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-            }
-            else
-            {
-                if(distance(road)>60)
-                createRoad()
+                if(road.mStatus != Road.STATUS_OK){
+                    activity!!.runOnUiThread {
+                        Toast.makeText(activity!!,"Невозможно построить путь",Toast.LENGTH_LONG).show()
+                    }
+                }
                 else
                 {
-                    tracking(road)
-                    //tracking
+                    if (road.mRouteHigh.size> 2) {
+                        val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
+                        activity!!.runOnUiThread {
+                            mMapView.overlays.add(0, roadOverlay)
+                            road.mRouteHigh.add(0, startPoint)
+                            // tracking
+                            tracking(road)
+                        }
+                    } else {
+                        if (distance(road)> 60)
+                            createRoad()
+                        else {
+                            tracking(road)
+                            // tracking
+                        }
+                    }
                 }
+
             }
+            Thread(createRoad).start()
+        }catch (e:Exception){
+            e.printStackTrace()
         }
-        Thread(createRoad).start()
+
     }
 
     private fun tracking(road: Road) {
@@ -267,7 +283,6 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
                 try {
                     var oldDistance = distance(road)
                     while (!arrivedToObject) {
-                        println(arrivedToObject)
                         sleep(100)
                         if (road.mRouteHigh.size> 2) {
                             if (distance(road)> oldDistance + 40) {
@@ -287,25 +302,24 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
                                 activity!!.runOnUiThread {
                                     if (distance(road) <40) {
                                         road.mRouteHigh.removeAt(1)
-                                        if(mMapView.overlays.size>0)
+                                        if (mMapView.overlays.size> 0)
                                             mMapView.overlays.removeAt(0)
                                         val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
                                         mMapView.overlays.add(0, roadOverlay)
                                         oldDistance = distance(road)
                                         mMapView.invalidate()
                                     } else {
-                                        try{
+                                        try {
                                             road.mRouteHigh.removeAt(0)
                                             road.mRouteHigh.add(0, locationOverlay.myLocation)
-                                            if(mMapView.overlays.size>0)
+                                            if (mMapView.overlays.size> 0)
                                                 mMapView.overlays.removeAt(0)
                                             val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
                                             mMapView.overlays.add(0, roadOverlay)
                                             mMapView.invalidate()
-                                        }catch (e:Exception){
+                                        } catch (e: Exception) {
                                             e.printStackTrace()
                                         }
-
                                     }
                                 }
                             }
@@ -386,7 +400,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
         mMapView.onResume()
         println(mMapView.overlays.size)
         if (firstTime) {
-            if(mMapView.overlays.size==0){
+            if (mMapView.overlays.size == 0) {
                 addOverlays()
             }
             scaleBarOverlay.enableScaleBar()
@@ -398,7 +412,8 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
                 latitude = 0.toDouble()
                 println("Thread start")
                 do {
-                    try { latitude = locationOverlay.lastFix.latitude
+                    try {
+                        latitude = locationOverlay.lastFix.latitude
                     } catch (e: Exception) {}
                 } while (latitude == 0.toDouble())
                 activity!!.runOnUiThread {
@@ -406,20 +421,16 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
                         try {
                             closeProgressBar()
                             mMapView.controller.animateTo(GeoPoint(locationOverlay.lastFix.latitude, locationOverlay.lastFix.longitude))
-
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
-                        try{
-                            if(lat!=0.0 && lon!=0.0){
+                        try {
+                            if (lat != 0.0 && lon != 0.0) {
                                 createRoad()
+                            } else {
+                                Toast.makeText(activity!!, "Не были указаны координаты до конечного объекта", Toast.LENGTH_SHORT).show()
                             }
-                            else
-                            {
-                                Toast.makeText(activity!!,"Не были указаны координаты до конечного объекта",Toast.LENGTH_SHORT).show()
-                            }
-
-                        }catch (e:Exception){
+                        } catch (e: Exception) {
                             e.printStackTrace()
                         }
                     }
@@ -435,7 +446,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
         println("onPause")
         mMapView.onPause()
         scaleBarOverlay.disableScaleBar()
-        //firstTime = true
+        // firstTime = true
     }
 
     override fun onStop() {

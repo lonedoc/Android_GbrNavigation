@@ -214,7 +214,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start)
 
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         NavigatorFragment.firstTime = true
 
@@ -444,11 +444,10 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                 intent!!.putExtra("speed",locationOverlay.lastFix.speed)
                 println(request)*/
                 val status = intent?.getStringExtra("status")
-                val accessDenied = intent?.getBooleanExtra("accessDenied",false)
-                if(accessDenied!!)
-                {
-                    //Dialog Window
-                    Toast.makeText(this@StartActivity,"Связь с Сервером потеряна!",Toast.LENGTH_LONG).show()
+                val accessDenied = intent?.getBooleanExtra("accessDenied", false)
+                if (accessDenied!!) {
+                    // Dialog Window
+                    Toast.makeText(this@StartActivity, "Связь с Сервером потеряна!", Toast.LENGTH_LONG).show()
                 }
                 SharedPreferencesState.init(this@StartActivity)
                 if (status != null) {
@@ -472,6 +471,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                     val view = layoutInflater.inflate(R.layout.dialog_alarm, null)
                     alertDialog.setView(view)
                     val dialog: AlertDialog = alertDialog.create()
+                    dialog.setCancelable(false)
                     dialog.show()
 
                     val acceptAlertButton: Button = view!!.findViewById(R.id.AcceptAlert)
@@ -505,7 +505,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     private fun acceptAlarm(jsonArray: JSONArray) {
         val acceptAlarm = Runnable {
             request.acceptAlarm(
-                PollingServer.socket,
+                PollingServer.socket!!,
                 PollingServer.countSender,
                 JSONObject(jsonArray.getString(0)).getString("number"),
                 0,
@@ -541,9 +541,9 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
             runOnUiThread {
                 if (latiduet != 0.toDouble()) {
                     closeProgressBar()
-                    try{
+                    try {
                         mMapView.controller.animateTo(GeoPoint(locationOverlay.lastFix.latitude, locationOverlay.lastFix.longitude))
-                    }catch (e:Exception){}
+                    } catch (e: Exception) {}
                 }
             }
         }; Thread(tread).start()
@@ -635,7 +635,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     private fun statusChanged(floatingActionButton: com.github.clans.fab.FloatingActionButton) {
         val statusChanged = Runnable {
             request.changeStatus(
-                PollingServer.socket,
+                PollingServer.socket!!,
                 floatingActionButton.labelText,
                 PollingServer.countSender,
                 0,
@@ -671,5 +671,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
     override fun onDestroy() {
         super.onDestroy()
+        val intent = Intent(this@StartActivity, PollingServer::class.java)
+        stopService(intent)
     }
 }

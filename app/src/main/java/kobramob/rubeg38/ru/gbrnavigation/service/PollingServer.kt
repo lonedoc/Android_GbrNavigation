@@ -27,6 +27,7 @@ import org.json.JSONObject
 import java.lang.Exception
 import java.net.DatagramPacket
 import java.net.DatagramSocket
+import java.net.InetSocketAddress
 import java.nio.channels.DatagramChannel
 import java.util.*
 
@@ -44,8 +45,8 @@ class PollingServer : Service(), LocationListener {
 
     companion object {
         private val datagramChannel: DatagramChannel = DatagramChannel.open()
-        val socket: DatagramSocket = datagramChannel.socket()
-        var countReceiver: Long = 2
+        var socket: DatagramSocket = DatagramSocket(null)
+        var countReceiver: Long = 0
         var countSender: Long = 1
         var latitude: Double = 0.toDouble()
         var longtitude: Double = 0.toDouble()
@@ -83,6 +84,12 @@ class PollingServer : Service(), LocationListener {
 //
     }
 
+    fun initSocket(ip: String?, port: Int) {
+        socket.reuseAddress = true
+        socket.bind(InetSocketAddress(socket.localAddress, socket.localPort))
+        /*socket.connect(InetSocketAddress(ip,port))*/
+    }
+
     override fun onCreate() {
         super.onCreate()
         getLocation()
@@ -95,7 +102,8 @@ class PollingServer : Service(), LocationListener {
         startService()
         return START_STICKY
     }
-    private fun startForeground(){
+
+    private fun startForeground() {
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -106,21 +114,24 @@ class PollingServer : Service(), LocationListener {
                 "101"
             }
 
-        val notificationBuilder = NotificationCompat.Builder(this, channelId )
-        val notification = notificationBuilder.setOngoing(true)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(PRIORITY_MIN)
-            .setCategory(Notification.CATEGORY_SERVICE)
-            .build()
+        val notificationBuilder = NotificationCompat.Builder(this, channelId)
+        val notification =
+            notificationBuilder.setOngoing(true)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setPriority(PRIORITY_MIN)
+                .setCategory(Notification.CATEGORY_SERVICE)
+                .build()
         startForeground(channelId.toInt(), notification)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(): String{
+    private fun createNotificationChannel(): String {
         val channelId = "101"
         val channelName = "My Background Service"
-        val chan = NotificationChannel(channelId,
-            channelName, NotificationManager.IMPORTANCE_HIGH)
+        val chan = NotificationChannel(
+            channelId,
+            channelName, NotificationManager.IMPORTANCE_HIGH
+        )
         chan.lightColor = Color.BLUE
         chan.importance = NotificationManager.IMPORTANCE_NONE
         chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
@@ -130,23 +141,12 @@ class PollingServer : Service(), LocationListener {
     }
 
     private fun startService() {
-        val timerTask:TimerTask =requestTask()
-        timer.schedule(timerTask,0,8500)
+        val timerTask: TimerTask = requestTask()
+        timer.schedule(timerTask, 0, 9500)
         serverReceiver()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        timer.cancel()
-
-        Log.d(LOG_TAG, "OnDestroy")
-    }
-
-    override fun onBind(intent: Intent): IBinder? {
-        return null
-    }
-
-    inner class requestTask : TimerTask(), Runnable {
+    inner class requestTask : TimerTask() {
         override fun run() {
             if (serverAlive) {
                 var speed: Float = 0.toFloat()
@@ -160,8 +160,8 @@ class PollingServer : Service(), LocationListener {
                     longtitude = currentLocation!!.longitude
                     lon = currentLocation!!.longitude
                 } catch (e: Exception) {
-                    e.printStackTrace()
                 }
+
                 serverAlive = false
                 if (speed> 0.toFloat()) {
                     request.sendLocation(
@@ -177,20 +177,16 @@ class PollingServer : Service(), LocationListener {
                         getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", "")
                     )
                 } else {
-
                     request.nullPacket(
                         socket,
                         getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
                         getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
                     )
                 }
-            }
-            else
-            {
+            } else {
                 countSender = 1
                 countReceiver = 1
-                if(tryCount<2)
-                {
+                if (tryCount <2) {
                     request.register(
                         socket, countSender, typePacket,
                         getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
@@ -199,32 +195,30 @@ class PollingServer : Service(), LocationListener {
                         ""
                     )
                     tryCount++
-                }
-                else
-                {
+                } else {
                     tryCount = 0
 
-                    try{
+                    try {
                         val intentLoginActivity = Intent(LoginActivity.BROADCAST_ACTION)
-                        intentLoginActivity.putExtra("accessDenied",true)
+                        intentLoginActivity.putExtra("accessDenied", true)
                         sendBroadcast(intentLoginActivity)
-                    }catch (e:Exception){
+                    } catch (e: Exception) {
                         e.printStackTrace()
                     }
 
-                    try{
+                    try {
                         val intentStartActivity = Intent(LoginActivity.BROADCAST_ACTION)
-                        intentStartActivity.putExtra("accessDenied",true)
+                        intentStartActivity.putExtra("accessDenied", true)
                         sendBroadcast(intentStartActivity)
-                    }catch (e:Exception){
+                    } catch (e: Exception) {
                         e.printStackTrace()
                     }
 
-                    try{
+                    try {
                         val intentObjectActivity = Intent(LoginActivity.BROADCAST_ACTION)
-                        intentObjectActivity.putExtra("accessDenied",true)
+                        intentObjectActivity.putExtra("accessDenied", true)
                         sendBroadcast(intentObjectActivity)
-                    }catch (e:Exception){
+                    } catch (e: Exception) {
                         e.printStackTrace()
                     }
                 }
@@ -234,23 +228,25 @@ class PollingServer : Service(), LocationListener {
 
     private fun serverReceiver() {
         val receiverServer = Runnable {
-            socket.soTimeout = 0
             while (true) {
-                val intentStartActivity = Intent(StartActivity.BROADCAST_ACTION)
-                val intentLoginActivity = Intent(LoginActivity.BROADCAST_ACTION)
-                val intentObjectActivity = Intent(ObjectActivity.BROADCAST_ACTION)
-                // Создаем буффер
-                val receiverBuffer = ByteArray(1057)
-                // Создаем датаграмму для приема
-                val receiverPacket = DatagramPacket(receiverBuffer, receiverBuffer.size)
-                // Принимаем то что лежит в сокете
-                socket.receive(receiverPacket)
-                //Проверяем на нулевой пакет
-                if(receiverPacket.length == 0 ){
-                    serverAlive = true
-                }
-                //Принимаем пакет
-                when (coder.typePacket(receiverPacket.data)) {
+                socket.soTimeout = 0
+                try {
+                    val intentStartActivity = Intent(StartActivity.BROADCAST_ACTION)
+                    val intentLoginActivity = Intent(LoginActivity.BROADCAST_ACTION)
+                    val intentObjectActivity = Intent(ObjectActivity.BROADCAST_ACTION)
+                    // Создаем буффер
+                    val receiverBuffer = ByteArray(1057)
+                    // Создаем датаграмму для приема
+                    val receiverPacket = DatagramPacket(receiverBuffer, receiverBuffer.size)
+                    // Принимаем то что лежит в сокете
+                    // Теперь могу даже перехватить если упал сокет,каеф
+                    socket.receive(receiverPacket)
+                    // Проверяем на нулевой пакет
+                    if (receiverPacket.length == 0) {
+                        serverAlive = true
+                    }
+                    // Принимаем пакет
+                    when (coder.typePacket(receiverPacket.data)) {
                         255 -> {
                             serverAlive = true
                         }
@@ -261,18 +257,22 @@ class PollingServer : Service(), LocationListener {
                                 val serverResponse = coder.decoderPacketOne(receiverPacket.data)
                                 val jsonObject = JSONObject(serverResponse)
                                 val jsonArray = jsonObject.getJSONArray("d")
-                                try{
+                                Log.d("Sender&Receiver", JSONObject(jsonArray.getString(0)).getString("command"))
+                                try {
                                     when (JSONObject(jsonArray.getString(0)).getString("command")) {
                                         "gbrstatus" -> {
                                             try {
                                                 intentStartActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("status"))
                                                 sendBroadcast(intentStartActivity)
-                                            } catch (e: Exception) { e.printStackTrace() }
+                                            } catch (e: Exception) {  SharedPreferencesState.init(this@PollingServer)
+                                                SharedPreferencesState.addPropertyString("status",
+                                                    JSONObject(jsonArray.getString(0)).getString("status")
+                                                )
+                                            }
                                             try {
                                                 intentObjectActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("status"))
                                                 sendBroadcast(intentObjectActivity)
                                             } catch (e: Exception) { e.printStackTrace() }
-
                                         }
                                         "alarm" -> {
                                             try {
@@ -284,6 +284,7 @@ class PollingServer : Service(), LocationListener {
                                         "regok" -> {
                                             tryCount = 0
                                             try {
+
                                                 intentLoginActivity.putExtra("info", serverResponse)
                                                 sendBroadcast(intentLoginActivity)
                                             } catch (e: Exception) {
@@ -324,22 +325,50 @@ class PollingServer : Service(), LocationListener {
                                             try {
                                                 intentObjectActivity.putExtra("info", JSONObject(jsonArray.getString(0)).getString("command"))
                                                 sendBroadcast(intentObjectActivity)
-                                            } catch (e: Exception) { e.printStackTrace()
-                                                startActivity(Intent(this@PollingServer, StartActivity::class.java))}
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                                startActivity(Intent(this@PollingServer, StartActivity::class.java))
+                                            }
                                         }
                                     }
-                                }catch (e:Exception){
+                                } catch (e: Exception) {
                                     e.printStackTrace()
                                     println(serverResponse)
                                 }
-
                                 countReceiver++
                             } else {
+                                println(coder.decoderPacketOne(receiverPacket.data))
                             }
                         }
                     }
-                }
+                } catch (e: Exception) {}
+            }
         }; Thread(receiverServer).start()
+    }
+
+   /* inner class requestTask:TimerTask(),Runnable{
+        override fun run() {
+            Log.d("Test","10sec")
+        }
+    }
+    private fun serverReceiver()
+    {
+        val runnable = Runnable{
+            while(true){
+                Log.d("Test","5sec")
+                Thread.sleep(5000)
+            }
+        };Thread(runnable).start()
+    }*/
+    override fun onDestroy() {
+        super.onDestroy()
+        timer.cancel()
+
+        Log.d(LOG_TAG, "OnDestroy")
+    }
+
+    override fun onBind(intent: Intent): IBinder? {
+        return null
     }
 
     override fun onLowMemory() {
@@ -347,3 +376,4 @@ class PollingServer : Service(), LocationListener {
         Log.d(LOG_TAG, "LowMemory")
     }
 }
+/*    */

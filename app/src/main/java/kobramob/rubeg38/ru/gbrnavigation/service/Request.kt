@@ -1,9 +1,10 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
-import android.util.Log
+import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer.Companion.countSender
 import org.json.JSONObject
 import java.net.*
 import java.nio.ByteBuffer
+import java.util.*
 
 class Request {
 
@@ -19,10 +20,12 @@ class Request {
         message.put("\$c$", "reg")
         message.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
         message.put("password", imei)
-
+        println("PacketWait")
         val encoderPacket: ByteBuffer = coder.encoderOne(message.toString(), count, typePacket, tid)
+        println(Arrays.toString(encoderPacket.array()))
         val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size, InetAddress.getByName(ip), port)
         socket.send(sendPacket)
+        println("PacketSend")
     }
 
     fun packetType255(
@@ -40,46 +43,6 @@ class Request {
         val sendData = ByteArray(0)
         val nullPacket = DatagramPacket(sendData, sendData.size, InetAddress.getByName(ip), port)
         socket.send(nullPacket)
-    }
-
-    private fun onePacket(
-        encoderPacket: ByteArray?,
-        socket: DatagramSocket,
-        ip: String,
-        port: Int
-    ): String {
-        try {
-            socket.soTimeout = 10000
-            println("Регистрация")
-            println(ip)
-            println(port)
-            val sendPacket = DatagramPacket(
-                encoderPacket, encoderPacket!!.size, InetAddress.getByName(ip),
-                port
-            )
-            socket.send(sendPacket)
-            val receiverBuffer = ByteArray(maxSizePacket)
-            var requestServer = "TimeOut"
-            do {
-                val receiverPacket = DatagramPacket(receiverBuffer, receiverBuffer.size)
-                socket.receive(receiverPacket)
-                when (coder.typePacket(receiverPacket.data)) {
-                    255 -> {
-                        println("Мой пакет принят")
-                    }
-                    0 -> {
-                        packetType255(socket, receiverPacket.data, receiverPacket.port, receiverPacket.address)
-                        requestServer = coder.decoderPacketOne(receiverPacket.data)
-                        register = true
-                        return requestServer
-                    }
-                }
-            } while (!register)
-            return requestServer
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return "TimeOut"
-        }
     }
 
     fun sendLocation(
@@ -140,7 +103,7 @@ class Request {
         val message = JSONObject()
         message.put("\$c$", "gbrkobra")
         message.put("command", "alarmp")
-        message.put("newstatus", number)
+        message.put("number", number)
         println(message.toString())
         val encoderPacket: ByteBuffer = coder.encoderOne(message.toString(), countSender, typePacket, tid.toString())
         val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size, InetAddress.getByName(ip), port)
@@ -160,7 +123,7 @@ class Request {
         val message = JSONObject()
         message.put("\$c$", "gbrkobra")
         message.put("command", "alarmpr")
-        message.put("newstatus", number)
+        message.put("number", number)
         println(message.toString())
         val encoderPacket: ByteBuffer = coder.encoderOne(message.toString(), countSender, typePacket, tid.toString())
         val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size, InetAddress.getByName(ip), port)

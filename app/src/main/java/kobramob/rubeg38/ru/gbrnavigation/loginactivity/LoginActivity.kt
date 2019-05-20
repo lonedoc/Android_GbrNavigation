@@ -16,20 +16,26 @@ import android.os.Build
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import org.json.JSONObject
 import android.os.StrictMode
+import android.util.Log
+import android.util.Xml
 import android.view.WindowManager
 import android.widget.Toast
+import kobramob.rubeg38.ru.gbrnavigation.IOHelper
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
-import kobramob.rubeg38.ru.gbrnavigation.service.MyPollingServer
 import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
+import org.redundent.kotlin.xml.xml
+import org.xmlpull.v1.XmlSerializer
+import java.io.File
+import java.io.FileOutputStream
+import java.io.StringWriter
 import java.lang.Exception
-
+import java.util.jar.Manifest
 
 class LoginActivity : AppCompatActivity() {
 
     private val request: Request = Request()
-    private val myPollingServer: MyPollingServer = MyPollingServer()
-    
+    private val pollingServer: PollingServer = PollingServer()
     lateinit var imei: String
     lateinit var ipInput: TextInputEditText
     lateinit var portInput: TextInputEditText
@@ -72,9 +78,14 @@ class LoginActivity : AppCompatActivity() {
     @SuppressLint("HardwareIds")
     override fun onStart() {
         super.onStart()
-        checkPermission()
-        if(ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
+        //checkPermission()
+        if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.WAKE_LOCK) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.FOREGROUND_SERVICE) != PackageManager.PERMISSION_GRANTED
+        ) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(
@@ -96,15 +107,14 @@ class LoginActivity : AppCompatActivity() {
                     permissionGranted
                 )
             }
-        }
-        else
-        {
-            val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-            imei = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                telephonyMgr.imei
-            } else {
-                telephonyMgr.deviceId
-            }
+        } else {
+                val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+                imei = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    telephonyMgr.imei
+                } else {
+                    telephonyMgr.deviceId
+                }
+
 
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             if (Build.VERSION.SDK_INT >= 21) {
@@ -137,8 +147,8 @@ class LoginActivity : AppCompatActivity() {
 
     @SuppressLint("HardwareIds")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        when{
-            grantResults.isNotEmpty() && grantResults[3] == PackageManager.PERMISSION_GRANTED ->{
+        when {
+            grantResults.isNotEmpty() && grantResults[3] == PackageManager.PERMISSION_GRANTED -> {
                 checkPermission()
                 val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
                 imei = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -147,7 +157,7 @@ class LoginActivity : AppCompatActivity() {
                     telephonyMgr.deviceId
                 }
 
-                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 if (Build.VERSION.SDK_INT >= 21) {
                     val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
                     StrictMode.setThreadPolicy(policy)
@@ -192,18 +202,32 @@ class LoginActivity : AppCompatActivity() {
                         portInput.setText("")
                     }.show()
             } else {
-               if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    this.startForegroundService(Intent(this@LoginActivity, PollingServer::class.java))
-                }
-                else
-                {
-                    this.startService(Intent(this@LoginActivity, PollingServer::class.java))
+                SharedPreferencesState.init(this@LoginActivity)
+                SharedPreferencesState.addPropertyString(
+                    "ip",
+                    ipInput.text.toString()
+                )
+
+                SharedPreferencesState.addPropertyInt(
+                    "port",
+                    portInput.text.toString().toInt()
+                )
+
+                pollingServer.initSocket(
+                    ipInput.text.toString(),
+                    portInput.text.toString().toInt()
+                )
+
+                val intent = Intent(this@LoginActivity, PollingServer::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    this.startForegroundService(intent)
+                } else {
+                    this.startService(intent)
                 }
 
                 val registerThread = Runnable {
                     request.register(PollingServer.socket, PollingServer.countSender, 0, imei, ipInput.text.toString(), portInput.text.toString().toInt(), "")
                     PollingServer.countSender++
-                    /*PollingServer.startService(this)*/
                 }; Thread(registerThread).start()
             }
         }
@@ -212,17 +236,20 @@ class LoginActivity : AppCompatActivity() {
     private fun registerThread() {
 
         val registerThread = Runnable {
+            pollingServer.initSocket(
+                getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
+                getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
+            )
+
             val intent = Intent(this@LoginActivity, PollingServer::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(intent)
+            } else {
+                startService(intent)
             }
-            else
-            { startService(Intent(this@LoginActivity, PollingServer::class.java))
-            }
-
 
             request.register(
-                PollingServer.socket,
+                PollingServer.socket!!,
                 PollingServer.countSender,
                 0,
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", "")!!,
@@ -240,13 +267,11 @@ class LoginActivity : AppCompatActivity() {
         br = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 val info = intent?.getStringExtra("info")
-                val accessDenied = intent?.getBooleanExtra("accessDenied",false)
-                if(accessDenied!!){
+                val accessDenied = intent?.getBooleanExtra("accessDenied", false)
+                if (accessDenied!!) {
                     closeProgressBar()
-                    Toast.makeText(this@LoginActivity,"Данное устройство не зарегистрировано на этом сервере",Toast.LENGTH_LONG).show()
-                }
-                else
-                if (!firstStart) {
+                    Toast.makeText(this@LoginActivity, "Данное устройство не зарегистрировано на этом сервере", Toast.LENGTH_LONG).show()
+                } else if (!firstStart) {
                     val jsonObject = JSONObject(info)
                     val jsonArray = jsonObject.getJSONArray("d")
 
@@ -271,10 +296,35 @@ class LoginActivity : AppCompatActivity() {
                             JSONObject(jsonArray.getString(0)).getString("call")
                         )
                     }
+
+                    /*val serializable:XmlSerializer = Xml.newSerializer()
+                    val writer:StringWriter = StringWriter()
+
+                    try{
+                        serializable.setOutput(writer)
+                        serializable.startDocument("UTF-8",true)
+                        serializable.startTag("","network-security-config")
+                        serializable.startTag("","domain-config")
+                        serializable.attribute("","cleartextTrafficPermitted","true")
+                        serializable.startTag("","domain")
+                        serializable.attribute("","includeSubdomains","true")
+                        serializable.text("192.168.1.95")
+                        serializable.endTag("","domain")
+                        serializable.endTag("","domain-config")
+                        serializable.endTag("","network-security-config")
+                        serializable.endDocument()
+                        val result = writer.toString()
+                        IOHelper.writeToFile(this@LoginActivity,"app\\src\\main\\res\\xml\\networksecurityconfig.xml",result)
+                        Log.d("Result",result)
+
+                    }catch (e:Exception){
+                        e.printStackTrace()
+                    }*/
+
+
                     closeProgressBar()
                     startActivity(Intent(this@LoginActivity, StartActivity::class.java))
-                } else
-                {
+                } else {
                     val jsonObject = JSONObject(info)
                     val jsonArray = jsonObject.getJSONArray("d")
 
@@ -295,6 +345,8 @@ class LoginActivity : AppCompatActivity() {
                         "routeserver",
                         jsonArray1.getString(0)
                     )
+                    //TODO СДЕЛАТЬ ЗАПИСЬ IPОУТИНГА В XML
+
                     SharedPreferencesState.addPropertyString(
                         "namegbr",
                         JSONObject(jsonArray.getString(0)).getString("namegbr")
@@ -328,12 +380,11 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        try{
+        try {
             unregisterReceiver(br)
-        }catch (e:Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
     override fun onDestroy() {
@@ -350,7 +401,7 @@ class LoginActivity : AppCompatActivity() {
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED &&
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.WAKE_LOCK) != PackageManager.PERMISSION_GRANTED &&
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(applicationContext,android.Manifest.permission.FOREGROUND_SERVICE) != PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.FOREGROUND_SERVICE) != PackageManager.PERMISSION_GRANTED
 
         ) {
             ActivityCompat.requestPermissions(

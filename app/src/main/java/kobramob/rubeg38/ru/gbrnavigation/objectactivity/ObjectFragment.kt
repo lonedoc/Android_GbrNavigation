@@ -31,10 +31,9 @@ class ObjectFragment : Fragment() {
 
         objectName.text = JSONObject(jsonArray.getString(0)).getString("name")
         objectAddress.text = JSONObject(jsonArray.getString(0)).getString("address")
-        try{
+        try {
             objectCustomer.text = "Заказчик: " + JSONObject(jsonArray.getString(0)).getString("zakaz")
-        }catch (e:Exception)
-        {
+        } catch (e: Exception) {
             objectTIP.text = "Заказчик: " + ""
         }
 

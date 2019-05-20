@@ -20,7 +20,8 @@ object SharedPreferencesState {
     @SuppressLint("CommitPrefEdits")
     private fun init() {
         settings = context!!.getSharedPreferences(
-            STORAGE_NAME, Context.MODE_PRIVATE)
+            STORAGE_NAME, Context.MODE_PRIVATE
+        )
         editor = settings!!.edit()
     }
 
