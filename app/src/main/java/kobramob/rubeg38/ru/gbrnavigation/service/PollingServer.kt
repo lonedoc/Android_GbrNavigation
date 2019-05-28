@@ -275,6 +275,7 @@ class PollingServer : Service(), LocationListener {
                                             } catch (e: Exception) { e.printStackTrace() }
                                         }
                                         "alarm" -> {
+                                            println(coder.decoderPacketOne(receiverPacket.data))
                                             try {
                                                 intentStartActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("command"))
                                                 intentStartActivity.putExtra("info", serverResponse)

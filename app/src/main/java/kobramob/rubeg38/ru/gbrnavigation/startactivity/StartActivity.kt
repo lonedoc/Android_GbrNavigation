@@ -81,10 +81,12 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
     override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
         if (enableFollowMe) {
+
             timer.cancel()
             followButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
             followButton.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
             enableFollowMe = false
+
         }
         return true
     }

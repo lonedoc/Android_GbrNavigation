@@ -34,8 +34,8 @@ class ResponsibleFragment : Fragment() {
             addressList.add(JSONObject(jsonArray1.getString(i)).getString("address"))
             positionList.add(JSONObject(jsonArray1.getString(i)).getString("position"))
             phoneList.add(JSONObject(jsonArray1.getString(i)).getString("phone"))
-            homeList.add("empty")
-            workList.add("empty")
+            homeList.add(JSONObject(jsonArray1.getString(i)).getString("phoneh"))
+            workList.add(JSONObject(jsonArray1.getString(i)).getString("phonew"))
         }
 
         responsibleList.layoutManager = LinearLayoutManager(activity)

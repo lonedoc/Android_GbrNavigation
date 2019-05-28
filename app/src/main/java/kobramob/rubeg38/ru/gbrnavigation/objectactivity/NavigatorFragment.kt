@@ -141,12 +141,15 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
             if (enableFollowMe) {
 
                 /*startActivityModel.stopFollowMe()*/
+
                 timer.cancel()
                 follow_me.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
                 follow_me.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
                 enableFollowMe = false
             } else {
+
                 /*startActivityModel.followMe(mMapView,locationOverlay)*/
+
                 try {
                     oldLocation = locationOverlay.myLocation
                     setCenter()
@@ -219,7 +222,6 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
             val roadManager = OSRMRoadManager(context)
 
             roadManager.setService("http:" + activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("routeserver", "") + "/route/v1/driving/")
-            /*roadManager.setService("https://router.project-osrm.org/route/v1/driving/")*/
             roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
 
             val waypoints = ArrayList<GeoPoint>()
@@ -228,9 +230,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
                 activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lat", 0f).toDouble(),
                 activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lon", 0f).toDouble()
             )
-          /*  val lat1: Double = 56.14574
-            val lon1:Double = 101.60997
-            val startPoint = GeoPoint(lat1,lon1)*/
+
             val endPoint = GeoPoint(lat, lon)
 
             waypoints.add(startPoint)
@@ -411,11 +411,13 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
             val tread = Runnable {
                 latitude = 0.toDouble()
                 println("Thread start")
+
                 do {
                     try {
                         latitude = locationOverlay.lastFix.latitude
                     } catch (e: Exception) {}
                 } while (latitude == 0.toDouble())
+
                 activity!!.runOnUiThread {
                     if (latitude != 0.toDouble()) {
                         try {
