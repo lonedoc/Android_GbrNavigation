@@ -33,7 +33,7 @@
                   android:textColor="@color/textDark"
                   android:layout_marginTop="10dp"
                   android:layout_marginStart="10dp"
-                  android:text="Юбилейная 16"
+
         />
         <TextView
                 android:id="@+id/objectAlarm"
@@ -43,7 +43,6 @@
                   android:textColor="@color/textDark"
                   android:layout_marginTop="10dp"
                   android:layout_marginStart="10dp"
-                  android:text="Пожарная тревога - тревожная кнопка"
         />
 
         <TextView
@@ -54,7 +53,7 @@
                 android:textColor="@color/textDark"
                 android:layout_marginTop="10dp"
                 android:layout_marginStart="10dp"
-                android:text="23:00"
+
         />
 
         <TextView

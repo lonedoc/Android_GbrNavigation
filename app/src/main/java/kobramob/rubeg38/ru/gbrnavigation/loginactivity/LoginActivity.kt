@@ -16,19 +16,11 @@ import android.os.Build
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import org.json.JSONObject
 import android.os.StrictMode
-import android.util.Log
-import android.util.Xml
 import android.view.WindowManager
 import android.widget.Toast
-import kobramob.rubeg38.ru.gbrnavigation.IOHelper
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
-import org.redundent.kotlin.xml.xml
-import org.xmlpull.v1.XmlSerializer
-import java.io.File
-import java.io.FileOutputStream
-import java.io.StringWriter
 import java.lang.Exception
 import java.util.jar.Manifest
 
@@ -78,7 +70,7 @@ class LoginActivity : AppCompatActivity() {
     @SuppressLint("HardwareIds")
     override fun onStart() {
         super.onStart()
-        //checkPermission()
+        // checkPermission()
         if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED ||
@@ -108,13 +100,12 @@ class LoginActivity : AppCompatActivity() {
                 )
             }
         } else {
-                val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-                imei = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    telephonyMgr.imei
-                } else {
-                    telephonyMgr.deviceId
-                }
-
+            val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            imei = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                telephonyMgr.imei
+            } else {
+                telephonyMgr.deviceId
+            }
 
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             if (Build.VERSION.SDK_INT >= 21) {
@@ -321,7 +312,6 @@ class LoginActivity : AppCompatActivity() {
                         e.printStackTrace()
                     }*/
 
-
                     closeProgressBar()
                     startActivity(Intent(this@LoginActivity, StartActivity::class.java))
                 } else {
@@ -345,7 +335,7 @@ class LoginActivity : AppCompatActivity() {
                         "routeserver",
                         jsonArray1.getString(0)
                     )
-                    //TODO СДЕЛАТЬ ЗАПИСЬ IPОУТИНГА В XML
+                    // TODO СДЕЛАТЬ ЗАПИСЬ IPОУТИНГА В XML
 
                     SharedPreferencesState.addPropertyString(
                         "namegbr",

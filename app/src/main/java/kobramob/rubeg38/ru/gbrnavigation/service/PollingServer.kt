@@ -31,9 +31,13 @@ import java.net.InetSocketAddress
 import java.nio.channels.DatagramChannel
 import java.util.*
 
+interface NetworkServiceDelegate {
+    fun connectionLost()
+    fun messageReceived(message: ByteArray)
+}
+
 class PollingServer : Service(), LocationListener {
 
-    val response: SingleResponse = SingleResponse()
     val request: Request = Request()
     private val coder: Coder = Coder()
 
@@ -84,25 +88,6 @@ class PollingServer : Service(), LocationListener {
 //
     }
 
-    fun initSocket(ip: String?, port: Int) {
-        socket.reuseAddress = true
-        socket.bind(InetSocketAddress(socket.localAddress, socket.localPort))
-        /*socket.connect(InetSocketAddress(ip,port))*/
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-        getLocation()
-        startForeground()
-        Log.d(LOG_TAG, "onCreate")
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(LOG_TAG, "OnStartCommand")
-        startService()
-        return START_STICKY
-    }
-
     private fun startForeground() {
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId =
@@ -138,6 +123,25 @@ class PollingServer : Service(), LocationListener {
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         service.createNotificationChannel(chan)
         return channelId
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        getLocation()
+        startForeground()
+        Log.d(LOG_TAG, "onCreate")
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(LOG_TAG, "OnStartCommand")
+        startService()
+        return START_STICKY
+    }
+
+    fun initSocket(ip: String?, port: Int) {
+        socket.reuseAddress = true
+        socket.bind(InetSocketAddress(socket.localAddress, socket.localPort))
+        /*socket.connect(InetSocketAddress(ip,port))*/
     }
 
     private fun startService() {
@@ -235,7 +239,7 @@ class PollingServer : Service(), LocationListener {
                     val intentLoginActivity = Intent(LoginActivity.BROADCAST_ACTION)
                     val intentObjectActivity = Intent(ObjectActivity.BROADCAST_ACTION)
                     // Создаем буффер
-                    val receiverBuffer = ByteArray(1057)
+                    val receiverBuffer = ByteArray(1500)
                     // Создаем датаграмму для приема
                     val receiverPacket = DatagramPacket(receiverBuffer, receiverBuffer.size)
                     // Принимаем то что лежит в сокете
@@ -264,8 +268,10 @@ class PollingServer : Service(), LocationListener {
                                             try {
                                                 intentStartActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("status"))
                                                 sendBroadcast(intentStartActivity)
-                                            } catch (e: Exception) {  SharedPreferencesState.init(this@PollingServer)
-                                                SharedPreferencesState.addPropertyString("status",
+                                            } catch (e: Exception) {
+                                                SharedPreferencesState.init(this@PollingServer)
+                                                SharedPreferencesState.addPropertyString(
+                                                    "status",
                                                     JSONObject(jsonArray.getString(0)).getString("status")
                                                 )
                                             }
@@ -347,20 +353,6 @@ class PollingServer : Service(), LocationListener {
         }; Thread(receiverServer).start()
     }
 
-   /* inner class requestTask:TimerTask(),Runnable{
-        override fun run() {
-            Log.d("Test","10sec")
-        }
-    }
-    private fun serverReceiver()
-    {
-        val runnable = Runnable{
-            while(true){
-                Log.d("Test","5sec")
-                Thread.sleep(5000)
-            }
-        };Thread(runnable).start()
-    }*/
     override fun onDestroy() {
         super.onDestroy()
         timer.cancel()
@@ -377,4 +369,3 @@ class PollingServer : Service(), LocationListener {
         Log.d(LOG_TAG, "LowMemory")
     }
 }
-/*    */

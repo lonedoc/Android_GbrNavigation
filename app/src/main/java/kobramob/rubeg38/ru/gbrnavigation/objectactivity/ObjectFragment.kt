@@ -34,10 +34,13 @@ class ObjectFragment : Fragment() {
         try {
             objectCustomer.text = "Заказчик: " + JSONObject(jsonArray.getString(0)).getString("zakaz")
         } catch (e: Exception) {
-            objectTIP.text = "Заказчик: " + ""
+            objectCustomer.text = "Заказчик: "
         }
-
-        objectTIP.text = "ИНН: " + JSONObject(jsonArray.getString(0)).getString("inn")
+        try {
+            objectTIP.text = "ИНН: " + JSONObject(jsonArray.getString(0)).getString("inn")
+        } catch (e: Exception) {
+            objectTIP.text = "ИНН: "
+        }
 
         val jsonObject1 = JSONObject(jsonArray.getString(0))
         val jsonObject2 = JSONObject(jsonObject1.getString("area"))

@@ -103,9 +103,9 @@ class ObjectActivity : AppCompatActivity() {
                     Toast.makeText(this@ObjectActivity, "Прибытие отмечено!!", Toast.LENGTH_LONG).show()
                 } else {
                     if (info == "notalarm") {
-                        try{
+                        try {
                             unregisterReceiver(br)
-                        }catch (e:Exception){
+                        } catch (e: Exception) {
                             e.printStackTrace()
                         }
 

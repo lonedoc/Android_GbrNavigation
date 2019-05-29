@@ -9,17 +9,13 @@ import java.util.*
 class Request {
 
     private val coder: Coder = Coder()
-    /*private val ipAddress = "192.168.2.110"*/
-    private val ipAddress = "194.146.201.66"
-    private val maxSizePacket = 1057
-    private val port = 9010
-    private var register = false
 
     fun register(socket: DatagramSocket, count: Long, typePacket: Byte, imei: String, ip: String, port: Int, tid: String) {
         val message = JSONObject()
         message.put("\$c$", "reg")
         message.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
         message.put("password", imei)
+
         println("PacketWait")
         val encoderPacket: ByteBuffer = coder.encoderOne(message.toString(), count, typePacket, tid)
         println(Arrays.toString(encoderPacket.array()))
@@ -44,7 +40,6 @@ class Request {
         val nullPacket = DatagramPacket(sendData, sendData.size, InetAddress.getByName(ip), port)
         socket.send(nullPacket)
     }
-
     fun sendLocation(
         socket: DatagramSocket,
         ip: String?,

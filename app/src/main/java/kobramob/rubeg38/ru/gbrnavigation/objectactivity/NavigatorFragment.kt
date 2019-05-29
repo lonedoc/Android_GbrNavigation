@@ -218,7 +218,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
 
     private fun createRoad() {
 
-        try{
+        try {
             val roadManager = OSRMRoadManager(context)
 
             roadManager.setService("http:" + activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("routeserver", "") + "/route/v1/driving/")
@@ -243,13 +243,11 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-                if(road.mStatus != Road.STATUS_OK){
+                if (road.mStatus != Road.STATUS_OK) {
                     activity!!.runOnUiThread {
-                        Toast.makeText(activity!!,"Невозможно построить путь",Toast.LENGTH_LONG).show()
+                        Toast.makeText(activity!!, "Невозможно построить путь", Toast.LENGTH_LONG).show()
                     }
-                }
-                else
-                {
+                } else {
                     if (road.mRouteHigh.size> 2) {
                         val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
                         activity!!.runOnUiThread {
@@ -267,13 +265,11 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
                         }
                     }
                 }
-
             }
             Thread(createRoad).start()
-        }catch (e:Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
     private fun tracking(road: Road) {

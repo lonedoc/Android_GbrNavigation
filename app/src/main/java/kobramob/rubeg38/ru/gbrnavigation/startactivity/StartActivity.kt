@@ -86,7 +86,6 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
             followButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
             followButton.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
             enableFollowMe = false
-
         }
         return true
     }
