@@ -11,16 +11,16 @@ import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.telephony.TelephonyManager
 import android.widget.Button
-import kobramob.rubeg38.ru.gbrnavigation.service.Request
 import android.os.Build
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import org.json.JSONObject
 import android.os.StrictMode
+import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
-import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
+import kobramob.rubeg38.ru.gbrnavigation.service.*
 import java.lang.Exception
 import java.util.jar.Manifest
 
@@ -28,6 +28,8 @@ class LoginActivity : AppCompatActivity() {
 
     private val request: Request = Request()
     private val pollingServer: PollingServer = PollingServer()
+    private val networkService: NetworkService = NetworkService()
+    private val cooder:Coder = Coder()
     lateinit var imei: String
     lateinit var ipInput: TextInputEditText
     lateinit var portInput: TextInputEditText
@@ -227,19 +229,34 @@ class LoginActivity : AppCompatActivity() {
     private fun registerThread() {
 
         val registerThread = Runnable {
-            pollingServer.initSocket(
-                getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
-                getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
-            )
-
-            val intent = Intent(this@LoginActivity, PollingServer::class.java)
+            val intent = Intent(this@LoginActivity, NetworkService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(intent)
             } else {
                 startService(intent)
             }
 
-            request.register(
+            networkService.initSocket(
+                getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
+                getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
+            )
+            val message = JSONObject()
+            message.put("\$c$", "reg")
+            message.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
+            message.put("password", "861111033192520")
+
+            val handler: ResultHandler = { success, bytes ->
+                if(success){
+                    Log.d("SendLoop","PacketSend")
+                }
+            }
+
+            networkService.send(
+                message.toString().toByteArray(),
+                getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")!!,
+                false,handler)
+
+            /*request.register(
                 PollingServer.socket!!,
                 PollingServer.countSender,
                 0,
@@ -248,7 +265,7 @@ class LoginActivity : AppCompatActivity() {
                 getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0),
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")!!
             )
-            PollingServer.countSender++
+            PollingServer.countSender++*/
             /*PollingServer.startService(this)*/
         }; Thread(registerThread).start()
     }

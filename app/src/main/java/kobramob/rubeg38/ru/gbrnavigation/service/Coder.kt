@@ -13,7 +13,7 @@ class Coder {
 
     // new function
     fun encoder(data: ByteArray, headers: Headers): ByteArray {
-        var sessionIDBytes: ByteArray = ByteArray(16)
+        var sessionIDBytes = ByteArray(16)
 
         if (headers.sessionID != "") {
             sessionIDBytes = hexStringToByte(headers.sessionID.toString()).toByteArray()
@@ -33,6 +33,7 @@ class Coder {
             ContentType.string -> { headersBuffer.put(0x00.toByte()) }
             ContentType.binary -> { headersBuffer.put(0x01.toByte()) }
         }
+
         headersBuffer.putInt(packetSize) // PacketSize
         headersBuffer.putInt(0) // FirstSize
         headersBuffer.putInt(0) // SecondSize

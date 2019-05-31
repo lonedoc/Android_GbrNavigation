@@ -48,6 +48,11 @@
                 android:enabled="true"
                 android:exported="true">
         </service>
+        <service
+                android:name=".service.NetworkService"
+                android:enabled="true"
+                android:exported="true">
+        </service>
 
         <activity
                 android:name=".startactivity.StartActivity"

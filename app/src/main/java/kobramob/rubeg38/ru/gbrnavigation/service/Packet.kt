@@ -1,6 +1,8 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
 import java.net.DatagramPacket
+import java.net.InetAddress
+import java.util.*
 
 enum class PacketType {
     connection, acknowledgment, data
@@ -10,7 +12,7 @@ interface Packet {
     var type: PacketType?
     var headers: Headers?
     var data: ByteArray?
-    fun encode(): DatagramPacket
+    fun encode(ip:String?,port:Int): DatagramPacket
 }
 
 class PacketUtils {
@@ -52,7 +54,6 @@ class DataPacket() :
         this.data = data
 
         val packetSize = data.count() + 2
-
         this.headers = Headers(
             contentType,
             messageNumber,
@@ -67,13 +68,14 @@ class DataPacket() :
         )
     }
 
-    override fun encode(): DatagramPacket {
+    override fun encode(ip: String?, port: Int): DatagramPacket {
         this.type = PacketType.data
 
         val coder = Coder()
-
+        println("encode")
         val packet = coder.encoder(this.data!!, this.headers!!)
-        return DatagramPacket(packet, packet.size)
+        println(coder.decoder(data!!))
+        return DatagramPacket(packet, packet.size, InetAddress.getByName(ip), port)
     }
 }
 
@@ -107,10 +109,10 @@ class AcknowledgmentPacket() :
         )
     }
 
-    override fun encode(): DatagramPacket {
+    override fun encode(ip:String?,port:Int): DatagramPacket {
         val coder = Coder()
         val packet = coder.encoderAcknowledgment(this.headers!!)
-        return DatagramPacket(packet, packet!!.size)
+        return DatagramPacket(packet, packet!!.size, InetAddress.getByName(ip), port)
     }
 }
 
@@ -124,8 +126,8 @@ class ConnectionPacket : Packet {
         this.data = null
         this.headers = null
     }
-    override fun encode(): DatagramPacket {
+    override fun encode(ip: String?, port: Int): DatagramPacket {
         val arrayBuffer = ByteArray(0)
-        return DatagramPacket(arrayBuffer, 0)
+        return DatagramPacket(arrayBuffer, 0, InetAddress.getByName(ip), port)
     }
 }

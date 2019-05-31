@@ -31,10 +31,6 @@ import java.net.InetSocketAddress
 import java.nio.channels.DatagramChannel
 import java.util.*
 
-interface NetworkServiceDelegate {
-    fun connectionLost()
-    fun messageReceived(message: ByteArray)
-}
 
 class PollingServer : Service(), LocationListener {
 
@@ -45,7 +41,6 @@ class PollingServer : Service(), LocationListener {
     private val LOG_TAG = "PollingService"
 
     private val typePacket: Byte = 0
-    private val typePacket255: Byte = 255.toByte()
 
     companion object {
         private val datagramChannel: DatagramChannel = DatagramChannel.open()
@@ -89,6 +84,7 @@ class PollingServer : Service(), LocationListener {
     }
 
     private fun startForeground() {
+
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -145,12 +141,12 @@ class PollingServer : Service(), LocationListener {
     }
 
     private fun startService() {
-        val timerTask: TimerTask = requestTask()
+        val timerTask: TimerTask = RequestTask()
         timer.schedule(timerTask, 0, 9500)
         serverReceiver()
     }
 
-    inner class requestTask : TimerTask() {
+    inner class RequestTask : TimerTask() {
         override fun run() {
             if (serverAlive) {
                 var speed: Float = 0.toFloat()
@@ -368,4 +364,5 @@ class PollingServer : Service(), LocationListener {
         super.onLowMemory()
         Log.d(LOG_TAG, "LowMemory")
     }
+
 }
