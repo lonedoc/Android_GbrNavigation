@@ -25,7 +25,6 @@ import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
 import kobramob.rubeg38.ru.gbrnavigation.service.Request
 import kotlinx.android.synthetic.main.navigator_fragment.*
-import org.json.JSONArray
 import org.json.JSONObject
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.Road
@@ -66,7 +65,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
     companion object {
         var firstTime = true
     }
-    lateinit var jsonArray: JSONArray
+    lateinit var jsonObject: JSONObject
 
     private fun showProgressBar() {
         if (progressBarOpen == "close") {
@@ -106,10 +105,9 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
         println("onCreateView")
         val rootView = inflater.inflate(R.layout.navigator_fragment, container, false)
 
-        val jsonObject = JSONObject(activity!!.intent.getStringExtra("info"))
-        jsonArray = jsonObject.getJSONArray("d")
-        lat = JSONObject(jsonArray.getString(0)).getDouble("lat")
-        lon = JSONObject(jsonArray.getString(0)).getDouble("lon")
+        jsonObject = JSONObject(activity!!.intent.getStringExtra("info"))
+        lat = jsonObject.getDouble("lat")
+        lon = jsonObject.getDouble("lon")
         initMapView(rootView)
 
         val bnv: BottomNavigationView = activity!!.findViewById(R.id.objectMenu)
@@ -333,7 +331,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
                                         val arrive_button: LinearLayout = view!!.findViewById(R.id.arrived_button)
                                         arrive_button.setOnClickListener {
                                             val arriveThread = Runnable {
-                                                arrivedToObject(jsonArray)
+                                                arrivedToObject(jsonObject = jsonObject)
                                                 dialog.cancel()
                                             }; Thread(arriveThread).start()
                                         }
@@ -360,12 +358,12 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
         }; updateTrackingThread.start()
     }
 
-    private fun arrivedToObject(jsonArray: JSONArray) {
+    private fun arrivedToObject(jsonObject: JSONObject) {
         val arrivedToObject = Runnable {
             request.arrivedToObject(
                 PollingServer.socket,
                 PollingServer.countSender,
-                JSONObject(jsonArray.getString(0)).getString("number"),
+                jsonObject.getString("number"),
                 0,
                 activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
                 activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
@@ -754,7 +752,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
             request.arrivedToObject(
                 PollingServer.socket,
                 PollingServer.countSender,
-                JSONObject(jsonArray.getString(0)).getString("number"),
+                jsonObject.getString("number"),
                 0,
                 activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
                 activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),

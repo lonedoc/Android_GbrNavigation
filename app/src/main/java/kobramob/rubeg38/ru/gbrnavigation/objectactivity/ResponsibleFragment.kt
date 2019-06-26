@@ -19,9 +19,7 @@ class ResponsibleFragment : Fragment() {
         val responsibleList: RecyclerView = rootView.findViewById(R.id.responsibleRecyclerView)
 
         val jsonObject = JSONObject(activity!!.intent.getStringExtra("info"))
-        val jsonArray = jsonObject.getJSONArray("d")
-        val jsonObject1 = JSONObject(jsonArray.getString(0))
-        val jsonArray1 = jsonObject1.getJSONArray("otvl")
+        val jsonArray1 = jsonObject.getJSONArray("otvl")
         val length = jsonArray1.length()
         val fioList = ArrayList<String>()
         val addressList = ArrayList<String>()

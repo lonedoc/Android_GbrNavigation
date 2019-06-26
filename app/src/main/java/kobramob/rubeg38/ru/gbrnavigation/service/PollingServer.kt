@@ -31,7 +31,6 @@ import java.net.InetSocketAddress
 import java.nio.channels.DatagramChannel
 import java.util.*
 
-
 class PollingServer : Service(), LocationListener {
 
     val request: Request = Request()
@@ -52,6 +51,7 @@ class PollingServer : Service(), LocationListener {
         var currentLocation: Location? = null
         var serverAlive: Boolean = true
         var tryCount = 0
+        var register: Boolean = false
     }
 
     @SuppressLint("MissingPermission")
@@ -86,6 +86,7 @@ class PollingServer : Service(), LocationListener {
     private fun startForeground() {
 
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
         val channelId =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 createNotificationChannel()
@@ -137,89 +138,94 @@ class PollingServer : Service(), LocationListener {
     fun initSocket(ip: String?, port: Int) {
         socket.reuseAddress = true
         socket.bind(InetSocketAddress(socket.localAddress, socket.localPort))
-        /*socket.connect(InetSocketAddress(ip,port))*/
+        socket.connect(InetSocketAddress(ip, port))
     }
 
     private fun startService() {
+        serverReceiver()
         val timerTask: TimerTask = RequestTask()
         timer.schedule(timerTask, 0, 9500)
-        serverReceiver()
     }
 
     inner class RequestTask : TimerTask() {
         override fun run() {
-            if (serverAlive) {
-                var speed: Float = 0.toFloat()
-                var lat: Double = 0.toDouble()
-                var lon: Double = 0.toDouble()
-
-                try {
-                    speed = currentLocation!!.speed
-                    lat = currentLocation!!.latitude
-                    latitude = currentLocation!!.latitude
-                    longtitude = currentLocation!!.longitude
-                    lon = currentLocation!!.longitude
-                } catch (e: Exception) {
-                }
-
-                serverAlive = false
-                if (speed> 0.toFloat()) {
-                    request.sendLocation(
-                        socket,
-                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
-                        getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010),
-                        countSender,
-                        typePacket,
-                        lat,
-                        lon,
-                        speed,
-                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", ""),
-                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", "")
-                    )
-                } else {
-                    request.nullPacket(
-                        socket,
-                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
-                        getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
-                    )
-                }
-            } else {
-                countSender = 1
-                countReceiver = 1
-                if (tryCount <2) {
-                    request.register(
-                        socket, countSender, typePacket,
-                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
-                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
-                        getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010),
-                        ""
-                    )
-                    tryCount++
-                } else {
-                    tryCount = 0
+            if (register) {
+                if (serverAlive) {
+                    var speed: Float = 0.toFloat()
+                    var lat: Double = 0.toDouble()
+                    var lon: Double = 0.toDouble()
 
                     try {
-                        val intentLoginActivity = Intent(LoginActivity.BROADCAST_ACTION)
-                        intentLoginActivity.putExtra("accessDenied", true)
-                        sendBroadcast(intentLoginActivity)
+                        speed = currentLocation!!.speed
+                        lat = currentLocation!!.latitude
+                        latitude = currentLocation!!.latitude
+                        longtitude = currentLocation!!.longitude
+                        lon = currentLocation!!.longitude
                     } catch (e: Exception) {
-                        e.printStackTrace()
                     }
 
-                    try {
-                        val intentStartActivity = Intent(LoginActivity.BROADCAST_ACTION)
-                        intentStartActivity.putExtra("accessDenied", true)
-                        sendBroadcast(intentStartActivity)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                    serverAlive = false
+                    if (speed> 0.toFloat()) {
+                        request.sendLocation(
+                            socket,
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010),
+                            countSender,
+                            typePacket,
+                            lat,
+                            lon,
+                            speed,
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", ""),
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", "")
+                        )
+                    } else {
+                        println("Packet254")
+                        request.packet254(
+                            socket,
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", ""),
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
+                        )
                     }
+                } else {
+                    println("РЕГИСТРАЦИЯ ЛЕТИТ ПО КД")
+                    countSender = 1
+                    countReceiver = 1
+                    if (tryCount <2) {
+                        request.register(
+                            socket, countSender, typePacket,
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010),
+                            ""
+                        )
+                        tryCount++
+                    } else {
+                        tryCount = 0
 
-                    try {
-                        val intentObjectActivity = Intent(LoginActivity.BROADCAST_ACTION)
-                        intentObjectActivity.putExtra("accessDenied", true)
-                        sendBroadcast(intentObjectActivity)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                        try {
+                            val intentLoginActivity = Intent(LoginActivity.BROADCAST_ACTION)
+                            intentLoginActivity.putExtra("accessDenied", true)
+                            sendBroadcast(intentLoginActivity)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+
+                        try {
+                            val intentStartActivity = Intent(LoginActivity.BROADCAST_ACTION)
+                            intentStartActivity.putExtra("accessDenied", true)
+                            sendBroadcast(intentStartActivity)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+
+                        try {
+                            val intentObjectActivity = Intent(LoginActivity.BROADCAST_ACTION)
+                            intentObjectActivity.putExtra("accessDenied", true)
+                            sendBroadcast(intentObjectActivity)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
                 }
             }
@@ -241,45 +247,62 @@ class PollingServer : Service(), LocationListener {
                     // Принимаем то что лежит в сокете
                     // Теперь могу даже перехватить если упал сокет,каеф
                     socket.receive(receiverPacket)
-                    // Проверяем на нулевой пакет
-                    if (receiverPacket.length == 0) {
-                        serverAlive = true
-                    }
+
                     // Принимаем пакет
                     when (coder.typePacket(receiverPacket.data)) {
+                        254 -> {
+                            // ServerAlive
+                            serverAlive = true
+                            println(coder.countReceiver(receiverPacket.data))
+                        }
                         255 -> {
+                            // Подтверждение
                             serverAlive = true
                         }
                         0 -> {
-                            serverAlive = true
+                            // String
                             if (coder.countReceiver(receiverPacket.data) >= countReceiver) {
+                                serverAlive = true
+                                println(coder.decoderPacketOne(receiverPacket.data))
+                                // изменить размер пакета
+
                                 request.packetType255(socket, receiverPacket.data, receiverPacket.port, receiverPacket.address)
+
                                 val serverResponse = coder.decoderPacketOne(receiverPacket.data)
                                 val jsonObject = JSONObject(serverResponse)
+                                /*
                                 val jsonArray = jsonObject.getJSONArray("d")
-                                Log.d("Sender&Receiver", JSONObject(jsonArray.getString(0)).getString("command"))
+                                println(jsonObject.getString("command"))*/
+
                                 try {
-                                    when (JSONObject(jsonArray.getString(0)).getString("command")) {
+                                    when (jsonObject.getString("command")) {
                                         "gbrstatus" -> {
                                             try {
-                                                intentStartActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("status"))
+                                                intentStartActivity.putExtra("status", jsonObject.getString("status"))
                                                 sendBroadcast(intentStartActivity)
                                             } catch (e: Exception) {
                                                 SharedPreferencesState.init(this@PollingServer)
                                                 SharedPreferencesState.addPropertyString(
                                                     "status",
-                                                    JSONObject(jsonArray.getString(0)).getString("status")
+                                                    jsonObject.getString("status")
                                                 )
                                             }
                                             try {
-                                                intentObjectActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("status"))
+                                                intentObjectActivity.putExtra("status", jsonObject.getString("status"))
                                                 sendBroadcast(intentObjectActivity)
-                                            } catch (e: Exception) { e.printStackTrace() }
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                                SharedPreferencesState.init(this@PollingServer)
+                                                SharedPreferencesState.addPropertyString(
+                                                    "status",
+                                                    jsonObject.getString("status")
+                                                )
+                                            }
                                         }
                                         "alarm" -> {
                                             println(coder.decoderPacketOne(receiverPacket.data))
                                             try {
-                                                intentStartActivity.putExtra("status", JSONObject(jsonArray.getString(0)).getString("command"))
+                                                intentStartActivity.putExtra("alarm", jsonObject.getString("command"))
                                                 intentStartActivity.putExtra("info", serverResponse)
                                                 sendBroadcast(intentStartActivity)
                                             } catch (e: Exception) { e.printStackTrace() }
@@ -287,46 +310,50 @@ class PollingServer : Service(), LocationListener {
                                         "regok" -> {
                                             tryCount = 0
                                             try {
-
+                                                println("regok")
                                                 intentLoginActivity.putExtra("info", serverResponse)
                                                 sendBroadcast(intentLoginActivity)
                                             } catch (e: Exception) {
                                                 e.printStackTrace()
                                                 val jsonObject = JSONObject(serverResponse)
-                                                val jsonArray = jsonObject.getJSONArray("d")
                                                 SharedPreferencesState.init(this@PollingServer)
                                                 SharedPreferencesState.addPropertyString(
                                                     "tid",
-                                                    JSONObject(jsonArray.getString(0)).getString("tid")
+                                                    jsonObject.getString("tid")
                                                 )
-                                                if (JSONObject(jsonArray.getString(0)).getString("namegbr") !=
+                                                if (jsonObject.getString("namegbr") !=
                                                     getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
                                                 ) {
                                                     SharedPreferencesState.addPropertyString(
                                                         "namegbr",
-                                                        JSONObject(jsonArray.getString(0)).getString("namegbr")
+                                                        jsonObject.getString("namegbr")
                                                     )
                                                 }
-                                                if (JSONObject(jsonArray.getString(0)).getString("call") !=
+                                                if (jsonObject.getString("call") !=
                                                     getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "")
                                                 ) {
                                                     SharedPreferencesState.addPropertyString(
                                                         "call",
-                                                        JSONObject(jsonArray.getString(0)).getString("call")
+                                                        jsonObject.getString("call")
                                                     )
                                                 }
                                             }
                                         }
                                         "alarmprok" -> {
                                             try {
-                                                intentObjectActivity.putExtra("info", JSONObject(jsonArray.getString(0)).getString("command"))
+                                                intentObjectActivity.putExtra("info", jsonObject.getString("command"))
                                                 sendBroadcast(intentObjectActivity)
                                             } catch (e: Exception) { e.printStackTrace() }
                                         }
                                         "notalarm" -> {
 
                                             try {
-                                                intentObjectActivity.putExtra("info", JSONObject(jsonArray.getString(0)).getString("command"))
+                                                SharedPreferencesState.init(this@PollingServer)
+                                                SharedPreferencesState.addPropertyString(
+                                                    "status",
+                                                    jsonObject.getString("status")
+                                                )
+                                                intentObjectActivity.putExtra("info", jsonObject.getString("command"))
                                                 sendBroadcast(intentObjectActivity)
                                             } catch (e: Exception) {
                                                 e.printStackTrace()
@@ -364,5 +391,4 @@ class PollingServer : Service(), LocationListener {
         super.onLowMemory()
         Log.d(LOG_TAG, "LowMemory")
     }
-
 }

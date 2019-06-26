@@ -27,22 +27,21 @@ class ObjectFragment : Fragment() {
         val infoObject = activity!!.intent.getStringExtra("info")
 
         val jsonObject = JSONObject(infoObject)
-        val jsonArray = jsonObject.getJSONArray("d")
 
-        objectName.text = JSONObject(jsonArray.getString(0)).getString("name")
-        objectAddress.text = JSONObject(jsonArray.getString(0)).getString("address")
+        objectName.text = jsonObject.getString("name")
+        objectAddress.text = jsonObject.getString("address")
         try {
-            objectCustomer.text = "Заказчик: " + JSONObject(jsonArray.getString(0)).getString("zakaz")
+            objectCustomer.text = "Заказчик: " + jsonObject.getString("zakaz")
         } catch (e: Exception) {
             objectCustomer.text = "Заказчик: "
         }
         try {
-            objectTIP.text = "ИНН: " + JSONObject(jsonArray.getString(0)).getString("inn")
+            objectTIP.text = "ИНН: " + jsonObject.getString("inn")
         } catch (e: Exception) {
             objectTIP.text = "ИНН: "
         }
 
-        val jsonObject1 = JSONObject(jsonArray.getString(0))
+        val jsonObject1 = jsonObject
         val jsonObject2 = JSONObject(jsonObject1.getString("area"))
 
         objectAlarm.text = jsonObject2.getString("name")

@@ -15,7 +15,6 @@ import android.os.Build
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import org.json.JSONObject
 import android.os.StrictMode
-import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
 import kobramob.rubeg38.ru.gbrnavigation.R
@@ -29,7 +28,7 @@ class LoginActivity : AppCompatActivity() {
     private val request: Request = Request()
     private val pollingServer: PollingServer = PollingServer()
     private val networkService: NetworkService = NetworkService()
-    private val cooder:Coder = Coder()
+    private val cooder: Coder = Coder()
     lateinit var imei: String
     lateinit var ipInput: TextInputEditText
     lateinit var portInput: TextInputEditText
@@ -221,6 +220,7 @@ class LoginActivity : AppCompatActivity() {
                 val registerThread = Runnable {
                     request.register(PollingServer.socket, PollingServer.countSender, 0, imei, ipInput.text.toString(), portInput.text.toString().toInt(), "")
                     PollingServer.countSender++
+                    PollingServer.serverAlive = true
                 }; Thread(registerThread).start()
             }
         }
@@ -229,35 +229,35 @@ class LoginActivity : AppCompatActivity() {
     private fun registerThread() {
 
         val registerThread = Runnable {
-            val intent = Intent(this@LoginActivity, NetworkService::class.java)
+            val intent = Intent(this@LoginActivity, PollingServer::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(intent)
             } else {
                 startService(intent)
             }
 
-            networkService.initSocket(
-                getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
-                getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
-            )
-            val message = JSONObject()
-            message.put("\$c$", "reg")
-            message.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
-            message.put("password", "861111033192520")
+            /* val message = JSONObject()
+             message.put("\$c$", "reg")
+             message.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
+             message.put("password", "861111033192520")
 
-            val handler: ResultHandler = { success, bytes ->
-                if(success){
-                    Log.d("SendLoop","PacketSend")
-                }
-            }
-
-            networkService.send(
+             val handler: ResultHandler = { success, bytes ->
+                 if(success){
+                     Log.d("SendLoop","PacketSend")
+                 }
+             }
+             networkService.initSocket(
+                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
+                 getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
+             )
+             networkService.send(
                 message.toString().toByteArray(),
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")!!,
-                false,handler)
+                false,handler)*/
 
-            /*request.register(
-                PollingServer.socket!!,
+            pollingServer.initSocket(getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!, getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0))
+            request.register(
+                PollingServer.socket,
                 PollingServer.countSender,
                 0,
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", "")!!,
@@ -265,8 +265,8 @@ class LoginActivity : AppCompatActivity() {
                 getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0),
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")!!
             )
-            PollingServer.countSender++*/
-            /*PollingServer.startService(this)*/
+
+            PollingServer.countSender++
         }; Thread(registerThread).start()
     }
 
@@ -280,60 +280,41 @@ class LoginActivity : AppCompatActivity() {
                     closeProgressBar()
                     Toast.makeText(this@LoginActivity, "Данное устройство не зарегистрировано на этом сервере", Toast.LENGTH_LONG).show()
                 } else if (!firstStart) {
+
                     val jsonObject = JSONObject(info)
-                    val jsonArray = jsonObject.getJSONArray("d")
 
                     SharedPreferencesState.init(this@LoginActivity)
                     SharedPreferencesState.addPropertyString(
                         "tid",
-                        JSONObject(jsonArray.getString(0)).getString("tid")
+                        jsonObject.getString("tid")
                     )
-                    if (JSONObject(jsonArray.getString(0)).getString("namegbr") !=
-                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
-                    ) {
-                        SharedPreferencesState.addPropertyString(
-                            "namegbr",
-                            JSONObject(jsonArray.getString(0)).getString("namegbr")
-                        )
-                    }
-                    if (JSONObject(jsonArray.getString(0)).getString("call") !=
-                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "")
-                    ) {
-                        SharedPreferencesState.addPropertyString(
-                            "call",
-                            JSONObject(jsonArray.getString(0)).getString("call")
-                        )
-                    }
-
-                    /*val serializable:XmlSerializer = Xml.newSerializer()
-                    val writer:StringWriter = StringWriter()
-
-                    try{
-                        serializable.setOutput(writer)
-                        serializable.startDocument("UTF-8",true)
-                        serializable.startTag("","network-security-config")
-                        serializable.startTag("","domain-config")
-                        serializable.attribute("","cleartextTrafficPermitted","true")
-                        serializable.startTag("","domain")
-                        serializable.attribute("","includeSubdomains","true")
-                        serializable.text("192.168.1.95")
-                        serializable.endTag("","domain")
-                        serializable.endTag("","domain-config")
-                        serializable.endTag("","network-security-config")
-                        serializable.endDocument()
-                        val result = writer.toString()
-                        IOHelper.writeToFile(this@LoginActivity,"app\\src\\main\\res\\xml\\networksecurityconfig.xml",result)
-                        Log.d("Result",result)
-
-                    }catch (e:Exception){
+                    PollingServer.register = true
+                    try {
+                        if (jsonObject.getString("namegbr") !=
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
+                        ) {
+                            SharedPreferencesState.addPropertyString(
+                                "namegbr",
+                                jsonObject.getString("namegbr")
+                            )
+                        }
+                        if (jsonObject.getString("call") !=
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "")
+                        ) {
+                            SharedPreferencesState.addPropertyString(
+                                "call",
+                                jsonObject.getString("call")
+                            )
+                        }
+                    } catch (e: Exception) {
                         e.printStackTrace()
-                    }*/
+                    }
 
                     closeProgressBar()
                     startActivity(Intent(this@LoginActivity, StartActivity::class.java))
                 } else {
+                    println("FirstStart")
                     val jsonObject = JSONObject(info)
-                    val jsonArray = jsonObject.getJSONArray("d")
 
                     SharedPreferencesState.init(this@LoginActivity)
 
@@ -344,25 +325,27 @@ class LoginActivity : AppCompatActivity() {
 
                     SharedPreferencesState.addPropertyString(
                         "tid",
-                        JSONObject(jsonArray.getString(0)).getString("tid")
+                        jsonObject.getString("tid")
                     )
-                    val jsonObject1 = JSONObject(jsonArray.getString(0))
-                    val jsonArray1 = jsonObject1.getJSONArray("routeserver")
-                    SharedPreferencesState.addPropertyString(
-                        "routeserver",
-                        jsonArray1.getString(0)
-                    )
-                    // TODO СДЕЛАТЬ ЗАПИСЬ IPОУТИНГА В XML
+                    PollingServer.register = true
+                    try {
+                        SharedPreferencesState.addPropertyString(
+                            "routeserver",
+                            jsonObject.getJSONArray("routeserver").getString(0)
+                        )
+                        SharedPreferencesState.addPropertyString(
+                            "namegbr",
+                            jsonObject.getString("namegbr")
+                        )
 
-                    SharedPreferencesState.addPropertyString(
-                        "namegbr",
-                        JSONObject(jsonArray.getString(0)).getString("namegbr")
-                    )
+                        SharedPreferencesState.addPropertyString(
+                            "call",
+                            jsonObject.getString("call")
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
 
-                    SharedPreferencesState.addPropertyString(
-                        "call",
-                        JSONObject(jsonArray.getString(0)).getString("call")
-                    )
                     SharedPreferencesState.addPropertyString(
                         "ip",
                         ipInput.text.toString()
@@ -372,6 +355,7 @@ class LoginActivity : AppCompatActivity() {
                         "port",
                         portInput.text.toString().toInt()
                     )
+
                     closeProgressBar()
                     startActivity(Intent(this@LoginActivity, StartActivity::class.java))
                     firstStart = false
@@ -396,6 +380,8 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        val intent = Intent(this@LoginActivity, PollingServer::class.java)
+        stopService(intent)
 
         val clean = getSharedPreferences("state", Context.MODE_PRIVATE).edit()
         clean.remove("tid")

@@ -12,7 +12,7 @@ interface Packet {
     var type: PacketType?
     var headers: Headers?
     var data: ByteArray?
-    fun encode(ip:String?,port:Int): DatagramPacket
+    fun encode(ip: String?, port: Int): DatagramPacket
 }
 
 class PacketUtils {
@@ -109,7 +109,7 @@ class AcknowledgmentPacket() :
         )
     }
 
-    override fun encode(ip:String?,port:Int): DatagramPacket {
+    override fun encode(ip: String?, port: Int): DatagramPacket {
         val coder = Coder()
         val packet = coder.encoderAcknowledgment(this.headers!!)
         return DatagramPacket(packet, packet!!.size, InetAddress.getByName(ip), port)

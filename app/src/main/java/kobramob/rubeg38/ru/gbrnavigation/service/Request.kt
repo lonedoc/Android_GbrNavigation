@@ -15,13 +15,9 @@ class Request {
         message.put("\$c$", "reg")
         message.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
         message.put("password", imei)
-
-        println("PacketWait")
         val encoderPacket: ByteBuffer = coder.encoderOne(message.toString(), count, typePacket, tid)
-        println(Arrays.toString(encoderPacket.array()))
-        val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size, InetAddress.getByName(ip), port)
+        val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size)
         socket.send(sendPacket)
-        println("PacketSend")
     }
 
     fun packetType255(
@@ -31,15 +27,16 @@ class Request {
         address: InetAddress
     ) {
         val buffer255: ByteBuffer = coder.packetType255(message)
-        val sendPacket = DatagramPacket(buffer255.array(), buffer255.array().size, address, port)
+        val sendPacket = DatagramPacket(buffer255.array(), buffer255.array().size)
         socket.send(sendPacket)
     }
 
-    fun nullPacket(socket: DatagramSocket, ip: String?, port: Int) {
-        val sendData = ByteArray(0)
-        val nullPacket = DatagramPacket(sendData, sendData.size, InetAddress.getByName(ip), port)
+    fun packet254(socket: DatagramSocket, tid: String?, ip: String?, port: Int) {
+        val sendData = coder.packetType254(tid.toString())
+        val nullPacket = DatagramPacket(sendData.array(), sendData.array().size)
         socket.send(nullPacket)
     }
+
     fun sendLocation(
         socket: DatagramSocket,
         ip: String?,
@@ -61,7 +58,7 @@ class Request {
         message.put("speed", speed)
 
         val encoderPacket: ByteBuffer = coder.encoderOne(message.toString(), count, typePacket, tid.toString())
-        val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size, InetAddress.getByName(ip), port)
+        val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size)
         socket.send(sendPacket)
     }
 
@@ -81,7 +78,7 @@ class Request {
         message.put("newstatus", status)
         println(message.toString())
         val encoderPacket: ByteBuffer = coder.encoderOne(message.toString(), countSender, typePacket, tid.toString())
-        val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size, InetAddress.getByName(ip), port)
+        val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size)
         socket.send(sendPacket)
     }
 
@@ -101,7 +98,7 @@ class Request {
         message.put("number", number)
         println(message.toString())
         val encoderPacket: ByteBuffer = coder.encoderOne(message.toString(), countSender, typePacket, tid.toString())
-        val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size, InetAddress.getByName(ip), port)
+        val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size)
         socket.send(sendPacket)
     }
 
@@ -121,7 +118,7 @@ class Request {
         message.put("number", number)
         println(message.toString())
         val encoderPacket: ByteBuffer = coder.encoderOne(message.toString(), countSender, typePacket, tid.toString())
-        val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size, InetAddress.getByName(ip), port)
+        val sendPacket = DatagramPacket(encoderPacket.array(), encoderPacket.array().size)
         socket.send(sendPacket)
     }
 }

@@ -379,6 +379,31 @@ class Coder {
             tidByteArray
         )
         headingArray = byteBuffer.array()
+        println(Arrays.toString(headingArray))
+        code(headingArray)
+        byteBuffer.position(0)
+        byteBuffer.put(headingArray)
+        return byteBuffer
+    }
+
+    fun packetType254(tid: String): ByteBuffer {
+        val byteBuffer: ByteBuffer = ByteBuffer.allocate(57)
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
+        fillHeaders(
+            byteBuffer,
+            0xFE.toByte(),
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            hexStringToByte(tid).toByteArray()
+        )
+        var headingArray: ByteArray = ByteArray(57)
+        headingArray = byteBuffer.array()
         code(headingArray)
         byteBuffer.position(0)
         byteBuffer.put(headingArray)

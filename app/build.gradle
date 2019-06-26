@@ -89,9 +89,9 @@ dependencies {
     implementation 'org.redundent:kotlin-xml-builder:1.5.1'
 
 
-    implementation 'com.google.android.gms:play-services-location:16.0.0' //you can use newer GMS version if you need
-    implementation 'com.google.android.gms:play-services-places:16.1.0'
-    implementation 'com.google.android.gms:play-services-maps:16.1.0'
+    implementation 'com.google.android.gms:play-services-location:17.0.0' //you can use newer GMS version if you need
+    implementation 'com.google.android.gms:play-services-places:17.0.0'
+    implementation 'com.google.android.gms:play-services-maps:17.0.0'
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1"
 

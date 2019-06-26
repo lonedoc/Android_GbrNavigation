@@ -33,7 +33,6 @@ import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.resource.TileSource
 import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
 import kobramob.rubeg38.ru.gbrnavigation.service.Request
-import org.json.JSONArray
 import org.json.JSONObject
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.events.MapListener
@@ -440,11 +439,11 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
         br = object : BroadcastReceiver() {
             @SuppressLint("SetTextI18n")
             override fun onReceive(context: Context?, intent: Intent?) {
-                /*val request = intent?.getStringExtra("test")
-                if(locationOverlay.lastFix.speed!=0f)
-                intent!!.putExtra("speed",locationOverlay.lastFix.speed)
-                println(request)*/
                 val status = intent?.getStringExtra("status")
+                var alarm = false
+                if (intent?.getStringExtra("alarm") == "alarm") {
+                    alarm = true
+                }
                 val accessDenied = intent?.getBooleanExtra("accessDenied", false)
                 if (accessDenied!!) {
                     // Dialog Window
@@ -454,10 +453,9 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                 if (status != null) {
                     SharedPreferencesState.addPropertyString("status", status)
                 }
-                if (status == "alarm") {
+                if (alarm) {
                     val serverResponse = intent.getStringExtra("info")
                     val jsonObject = JSONObject(serverResponse)
-                    val jsonArray = jsonObject.getJSONArray("d")
 
                     if (Build.VERSION.SDK_INT >= 26) {
                         (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
@@ -478,12 +476,12 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                     val acceptAlertButton: Button = view!!.findViewById(R.id.AcceptAlert)
                     val dialog_objectName: TextView = view.findViewById(R.id.dialog_objectName)
                     val dialog_objectAddress: TextView = view.findViewById(R.id.dialog_objectAddress)
-                    dialog_objectName.text = JSONObject(jsonArray.getString(0)).getString("name")
-                    dialog_objectAddress.text = JSONObject(jsonArray.getString(0)).getString("address")
+                    dialog_objectName.text = jsonObject.getString("name")
+                    dialog_objectAddress.text = jsonObject.getString("address")
 
                     acceptAlertButton.setOnClickListener {
                         trevoga.stop()
-                        acceptAlarm(jsonArray)
+                        acceptAlarm(jsonObject)
                         unregisterReceiver(br)
                         val objectActivity = Intent(this@StartActivity, ObjectActivity::class.java)
                         objectActivity.putExtra("info", serverResponse)
@@ -503,12 +501,12 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
         registerReceiver(br, intentFilter)
     }
 
-    private fun acceptAlarm(jsonArray: JSONArray) {
+    private fun acceptAlarm(jsonObject: JSONObject) {
         val acceptAlarm = Runnable {
             request.acceptAlarm(
                 PollingServer.socket!!,
                 PollingServer.countSender,
-                JSONObject(jsonArray.getString(0)).getString("number"),
+                jsonObject.getString("number"),
                 0,
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
