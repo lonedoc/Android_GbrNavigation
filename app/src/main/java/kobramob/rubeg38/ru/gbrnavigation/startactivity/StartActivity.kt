@@ -504,7 +504,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     private fun acceptAlarm(jsonObject: JSONObject) {
         val acceptAlarm = Runnable {
             request.acceptAlarm(
-                PollingServer.socket!!,
+                PollingServer.socket,
                 PollingServer.countSender,
                 jsonObject.getString("number"),
                 0,
@@ -670,6 +670,10 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
     override fun onDestroy() {
         super.onDestroy()
+        unregisterReceiver(br)
+        val clean = getSharedPreferences("state", Context.MODE_PRIVATE).edit()
+        clean.remove("tid")
+        clean.apply()
         val intent = Intent(this@StartActivity, PollingServer::class.java)
         stopService(intent)
     }

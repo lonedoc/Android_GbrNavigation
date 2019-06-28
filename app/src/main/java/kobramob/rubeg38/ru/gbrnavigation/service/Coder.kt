@@ -1,5 +1,6 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
+import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
@@ -95,6 +96,8 @@ class Coder {
         System.arraycopy(data, 0, headersArray, 0, headersSize + 2)
         code(headersArray)
         val headersBuffer = ByteBuffer.allocate(headersSize + 2)
+        headersBuffer.order(ByteOrder.LITTLE_ENDIAN)
+        headersBuffer.put(headersArray)
         val rawType = headersBuffer.get(4)
         var contentType: ContentType = ContentType.string
 
@@ -262,7 +265,9 @@ class Coder {
         System.arraycopy(packetArray, 2, result, 0, lengthPacket - 2)
         return String(result)
     }
-
+    fun packetString(message: ByteArray): String {
+        return String(message)
+    }
     private fun coderPacket(temporaryArray: ByteArray, mass1: ByteArray, length: Int) {
         var shiftRight = temporaryArray[0].toInt() and 255
         var shiftLeft = temporaryArray[1].toInt() and 255
@@ -379,7 +384,7 @@ class Coder {
             tidByteArray
         )
         headingArray = byteBuffer.array()
-        println(Arrays.toString(headingArray))
+        Log.d("255", Arrays.toString(headingArray))
         code(headingArray)
         byteBuffer.position(0)
         byteBuffer.put(headingArray)
@@ -402,12 +407,21 @@ class Coder {
             0,
             hexStringToByte(tid).toByteArray()
         )
-        var headingArray: ByteArray = ByteArray(57)
-        headingArray = byteBuffer.array()
+        val headingArray = byteBuffer.array()
         code(headingArray)
         byteBuffer.position(0)
         byteBuffer.put(headingArray)
         return byteBuffer
+    }
+
+    fun numberOfPackages(message: ByteArray): Int {
+        val headingArray: ByteArray = ByteArray(57)
+        System.arraycopy(message, 0, headingArray, 0, headingArray.size)
+        code(headingArray)
+        val byteBuffer: ByteBuffer = ByteBuffer.allocate(57)
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
+        byteBuffer.put(headingArray)
+        return byteBuffer.getInt(33)
     }
 
     fun typePacket(message: ByteArray): Int {

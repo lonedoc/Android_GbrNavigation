@@ -18,8 +18,8 @@ android {
         applicationId "kobramob.rubeg38.ru.gbrnavigation"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 7
-        versionName "1.045"
+        versionCode 9
+        versionName "1.5"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -46,6 +46,11 @@ dependencies {
     implementation 'com.android.support:support-v4:28.0.0'
     implementation 'com.android.support:animated-vector-drawable:28.0.0'
     implementation 'com.gabrielittner.ktlint:ktlint-rules:0.2.0'
+
+    //ПЕрейти на AndroidX
+    implementation 'com.google.android.gms:play-services-location:16.0.0' //you can use newer GMS version if you need
+    implementation 'com.google.android.gms:play-services-places:16.0.0'
+    implementation 'com.google.android.gms:play-services-maps:16.0.0'
 
     configurations {
         ktlint
@@ -87,12 +92,6 @@ dependencies {
     implementation 'com.github.clans:fab:1.6.4'
     implementation 'ru.tinkoff.decoro:decoro:1.1.1'
     implementation 'org.redundent:kotlin-xml-builder:1.5.1'
-
-
-    implementation 'com.google.android.gms:play-services-location:17.0.0' //you can use newer GMS version if you need
-    implementation 'com.google.android.gms:play-services-places:17.0.0'
-    implementation 'com.google.android.gms:play-services-maps:17.0.0'
-
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1"
 
     testImplementation 'junit:junit:4.12'

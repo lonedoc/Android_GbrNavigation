@@ -32,7 +32,9 @@
             android:theme="@style/AppTheme"
             android:usesCleartextTraffic="true"
             android:networkSecurityConfig="@xml/networksecurityconfig"
-            tools:targetApi="n">
+            tools:targetApi="n" tools:ignore="GoogleAppIndexingWarning"
+            >
+
         <activity
                 android:name=".loginactivity.LoginActivity"
                 android:screenOrientation="landscape">
@@ -46,12 +48,13 @@
         <service
                 android:name=".service.PollingServer"
                 android:enabled="true"
-                android:exported="true">
+                android:exported="false">
         </service>
+
         <service
-                android:name=".service.NetworkService"
+                android:name=".service.NetworkServiceTest"
                 android:enabled="true"
-                android:exported="true">
+                android:exported="false" >
         </service>
 
         <activity

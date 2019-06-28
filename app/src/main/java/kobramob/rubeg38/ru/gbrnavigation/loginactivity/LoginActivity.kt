@@ -229,6 +229,7 @@ class LoginActivity : AppCompatActivity() {
     private fun registerThread() {
 
         val registerThread = Runnable {
+
             val intent = Intent(this@LoginActivity, PollingServer::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(intent)
@@ -236,26 +237,11 @@ class LoginActivity : AppCompatActivity() {
                 startService(intent)
             }
 
-            /* val message = JSONObject()
-             message.put("\$c$", "reg")
-             message.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
-             message.put("password", "861111033192520")
+            pollingServer.initSocket(
+                getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
+                getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0)
+            )
 
-             val handler: ResultHandler = { success, bytes ->
-                 if(success){
-                     Log.d("SendLoop","PacketSend")
-                 }
-             }
-             networkService.initSocket(
-                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
-                 getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
-             )
-             networkService.send(
-                message.toString().toByteArray(),
-                getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")!!,
-                false,handler)*/
-
-            pollingServer.initSocket(getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!, getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0))
             request.register(
                 PollingServer.socket,
                 PollingServer.countSender,
@@ -263,7 +249,7 @@ class LoginActivity : AppCompatActivity() {
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", "")!!,
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
                 getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0),
-                getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")!!
+                ""
             )
 
             PollingServer.countSender++
@@ -373,6 +359,7 @@ class LoginActivity : AppCompatActivity() {
         super.onStop()
         try {
             unregisterReceiver(br)
+            cancelDialog.cancel()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -380,6 +367,7 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+
         val intent = Intent(this@LoginActivity, PollingServer::class.java)
         stopService(intent)
 

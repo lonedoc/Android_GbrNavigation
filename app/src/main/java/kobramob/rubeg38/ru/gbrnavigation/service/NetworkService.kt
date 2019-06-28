@@ -44,12 +44,13 @@ class NetworkService : Service(), LocationListener {
     private var onAirPackets = ArrayList<Triple<Packet, Time, Int>>()
     private var messagesTransmissionInfo = LongSparseArray<Triple<BooleanArray?, Boolean, ResultHandler>>()
     private var messagesReceivingInfo = LongSparseArray<Triple<BooleanArray?, ByteBuffer?, ResultHandler>>()
+    lateinit var ip: String
+    var port: Int = 9010
 
     companion object {
         var currentLocation: Location? = null
-        val ip: String? = "192.168.2.110"
-        val port = 9010
     }
+
     private val socket = DatagramSocket(null)
 
     override fun onCreate() {
@@ -58,16 +59,12 @@ class NetworkService : Service(), LocationListener {
         startForeground()
     }
 
-/*    private var ip:String? = null
-    private var port:Int = 0*/
-
     fun initSocket(ip: String, port: Int) {
-      /*  this.ip = ip
-        this.port = port*/
-
-        // socket.connect(InetSocketAddress(ip,port))
+        this.port = port
+        this.ip = ip
         socket.reuseAddress = true
         socket.bind(InetSocketAddress(PollingServer.socket.localAddress, PollingServer.socket.localPort))
+        socket.connect(InetSocketAddress(ip, port))
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -227,7 +224,6 @@ class NetworkService : Service(), LocationListener {
             } catch (e: Exception) {}
         } catch (e: Exception) { e.printStackTrace() }
     }
-
     private fun startForeground() {
 
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -249,7 +245,6 @@ class NetworkService : Service(), LocationListener {
                 .build()
         startForeground(channelId.toInt(), notification)
     }
-
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel(): String {
         val channelId = "101"
@@ -265,7 +260,6 @@ class NetworkService : Service(), LocationListener {
         service.createNotificationChannel(chan)
         return channelId
     }
-
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }

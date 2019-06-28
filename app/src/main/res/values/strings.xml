@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Навигация ГБР</string>
+    <string name="app_name">Кобра ГБР</string>
     <string name="EnterIp">Введите ip адрес сервера</string>
     <string name="EnterPort">Введите port сервера</string>
     <string name="FIO">Фамилия Имя Отчество</string>
