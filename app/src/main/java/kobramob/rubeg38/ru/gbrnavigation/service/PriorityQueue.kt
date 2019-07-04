@@ -1,59 +1,44 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
+import android.util.Log
 import kotlinx.coroutines.*
 import java.util.*
-import kotlin.collections.ArrayList
+import java.util.concurrent.CopyOnWriteArrayList
 
 enum class Priority(value: Int) {
     low(1), medium(2), high(3);
 }
 class PriorityQueue<T> {
 
-    private lateinit var lockQueue: Job
-    private var items: ArrayList<Pair<T, Int>> = ArrayList()
+    private var items: CopyOnWriteArrayList<Pair<T, Int>> = CopyOnWriteArrayList()
 
-    fun enqueue(item: T, priority: Int) {
-        synchronized(this) {
-            for (i in 0 until items.count()) {
-                if (priority > items[i].second) {
-                    items.add(i, Pair(item, priority))
-                    return
-                }
+    @Synchronized fun enqueue(item: T, priority: Int) {
+        for (i in 0 until items.count()) {
+            if (priority > items[i].second) {
+                Log.d("Enqueue>", items.count().toString())
+                items.add(i, Pair(item, priority))
+                return
             }
-            items.add(Pair(item, priority))
-            println(items.count())
         }
-
-            /*lockQueue = launch {
-
-
-            }
-            lockQueue.join()*/
+        items.add(Pair(item, priority))
     }
-    fun enqueue(item: T) {
+
+    @Synchronized fun enqueue(item: T) {
         this.enqueue(item, 1)
     }
-    fun dequeue(): T? {
-        var item: T?
-        synchronized(this) {
-            item = if (items.count() > 0) {
-                println("return data")
-                items.removeAt(0).first
-            } else {
-                null
-            }
-            return item
+
+    @Synchronized fun dequeue(): T? {
+        return if (items.count()> 0) {
+            items.getOrNull(0)!!.first
+        } else {
+            null
         }
     }
 
-    fun remove() {
+    @Synchronized fun remove() {
         items.removeAt(0)
     }
-    fun removeAll(predicate: (T) -> Boolean) {
-        runBlocking {
-            val lockQueue = async {
-                items = ArrayList(items.filter { !predicate(it.first) })
-            }; awaitAll(lockQueue)
-        }
+    @Synchronized fun removeAll(predicate: (T) -> Boolean) {
+        items = CopyOnWriteArrayList(items.filter { !predicate(it.first) })
     }
 }

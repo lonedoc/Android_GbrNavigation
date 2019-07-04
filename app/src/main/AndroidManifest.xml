@@ -52,7 +52,7 @@
         </service>
 
         <service
-                android:name=".service.NetworkServiceTest"
+                android:name=".service.NetworkService"
                 android:enabled="true"
                 android:exported="false" >
         </service>

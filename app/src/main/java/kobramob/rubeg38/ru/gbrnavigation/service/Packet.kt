@@ -1,8 +1,6 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
 import java.net.DatagramPacket
-import java.net.InetAddress
-import java.util.*
 
 enum class PacketType {
     connection, acknowledgment, data
@@ -12,7 +10,7 @@ interface Packet {
     var type: PacketType?
     var headers: Headers?
     var data: ByteArray?
-    fun encode(ip: String?, port: Int): DatagramPacket
+    fun encode(): DatagramPacket
 }
 
 class PacketUtils {
@@ -20,16 +18,16 @@ class PacketUtils {
     companion object {
         fun decode(data: DatagramPacket): Packet {
 
-            if (data.length == 0) {
-                return ConnectionPacket()
-            }
             val coder = Coder()
             val dataArray: ByteArray = data.data
 
             val (headers, body) = coder.decoder(dataArray)
 
-            if (headers.contentType == ContentType.empty) {
+            if (headers.contentType == ContentType.acknowledgement) {
                 return AcknowledgmentPacket(headers)
+            }
+            if (headers.contentType == ContentType.connection) {
+                return ConnectionPacket(headers)
             }
 
             return DataPacket(body, headers)
@@ -43,7 +41,7 @@ class DataPacket() :
     override var headers: Headers? = null
     override var data: ByteArray? = null
 
-    constructor(data: ByteArray, headers: Headers) : this() {
+    constructor(data: ByteArray?, headers: Headers) : this() {
         this.data = data
         this.headers = headers
         this.type = PacketType.data
@@ -68,14 +66,12 @@ class DataPacket() :
         )
     }
 
-    override fun encode(ip: String?, port: Int): DatagramPacket {
+    override fun encode(): DatagramPacket {
         this.type = PacketType.data
 
         val coder = Coder()
-        println("encode")
         val packet = coder.encoder(this.data!!, this.headers!!)
-        println(coder.decoder(data!!))
-        return DatagramPacket(packet, packet.size, InetAddress.getByName(ip), port)
+        return DatagramPacket(packet, packet.size)
     }
 }
 
@@ -96,7 +92,7 @@ class AcknowledgmentPacket() :
         this.data = null
 
         this.headers = Headers(
-            ContentType.empty,
+            ContentType.acknowledgement,
             packet.headers!!.messageNumber,
             packet.headers!!.messageSize,
             packet.headers!!.packetsCount,
@@ -109,10 +105,10 @@ class AcknowledgmentPacket() :
         )
     }
 
-    override fun encode(ip: String?, port: Int): DatagramPacket {
+    override fun encode(): DatagramPacket {
         val coder = Coder()
         val packet = coder.encoderAcknowledgment(this.headers!!)
-        return DatagramPacket(packet, packet!!.size, InetAddress.getByName(ip), port)
+        return DatagramPacket(packet, packet!!.size)
     }
 }
 
@@ -121,13 +117,29 @@ class ConnectionPacket : Packet {
     override var headers: Headers? = null
     override var data: ByteArray? = null
 
-    init {
-        this.type = PacketType.connection
+    constructor(headers: Headers) {
         this.data = null
-        this.headers = null
+        this.headers = headers
     }
-    override fun encode(ip: String?, port: Int): DatagramPacket {
-        val arrayBuffer = ByteArray(0)
-        return DatagramPacket(arrayBuffer, 0, InetAddress.getByName(ip), port)
+
+    constructor(messageNumber: Long, sessionID: String?) {
+        this.data = null
+        this.headers = Headers(
+            ContentType.connection,
+            messageNumber,
+            0,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0,
+            sessionID
+        )
+    }
+    override fun encode(): DatagramPacket {
+        val coder = Coder()
+        val packet = coder.encoder(null, this.headers!!)
+        return DatagramPacket(packet, packet.size)
     }
 }

@@ -22,7 +22,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
-import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer
+import kobramob.rubeg38.ru.gbrnavigation.service.NetworkService
 import kobramob.rubeg38.ru.gbrnavigation.service.Request
 import kotlinx.android.synthetic.main.navigator_fragment.*
 import org.json.JSONObject
@@ -43,6 +43,7 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.lang.Exception
 import java.util.*
+import kotlin.concurrent.thread
 
 class NavigatorFragment : Fragment(), MapEventsReceiver {
 
@@ -61,6 +62,8 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
     private var progressBarOpen: String = "close"
     private lateinit var cancelDialog: AlertDialog
     var latitude: Double = 0.toDouble()
+
+    private val networkService = NetworkService()
 
     companion object {
         var firstTime = true
@@ -359,19 +362,17 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
     }
 
     private fun arrivedToObject(jsonObject: JSONObject) {
-        val arrivedToObject = Runnable {
-            request.arrivedToObject(
-                PollingServer.socket,
-                PollingServer.countSender,
-                jsonObject.getString("number"),
-                0,
-                activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
-                activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
-                activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0),
-                activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")
-            )
-        }; Thread(arrivedToObject).start()
-        PollingServer.countSender++
+        thread{
+            val message = JSONObject()
+            message.put("\$c$", "gbrkobra")
+            message.put("command", "alarmpr")
+            message.put("number", jsonObject.getString("number"))
+            val sessionId = activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid","")
+            networkService.send(message = message.toString(),sessionID = sessionId){
+                if(it)
+                    Toast.makeText(activity,"Прибытие подтверждено",Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun distance(road: Road): Float {

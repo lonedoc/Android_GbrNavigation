@@ -40,17 +40,17 @@ class AdapterResponsibleList internal constructor(
         holder.textAddress.text = addressList[position]
         holder.textPosition.text = positionList[position]
 
-        if (phoneList[position] == "empty") {
+        if (phoneList[position] == "acknowledgement") {
             holder.buttonPhone.visibility = View.GONE
             holder.additionalContainer.visibility = View.VISIBLE
         }
 
-        if (homeList[position] == "empty")
+        if (homeList[position] == "acknowledgement")
             holder.buttonHome.visibility = View.GONE
         else
             holder.buttonHome.text = "Дом. " + homeList[position]
 
-        if (workList[position] == "empty")
+        if (workList[position] == "acknowledgement")
             holder.buttonWork.visibility = View.GONE
         else
             holder.buttonWork.text = "Раб. " + workList[position]

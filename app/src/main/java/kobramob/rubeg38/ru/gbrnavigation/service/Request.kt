@@ -1,6 +1,5 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
-import kobramob.rubeg38.ru.gbrnavigation.service.PollingServer.Companion.countSender
 import org.json.JSONObject
 import java.net.*
 import java.nio.ByteBuffer

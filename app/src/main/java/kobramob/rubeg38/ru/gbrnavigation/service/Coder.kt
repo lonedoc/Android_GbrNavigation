@@ -13,15 +13,19 @@ class Coder {
     private val headersSize = 55
 
     // new function
-    fun encoder(data: ByteArray, headers: Headers): ByteArray {
+    fun encoder(data: ByteArray? = null, headers: Headers): ByteArray {
         var sessionIDBytes = ByteArray(16)
 
-        if (headers.sessionID != "") {
+        if (headers.sessionID != null) {
             sessionIDBytes = hexStringToByte(headers.sessionID.toString()).toByteArray()
         }
 
-        val packetSize = data.size + 2
+        var packetSize = 0
 
+        packetSize = if (data != null) {
+            data.size + 2
+        } else
+            0
         // headers
         val headersBuffer = ByteBuffer.allocate(headersSize + 2)
         headersBuffer.order(ByteOrder.LITTLE_ENDIAN)
@@ -30,7 +34,8 @@ class Coder {
         headersBuffer.put(0xFF.toByte())
 
         when (headers.contentType) {
-            ContentType.empty -> { headersBuffer.put(0xFF.toByte()) }
+            ContentType.acknowledgement -> { headersBuffer.put(0xFF.toByte()) }
+            ContentType.connection -> { headersBuffer.put(0xFE.toByte()) }
             ContentType.string -> { headersBuffer.put(0x00.toByte()) }
             ContentType.binary -> { headersBuffer.put(0x01.toByte()) }
         }
@@ -48,6 +53,9 @@ class Coder {
 
         val headersArray = headersBuffer.array()
         code(headersArray)
+
+        if (data == null)
+            return headersArray
 
         // data
         val dataBuffer = ByteBuffer.allocate(packetSize)
@@ -90,7 +98,7 @@ class Coder {
         return acknowledgmentArray
     }
 
-    fun decoder(data: ByteArray): Pair<Headers, ByteArray> {
+    fun decoder(data: ByteArray): Pair<Headers, ByteArray?> {
         // header
         val headersArray = ByteArray(headersSize + 2)
         System.arraycopy(data, 0, headersArray, 0, headersSize + 2)
@@ -102,7 +110,8 @@ class Coder {
         var contentType: ContentType = ContentType.string
 
         when (rawType) {
-            ContentType.empty.contentType -> contentType = ContentType.empty
+            ContentType.connection.contentType -> contentType = ContentType.connection
+            ContentType.acknowledgement.contentType -> contentType = ContentType.acknowledgement
             ContentType.binary.contentType -> contentType = ContentType.binary
             ContentType.string.contentType -> contentType = ContentType.string
         }
@@ -128,16 +137,19 @@ class Coder {
             secondSize,
             null
         )
+        var body: ByteArray? = null
+        if (contentType != ContentType.acknowledgement && packetSize> 0) {
+            // data
+            val bodyBuffer = ByteArray(packetSize)
+            body = ByteArray(packetSize - 2)
+            if (contentType != ContentType.acknowledgement && packetSize> 0) {
+                System.arraycopy(data, 57, bodyBuffer, 0, packetSize)
+                code(bodyBuffer)
 
-        // data
-        val bodyBuffer = ByteArray(packetSize)
-        val body = ByteArray(packetSize - 2)
-        if (contentType != ContentType.empty && packetSize> 0) {
-            System.arraycopy(data, 57, bodyBuffer, 0, packetSize)
-            code(bodyBuffer)
-
-            System.arraycopy(bodyBuffer, 2, body, 0, packetSize - 2)
+                System.arraycopy(bodyBuffer, 2, body, 0, packetSize - 2)
+            }
         }
+
         return Pair(headers, body)
     }
 

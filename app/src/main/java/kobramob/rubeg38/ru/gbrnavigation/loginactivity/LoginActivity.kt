@@ -15,29 +15,32 @@ import android.os.Build
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import org.json.JSONObject
 import android.os.StrictMode
+import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.service.*
+import org.greenrobot.eventbus.Subscribe
 import java.lang.Exception
-import java.util.jar.Manifest
 
 class LoginActivity : AppCompatActivity() {
 
     private val request: Request = Request()
-    private val pollingServer: PollingServer = PollingServer()
+    private var serviceDelegate: ServiceDelegate = ServiceDelegate()
     private val networkService: NetworkService = NetworkService()
-    private val cooder: Coder = Coder()
+    private val coder = Coder()
+
+    private lateinit var serviceConnection: ServiceConnection
+
     lateinit var imei: String
     lateinit var ipInput: TextInputEditText
     lateinit var portInput: TextInputEditText
 
     companion object {
-        var firstStart = false
+        var Alive = false
         const val BROADCAST_ACTION = "kobramob.ruber38.ru.gbrnavigation.loginactivity"
     }
-
     private var progressBarOpen: String = "close"
     private lateinit var cancelDialog: AlertDialog
 
@@ -64,6 +67,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+
     }
 
     private var permissionGranted = PackageManager.PERMISSION_GRANTED
@@ -71,6 +75,7 @@ class LoginActivity : AppCompatActivity() {
     @SuppressLint("HardwareIds")
     override fun onStart() {
         super.onStart()
+        Alive = true
         // checkPermission()
         if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
@@ -125,7 +130,11 @@ class LoginActivity : AppCompatActivity() {
                 clean.remove("tid")
                 clean.apply()
 
-                registerThread()
+                ipInput = findViewById(R.id.ipInputText)
+                portInput = findViewById(R.id.portInputText)
+
+                authorization()
+
             }
 
             ipInput = findViewById(R.id.ipInputText)
@@ -154,6 +163,7 @@ class LoginActivity : AppCompatActivity() {
                     val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
                     StrictMode.setThreadPolicy(policy)
                 }
+
                 broadcastReceiver()
 
                 if (getSharedPreferences("state", Context.MODE_PRIVATE).contains("ip") &&
@@ -162,11 +172,14 @@ class LoginActivity : AppCompatActivity() {
                 ) {
                     showProgressBar()
 
+                    ipInput = findViewById(R.id.ipInputText)
+                    portInput = findViewById(R.id.portInputText)
+
                     val clean = getSharedPreferences("state", Context.MODE_PRIVATE).edit()
                     clean.remove("tid")
                     clean.apply()
 
-                    registerThread()
+                    authorization()
                 }
 
                 ipInput = findViewById(R.id.ipInputText)
@@ -182,8 +195,8 @@ class LoginActivity : AppCompatActivity() {
     private fun setOnClickListenerEnterToApp(buttonEnterToApp: Button, imei: String) {
 
         buttonEnterToApp.setOnClickListener {
-            firstStart = true
             showProgressBar()
+
             if (ipInput.text.toString() == "" || portInput.text.toString() == "") {
                 val dataNotEntered = AlertDialog.Builder(this)
                 dataNotEntered.setTitle("Данные не введены")
@@ -194,87 +207,134 @@ class LoginActivity : AppCompatActivity() {
                         portInput.setText("")
                     }.show()
             } else {
-                SharedPreferencesState.init(this@LoginActivity)
-                SharedPreferencesState.addPropertyString(
-                    "ip",
-                    ipInput.text.toString()
-                )
 
-                SharedPreferencesState.addPropertyInt(
-                    "port",
-                    portInput.text.toString().toInt()
-                )
-
-                pollingServer.initSocket(
-                    ipInput.text.toString(),
-                    portInput.text.toString().toInt()
-                )
-
-                val intent = Intent(this@LoginActivity, PollingServer::class.java)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    this.startForegroundService(intent)
-                } else {
-                    this.startService(intent)
-                }
-
-                val registerThread = Runnable {
-                    request.register(PollingServer.socket, PollingServer.countSender, 0, imei, ipInput.text.toString(), portInput.text.toString().toInt(), "")
-                    PollingServer.countSender++
-                    PollingServer.serverAlive = true
-                }; Thread(registerThread).start()
+                registration(ipInput.text.toString(), portInput.text.toString().toInt(), imei)
             }
         }
     }
 
-    private fun registerThread() {
+    private fun registration(ip: String, port: Int, imei: String) {
+        val startNetworkService = Intent(this@LoginActivity, NetworkService::class.java)
 
-        val registerThread = Runnable {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            this.startForegroundService(startNetworkService)
+        } else {
+            this.startService(startNetworkService)
+        }
 
-            val intent = Intent(this@LoginActivity, PollingServer::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent)
-            } else {
-                startService(intent)
+        networkService.initSocket(
+            ip,
+            port
+        )
+
+        val message = JSONObject()
+        message.put("\$c$", "reg")
+        message.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
+        message.put("password", imei)
+
+        networkService.request(message.toString(), sessionID = null) {
+            success: Boolean, data: ByteArray? ->
+                if (success) {
+                    if (data != null) {
+                        val jsonObject = JSONObject(String(data))
+
+                        SharedPreferencesState.init(this@LoginActivity)
+
+                        SharedPreferencesState.addPropertyString(
+                            "ip",
+                            ip
+                        )
+
+                        SharedPreferencesState.addPropertyInt(
+                            "port",
+                            port
+                        )
+
+                        SharedPreferencesState.addPropertyString(
+                            "imei",
+                            imei
+                        )
+
+                        SharedPreferencesState.addPropertyString(
+                            "tid",
+                            jsonObject.getString("tid")
+                        )
+
+                        try {
+                            SharedPreferencesState.addPropertyString(
+                                "routeserver",
+                                jsonObject.getJSONArray("routeserver").getString(0)
+                            )
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        try {
+                            SharedPreferencesState.addPropertyString(
+                                "namegbr",
+                                jsonObject.getString("namegbr")
+                            )
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        try {
+                            SharedPreferencesState.addPropertyString(
+                                "call",
+                                jsonObject.getString("call")
+                            )
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+
+                        closeProgressBar()
+                        startActivity(Intent(this@LoginActivity, StartActivity::class.java))
+                    }
+                }
+            else
+                {
+                    Log.d("Registration","RegistrationFailed")
+                }
             }
-
-            pollingServer.initSocket(
-                getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
-                getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0)
-            )
-
-            request.register(
-                PollingServer.socket,
-                PollingServer.countSender,
-                0,
-                getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", "")!!,
-                getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
-                getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0),
-                ""
-            )
-
-            PollingServer.countSender++
-        }; Thread(registerThread).start()
     }
 
-    private lateinit var br: BroadcastReceiver
-    private fun broadcastReceiver() {
-        br = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                val info = intent?.getStringExtra("info")
-                val accessDenied = intent?.getBooleanExtra("accessDenied", false)
-                if (accessDenied!!) {
-                    closeProgressBar()
-                    Toast.makeText(this@LoginActivity, "Данное устройство не зарегистрировано на этом сервере", Toast.LENGTH_LONG).show()
-                } else if (!firstStart) {
+    @Subscribe
+    private fun authorization() {
 
-                    val jsonObject = JSONObject(info)
+        val startNetworkService = Intent(this@LoginActivity, NetworkService::class.java)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(startNetworkService)
+        } else {
+            startService(startNetworkService)
+        }
+
+        ipInput.setText(getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!)
+        portInput.setText(getSharedPreferences("state",Context.MODE_PRIVATE).getInt("port",0).toString())
+
+        networkService.initSocket(
+            getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
+            getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0)
+        )
+
+        val message = JSONObject()
+        message.put("\$c$", "reg")
+        message.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
+        message.put("password", imei)
+
+        networkService.request(message = message.toString(), sessionID = null) { success: Boolean, data: ByteArray? ->
+            if (success) {
+                Log.d("Authorization", "success")
+
+                if (data != null) {
+
+                    Log.d("Authorization",String(data))
+                    val jsonObject = JSONObject(String(data))
 
                     SharedPreferencesState.init(this@LoginActivity)
                     SharedPreferencesState.addPropertyString(
                         "tid",
                         jsonObject.getString("tid")
                     )
-                    PollingServer.register = true
+
                     try {
                         if (jsonObject.getString("namegbr") !=
                             getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
@@ -284,6 +344,10 @@ class LoginActivity : AppCompatActivity() {
                                 jsonObject.getString("namegbr")
                             )
                         }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    try {
                         if (jsonObject.getString("call") !=
                             getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "")
                         ) {
@@ -298,53 +362,23 @@ class LoginActivity : AppCompatActivity() {
 
                     closeProgressBar()
                     startActivity(Intent(this@LoginActivity, StartActivity::class.java))
-                } else {
-                    println("FirstStart")
-                    val jsonObject = JSONObject(info)
+                }
+            } else
+                Log.d("Authorization", "failed")
+        }
+    }
 
-                    SharedPreferencesState.init(this@LoginActivity)
+    private lateinit var br: BroadcastReceiver
+    private fun broadcastReceiver() {
+        br = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val connectionLost = intent?.getBooleanExtra("connectionLost",false)
+                if(connectionLost != null){
+                    if(connectionLost){
+                        closeProgressBar()
 
-                    SharedPreferencesState.addPropertyString(
-                        "imei",
-                        imei
-                    )
-
-                    SharedPreferencesState.addPropertyString(
-                        "tid",
-                        jsonObject.getString("tid")
-                    )
-                    PollingServer.register = true
-                    try {
-                        SharedPreferencesState.addPropertyString(
-                            "routeserver",
-                            jsonObject.getJSONArray("routeserver").getString(0)
-                        )
-                        SharedPreferencesState.addPropertyString(
-                            "namegbr",
-                            jsonObject.getString("namegbr")
-                        )
-
-                        SharedPreferencesState.addPropertyString(
-                            "call",
-                            jsonObject.getString("call")
-                        )
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                        Toast.makeText(this@LoginActivity,"Не удается установить связь с сервером",Toast.LENGTH_LONG).show()
                     }
-
-                    SharedPreferencesState.addPropertyString(
-                        "ip",
-                        ipInput.text.toString()
-                    )
-
-                    SharedPreferencesState.addPropertyInt(
-                        "port",
-                        portInput.text.toString().toInt()
-                    )
-
-                    closeProgressBar()
-                    startActivity(Intent(this@LoginActivity, StartActivity::class.java))
-                    firstStart = false
                 }
             }
         }
@@ -358,6 +392,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         try {
+            Alive = false
             unregisterReceiver(br)
             cancelDialog.cancel()
         } catch (e: Exception) {
@@ -367,8 +402,9 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        NetworkService.appAlive = false
 
-        val intent = Intent(this@LoginActivity, PollingServer::class.java)
+        val intent = Intent(this@LoginActivity, NetworkService::class.java)
         stopService(intent)
 
         val clean = getSharedPreferences("state", Context.MODE_PRIVATE).edit()
