@@ -49,6 +49,7 @@ import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.lang.Exception
+import java.lang.Thread.sleep
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -210,7 +211,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                     "port",
                     port_server.text.toString().toInt()
                 )
-                unregisterReceiver(br)
+
                 startActivity(Intent(this, LoginActivity::class.java))
             }
         }.show()
@@ -265,6 +266,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     override fun onStart() {
         super.onStart()
         Alive = true
+        receiver()
     }
 
     private fun centerMap() {
@@ -450,106 +452,149 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
     lateinit var connectionLostDialog:AlertDialog
     var isShowing = false
-    private fun broadcastReceiver() {
-        br = object : BroadcastReceiver() {
-            @SuppressLint("SetTextI18n")
-            override fun onReceive(context: Context?, intent: Intent?) {
-                val status = intent?.getStringExtra("status")
-                val alarm = intent?.getStringExtra("alarm")
-                val regok = intent?.getStringExtra("regok")
-                val connectionLost = intent?.getBooleanExtra("connectionLost",false)
 
-                SharedPreferencesState.init(this@StartActivity)
-                if(connectionLost!!){
-                    //Dialog
-                    val dialog = AlertDialog.Builder(this@StartActivity)
-                    dialog.setTitle("Потеряно соединение с сервером")
-                        .setMessage("Пожалуйста подождите, пытаемся восстановить соединение,не сворачивайте приложение")
-                    if(!isShowing){
-                        connectionLostDialog = dialog.create()
-                        connectionLostDialog.show()
-                        isShowing = true
+    private fun receiver(){
+        var acceptAlarm:Boolean = true
+        thread{
+            while(Alive){
 
-                    }
-                    val message = JSONObject()
-                    message.put("\$c$", "reg")
-                    message.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
-                    message.put("password", getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei",""))
-                    networkService.send(message.toString(),null){
-                            success:Boolean->
-                        if (success){
-                            Log.d("Connected","true")
+                    if(NetworkService.messageBroker.count()>0){
+                        receiver@
+                        for(i in 0 until NetworkService.messageBroker.count()){
+                            if(acceptAlarm){
+                            SharedPreferencesState.init(this@StartActivity)
+                            Log.d("StartReceiver",NetworkService.messageBroker[i])
+                            val lenght = NetworkService.messageBroker.count()
+                            val jsonMessage = JSONObject(NetworkService.messageBroker[i])
 
+                            when(jsonMessage.getString("command")){
+                                "gbrstatus"->{
+                                    runOnUiThread {
+                                        val status = jsonMessage.getString("status")
+                                        val nameGbr  =getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
+                                        val call = getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "")
+
+                                        SharedPreferencesState.addPropertyString("status", status)
+
+                                        supportActionBar!!.title = ("$nameGbr $call ( $status )").toString()
+                                    }
+                                    NetworkService.messageBroker.removeAt(i)
+                                }
+
+                                "alarmpok"->{
+                                    runOnUiThread {
+                                        try{
+                                            Toast.makeText(this@StartActivity,"Тревога подтвреждена",Toast.LENGTH_LONG).show()
+                                        }catch (e:Exception){
+                                            e.printStackTrace()
+                                        }
+                                    }
+                                    NetworkService.messageBroker.removeAt(i)
+                                }
+
+                                "alarm"->{
+                                    runOnUiThread {
+                                        acceptAlarm = false
+                                        val messageAlarm = NetworkService.messageBroker[i]
+
+                                        if (Build.VERSION.SDK_INT >= 26) {
+                                            (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
+                                        } else {
+                                            (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(1000)
+                                        }
+
+                                        val trevoga = MediaPlayer.create(this@StartActivity, R.raw.trevoga)
+                                        trevoga.start()
+
+                                        val alertDialog = AlertDialog.Builder(this@StartActivity)
+                                        val view = layoutInflater.inflate(R.layout.dialog_alarm, null)
+                                        alertDialog.setView(view)
+                                        val dialog: AlertDialog = alertDialog.create()
+                                        dialog.setCancelable(false)
+                                        dialog.show()
+
+                                        val acceptAlertButton: Button = view!!.findViewById(R.id.AcceptAlert)
+                                        val dialogObjectName: TextView = view.findViewById(R.id.dialog_objectName)
+                                        val dialogObjectAddress: TextView = view.findViewById(R.id.dialog_objectAddress)
+
+                                        dialogObjectName.text = jsonMessage.getString("name")
+                                        dialogObjectAddress.text = jsonMessage.getString("address")
+
+
+                                        acceptAlertButton.setOnClickListener {
+                                            trevoga.stop()
+
+                                            val objectActivity = Intent(this@StartActivity, ObjectActivity::class.java)
+                                            objectActivity.putExtra("info",jsonMessage.toString())
+                                            startActivity(objectActivity)
+                                            acceptAlarm = true
+                                            acceptAlarm(jsonMessage)
+                                            NetworkService.messageBroker.removeAt(i)
+                                            dialog.cancel()
+                                        }
+                                    }
+
+                                }
+
+                                "disconnected"->{
+
+                                    val sendMessage = JSONObject()
+                                    sendMessage.put("\$c$", "reg")
+                                    sendMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
+                                    sendMessage.put("password", getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei",""))
+
+                                    runOnUiThread {
+                                        val dialog = AlertDialog.Builder(this@StartActivity)
+                                        dialog.setTitle("Потеряно соединение с сервером")
+                                            .setMessage("Пожалуйста подождите, пытаемся восстановить соединение,не сворачивайте приложение")
+                                        connectionLostDialog = dialog.create()
+                                    }
+
+                                    networkService.send(sendMessage.toString(),null){
+                                            success:Boolean->
+                                        if (success){
+                                            Log.d("Connected","true")
+                                            connectionLostDialog.cancel()
+                                        }
+                                        else{
+                                            Log.d("Connected","false")
+                                        }
+                                    }
+
+                                    runOnUiThread {
+
+                                        if(!isShowing){
+                                            connectionLostDialog.show()
+                                            isShowing = true
+
+                                        }
+                                    }
+                                    NetworkService.messageBroker.removeAt(i)
+
+                                }
+
+                                "reconnection"->{
+                                    if(isShowing)
+                                        connectionLostDialog.cancel()
+
+                                    isShowing = false
+
+                                    runOnUiThread {
+                                        Toast.makeText(this@StartActivity,"Соединение с сервером восстановлено",Toast.LENGTH_LONG).show()
+                                    }
+
+                                    NetworkService.messageBroker.removeAt(i)
+                                }
+                            }
+                            if(lenght>NetworkService.messageBroker.count())
+                                break
                         }
                     }
-
-                }
-                if(regok!=null){
-                    if(isShowing)
-                    connectionLostDialog.cancel()
-
-                    isShowing = false
-                    Toast.makeText(this@StartActivity,"Соединение с сервером восстановлено",Toast.LENGTH_LONG).show()
                 }
 
-                if (status != null) {
-                    SharedPreferencesState.addPropertyString("status", status)
-
-                    val title =
-                        getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "") + " " +
-                                getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "") +
-                                " (" + getSharedPreferences("state", Context.MODE_PRIVATE).getString("status", "") + ")"
-                    supportActionBar!!.title = title
-
-                }
-
-                if (alarm!=null) {
-
-                    val jsonObject = JSONObject(alarm)
-
-                    if (Build.VERSION.SDK_INT >= 26) {
-                        (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
-                    } else {
-                        (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(1000)
-                    }
-
-                    val trevoga = MediaPlayer.create(this@StartActivity, R.raw.trevoga)
-                    trevoga.start()
-
-                    val alertDialog = AlertDialog.Builder(this@StartActivity)
-                    val view = layoutInflater.inflate(R.layout.dialog_alarm, null)
-                    alertDialog.setView(view)
-                    val dialog: AlertDialog = alertDialog.create()
-                    dialog.setCancelable(false)
-                    dialog.show()
-
-                    val acceptAlertButton: Button = view!!.findViewById(R.id.AcceptAlert)
-                    val dialog_objectName: TextView = view.findViewById(R.id.dialog_objectName)
-                    val dialog_objectAddress: TextView = view.findViewById(R.id.dialog_objectAddress)
-                    dialog_objectName.text = jsonObject.getString("name")
-                    dialog_objectAddress.text = jsonObject.getString("address")
-
-                    acceptAlertButton.setOnClickListener {
-                        trevoga.stop()
-                        acceptAlarm(jsonObject)
-
-                        unregisterReceiver(br)
-
-                        val objectActivity = Intent(this@StartActivity, ObjectActivity::class.java)
-                        objectActivity.putExtra("info", alarm)
-                        startActivity(objectActivity)
-                        dialog.cancel()
-                    }
-                }
+                sleep(100)
             }
         }
-        val intentFilter = IntentFilter(BROADCAST_ACTION)
-        try{
-            registerReceiver(br, intentFilter)
-        }catch (e:Exception){
-            e.printStackTrace()
-        }
-
     }
 
     private fun acceptAlarm(jsonObject: JSONObject) {
@@ -563,11 +608,6 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                 success:Boolean ->
                 if(success){
                     Log.d("Alarm","accept")
-                    try{
-                        Toast.makeText(this@StartActivity,"Тревога подтвреждена",Toast.LENGTH_LONG).show()
-                    }catch (e:Exception){
-                        e.printStackTrace()
-                    }
                 }
             }
         }
@@ -576,8 +616,6 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     var latiduet: Double = 0.toDouble()
     override fun onResume() {
         super.onResume()
-
-        broadcastReceiver()
 
         if(getSharedPreferences("state", Context.MODE_PRIVATE).getString("status", "")!=""){
             val title =
@@ -745,12 +783,6 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
     override fun onDestroy() {
         super.onDestroy()
-
-        NetworkService.appAlive = false
-
-        unregisterReceiver(br)
-        val intent = Intent(this@StartActivity, NetworkService::class.java)
-        stopService(intent)
 
         val clean = getSharedPreferences("state", Context.MODE_PRIVATE).edit()
         clean.remove("tid")

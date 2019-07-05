@@ -27,7 +27,6 @@ import java.lang.Exception
 class LoginActivity : AppCompatActivity() {
 
     private val request: Request = Request()
-    private var serviceDelegate: ServiceDelegate = ServiceDelegate()
     private val networkService: NetworkService = NetworkService()
     private val coder = Coder()
 
@@ -214,18 +213,12 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun registration(ip: String, port: Int, imei: String) {
-        val startNetworkService = Intent(this@LoginActivity, NetworkService::class.java)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            this.startForegroundService(startNetworkService)
-        } else {
-            this.startService(startNetworkService)
-        }
-
         networkService.initSocket(
             ip,
             port
         )
+
+        networkService.startService()
 
         val message = JSONObject()
         message.put("\$c$", "reg")
@@ -259,6 +252,8 @@ class LoginActivity : AppCompatActivity() {
                             "tid",
                             jsonObject.getString("tid")
                         )
+
+                        networkService.initData(jsonObject.getString("tid"), imei,this)
 
                         try {
                             SharedPreferencesState.addPropertyString(
@@ -299,14 +294,6 @@ class LoginActivity : AppCompatActivity() {
     @Subscribe
     private fun authorization() {
 
-        val startNetworkService = Intent(this@LoginActivity, NetworkService::class.java)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(startNetworkService)
-        } else {
-            startService(startNetworkService)
-        }
-
         ipInput.setText(getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!)
         portInput.setText(getSharedPreferences("state",Context.MODE_PRIVATE).getInt("port",0).toString())
 
@@ -314,6 +301,8 @@ class LoginActivity : AppCompatActivity() {
             getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
             getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0)
         )
+
+        networkService.startService()
 
         val message = JSONObject()
         message.put("\$c$", "reg")
@@ -334,7 +323,7 @@ class LoginActivity : AppCompatActivity() {
                         "tid",
                         jsonObject.getString("tid")
                     )
-
+                    networkService.initData(jsonObject.getString("tid"),imei,this)
                     try {
                         if (jsonObject.getString("namegbr") !=
                             getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
@@ -402,10 +391,6 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        NetworkService.appAlive = false
-
-        val intent = Intent(this@LoginActivity, NetworkService::class.java)
-        stopService(intent)
 
         val clean = getSharedPreferences("state", Context.MODE_PRIVATE).edit()
         clean.remove("tid")

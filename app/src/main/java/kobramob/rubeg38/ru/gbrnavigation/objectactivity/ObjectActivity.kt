@@ -12,15 +12,18 @@ import android.view.WindowManager
 import android.widget.Toast
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
+import kobramob.rubeg38.ru.gbrnavigation.service.NetworkServiceOld
 import kobramob.rubeg38.ru.gbrnavigation.service.NetworkService
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import org.json.JSONObject
+import java.lang.Thread.sleep
+import kotlin.concurrent.thread
 
 class ObjectActivity : AppCompatActivity() {
 
     private val tabFragment: TabFragment = TabFragment()
     private val navigatorFragment: NavigatorFragment = NavigatorFragment()
-    private val networkService = NetworkService()
+    private val networkService = NetworkServiceOld()
 
     companion object {
         var Alive = false
@@ -78,9 +81,99 @@ class ObjectActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         Alive = true
-        broadcastReceiver()
+        receiver()
     }
 
+    private fun receiver() {
+        thread {
+            while (Alive) {
+                if (NetworkService.messageBroker.count() > 0) {
+                    receiver@
+                    for (i in 0 until NetworkService.messageBroker.count()) {
+                        SharedPreferencesState.init(this@ObjectActivity)
+                        Log.d("ObjectReceiver",NetworkService.messageBroker[i])
+                        val lenght = NetworkService.messageBroker.count()
+                        val jsonMessage = JSONObject(NetworkService.messageBroker[i])
+
+                        when(jsonMessage.getString("command")){
+                            "disconnect"->{
+                                val sendMessage = JSONObject()
+                                sendMessage.put("\$c$", "reg")
+                                sendMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
+                                sendMessage.put("password", getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei",""))
+
+                                networkService.send(sendMessage.toString(),null){
+                                        success:Boolean->
+                                    if (success){
+                                        Log.d("Connected","true")
+                                    }
+                                    else{
+                                        Log.d("Connected","false")
+                                    }
+                                }
+
+                                runOnUiThread {
+                                    val dialog = AlertDialog.Builder(this@ObjectActivity)
+                                    dialog.setTitle("Потеряно соединение с сервером")
+                                        .setMessage("СОЕДИНЕНИЕ С СЕРВЕРОМ ПОТЕРЯНО ПРИЛОЖЕНИЕ ПЕРЕХОДИТ В АВТОНОМНЫЙ РЕЖИМ")
+                                        .setPositiveButton("Принял") { dialog, _ ->
+                                            dialog.cancel()
+                                        }
+                                    dialog.show()
+                                }
+                                NetworkService.messageBroker.removeAt(i)
+                            }
+                            "reconnect"->{
+                                runOnUiThread {
+                                    Toast.makeText(this@ObjectActivity,"Соединение с сервером восстановлено",Toast.LENGTH_LONG).show()
+                                }
+
+                                NetworkService.messageBroker.removeAt(i)
+                            }
+                            "gbrstatus"->{
+                                if(jsonMessage.getString("status")!="На тревоге")
+                                {
+                                    SharedPreferencesState.init(this@ObjectActivity)
+                                    if (jsonMessage.getString("status") != null) {
+                                        SharedPreferencesState.addPropertyString("status", jsonMessage.getString("status"))
+                                    }
+
+                                    runOnUiThread {
+                                        Toast.makeText(this@ObjectActivity, "Тревога отменена(смена статуса)!", Toast.LENGTH_LONG).show()
+
+                                        startActivity(Intent(this@ObjectActivity, StartActivity::class.java))
+                                    }
+                                }
+                                NetworkService.messageBroker.removeAt(i)
+                            }
+                            "alarmpok"->{
+                                runOnUiThread {
+                                    try{
+                                        Toast.makeText(this@ObjectActivity,"Тревога подтвреждена",Toast.LENGTH_LONG).show()
+                                    }catch (e: java.lang.Exception){
+                                        e.printStackTrace()
+                                    }
+                                }
+                                NetworkService.messageBroker.removeAt(i)
+                            }
+
+                            "notalarm"->{
+                                runOnUiThread {
+                                    Toast.makeText(this@ObjectActivity, "Тревога отменена!", Toast.LENGTH_LONG).show()
+
+                                    startActivity(Intent(this@ObjectActivity, StartActivity::class.java))
+                                }
+                                NetworkService.messageBroker.removeAt(i)
+                            }
+                        }
+                        if(lenght>NetworkService.messageBroker.count())
+                            break
+                    }
+                }
+                sleep(100)
+            }
+        }
+    }
     var connectionLostBoolean = false
     var showDialog = false
     private lateinit var br: BroadcastReceiver

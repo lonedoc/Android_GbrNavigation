@@ -22,7 +22,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
-import kobramob.rubeg38.ru.gbrnavigation.service.NetworkService
+import kobramob.rubeg38.ru.gbrnavigation.service.NetworkServiceOld
 import kobramob.rubeg38.ru.gbrnavigation.service.Request
 import kotlinx.android.synthetic.main.navigator_fragment.*
 import org.json.JSONObject
@@ -63,7 +63,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
     private lateinit var cancelDialog: AlertDialog
     var latitude: Double = 0.toDouble()
 
-    private val networkService = NetworkService()
+    private val networkService = NetworkServiceOld()
 
     companion object {
         var firstTime = true
@@ -369,8 +369,12 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
             message.put("number", jsonObject.getString("number"))
             val sessionId = activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid","")
             networkService.send(message = message.toString(),sessionID = sessionId){
-                if(it)
-                    Toast.makeText(activity,"Прибытие подтверждено",Toast.LENGTH_LONG).show()
+                success:Boolean->
+                if(success){
+                    activity!!.runOnUiThread {
+                        Toast.makeText(activity,"Прибытие подтверждено",Toast.LENGTH_LONG).show()
+                    }
+                }
             }
         }
     }

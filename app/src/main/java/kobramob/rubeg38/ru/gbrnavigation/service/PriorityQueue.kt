@@ -36,6 +36,7 @@ class PriorityQueue<T> {
     }
 
     @Synchronized fun remove() {
+        if(items.count()>0)
         items.removeAt(0)
     }
     @Synchronized fun removeAll(predicate: (T) -> Boolean) {
