@@ -362,12 +362,13 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
     }
 
     private fun arrivedToObject(jsonObject: JSONObject) {
-        thread{
+
             val message = JSONObject()
             message.put("\$c$", "gbrkobra")
             message.put("command", "alarmpr")
             message.put("number", jsonObject.getString("number"))
-            val sessionId = activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid","")
+        val sessionId = activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid","")
+        thread{
             networkService.send(message = message.toString(),sessionID = sessionId){
                 success:Boolean->
                 if(success){

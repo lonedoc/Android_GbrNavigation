@@ -284,6 +284,7 @@ class NetworkService:NetworkServiceDelegate {
                             val packet = this.onAirPackets[i].first
                             val timeOnAir = this.onAirPackets[i].second
                             val count = this.onAirPackets[i].third
+
                             this.onAirPackets.removeAt(i)
 
                             this.onAirPackets.add(i, Triple(packet, timeOnAir, count + 1))
@@ -449,9 +450,13 @@ class NetworkService:NetworkServiceDelegate {
 
         val messageNumber = packet.headers!!.messageNumber
 
+        if(messageNumber<incommingMessagesCount && incomingTransmissions[messageNumber]==null)
+            return
+
         if (messageNumber> this.incommingMessagesCount) {
             incommingMessagesCount = messageNumber
         }
+
 
         if (incomingTransmissions[messageNumber] == null) {
             val handler: ResponseHandler
