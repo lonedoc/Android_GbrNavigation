@@ -12,7 +12,6 @@ import android.view.WindowManager
 import android.widget.Toast
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
-import kobramob.rubeg38.ru.gbrnavigation.service.NetworkServiceOld
 import kobramob.rubeg38.ru.gbrnavigation.service.NetworkService
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import org.json.JSONObject
@@ -23,7 +22,7 @@ class ObjectActivity : AppCompatActivity() {
 
     private val tabFragment: TabFragment = TabFragment()
     private val navigatorFragment: NavigatorFragment = NavigatorFragment()
-    private val networkService = NetworkServiceOld()
+    private val networkService = NetworkService()
 
     companion object {
         var Alive = false
@@ -165,7 +164,7 @@ class ObjectActivity : AppCompatActivity() {
 
                                     runOnUiThread {
                                         Toast.makeText(this@ObjectActivity, "Тревога отменена!", Toast.LENGTH_LONG).show()
-
+                                        SharedPreferencesState.addPropertyString("status", "Свободен")
                                         startActivity(Intent(this@ObjectActivity, StartActivity::class.java))
                                     }
                                     NetworkService.messageBroker.removeAt(i)

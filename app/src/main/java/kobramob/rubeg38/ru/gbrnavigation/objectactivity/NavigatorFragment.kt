@@ -11,18 +11,18 @@ import android.os.Bundle
 import android.os.Handler
 import android.support.design.widget.BottomNavigationView
 import android.support.design.widget.FloatingActionButton
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import kobramob.rubeg38.ru.gbrnavigation.R
 import android.support.v4.app.Fragment
 import android.support.v7.app.AlertDialog
 import android.util.DisplayMetrics
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.Toast
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
+import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
-import kobramob.rubeg38.ru.gbrnavigation.service.NetworkServiceOld
+import kobramob.rubeg38.ru.gbrnavigation.service.NetworkService
 import kobramob.rubeg38.ru.gbrnavigation.service.Request
 import kotlinx.android.synthetic.main.navigator_fragment.*
 import org.json.JSONObject
@@ -41,7 +41,6 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import java.lang.Exception
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -63,7 +62,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
     private lateinit var cancelDialog: AlertDialog
     var latitude: Double = 0.toDouble()
 
-    private val networkService = NetworkServiceOld()
+    private val networkService = NetworkService()
 
     companion object {
         var firstTime = true
@@ -329,6 +328,7 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
                                         val alertDialog = AlertDialog.Builder(activity!!)
                                         val view = layoutInflater.inflate(R.layout.arrived_dialog, null)
                                         alertDialog.setView(view)
+                                        alertDialog.setCancelable(false)
                                         val dialog: AlertDialog = alertDialog.create()
                                         dialog.show()
                                         val arrive_button: LinearLayout = view!!.findViewById(R.id.arrived_button)

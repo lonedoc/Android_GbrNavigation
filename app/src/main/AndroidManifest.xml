@@ -46,13 +46,7 @@
         </activity>
 
         <service
-                android:name=".service.PollingServer"
-                android:enabled="true"
-                android:exported="false">
-        </service>
-
-        <service
-                android:name=".service.NetworkServiceOld"
+                android:name=".service.NetworkService"
                 android:enabled="true"
                 android:exported="false" >
         </service>

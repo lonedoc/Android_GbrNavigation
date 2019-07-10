@@ -23,7 +23,7 @@ class PriorityQueue<T> {
         items.add(Pair(item, priority))
     }
 
-    @Synchronized fun enqueue(item: T) {
+    fun enqueue(item: T) {
         this.enqueue(item, 1)
     }
 

@@ -96,15 +96,11 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     }
 
     companion object {
-        const val BROADCAST_ACTION = "kobramob.ruber38.ru.gbrnavigation.startactivity"
         lateinit var rotationGestureOverlay: RotationGestureOverlay
         lateinit var locationOverlay: MyLocationNewOverlay
         var Alive = false
     }
 
-    private val startActivityModel: StartActivityModel = StartActivityModel()
-
-    private val request: Request = Request()
     private val tileSource: TileSource =
         TileSource()
 
@@ -241,13 +237,13 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
             val title =
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "") + " " +
                     getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "") +
-                    " (" + getSharedPreferences("state", Context.MODE_PRIVATE).getString("status", "") + ")"
+                    " ( " + getSharedPreferences("state", Context.MODE_PRIVATE).getString("status", "") + " )"
             supportActionBar!!.title = title
         } else {
             val title =
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "") + " " +
                     getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "") +
-                    " (Свободен)"
+                    " ( Свободен )"
             supportActionBar!!.title = title
         }
 
@@ -266,7 +262,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     override fun onStart() {
         super.onStart()
         Alive = true
-        receiver()
+
     }
 
     private fun centerMap() {
@@ -450,18 +446,16 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
     private lateinit var br: BroadcastReceiver
 
-    lateinit var connectionLostDialog:AlertDialog
+    var connectionLostDialog:AlertDialog? = null
     var isShowing = false
 
     private fun receiver(){
-        var acceptAlarm:Boolean = true
         thread{
+            closeReceiver@
             while(Alive){
-
                     if(NetworkService.messageBroker.count()>0){
                         receiver@
                         for(i in 0 until NetworkService.messageBroker.count()){
-                            if(acceptAlarm){
                             SharedPreferencesState.init(this@StartActivity)
                             Log.d("StartReceiver",NetworkService.messageBroker[i])
                             val lenght = NetworkService.messageBroker.count()
@@ -493,47 +487,61 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                                 }
 
                                 "alarm"->{
-                                    runOnUiThread {
-                                        acceptAlarm = false
-                                        val messageAlarm = NetworkService.messageBroker[i]
+                                        runOnUiThread {
+                                            val status = "На тревоге"
+                                            val nameGbr  =getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
+                                            val call = getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "")
 
-                                        if (Build.VERSION.SDK_INT >= 26) {
-                                            (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
-                                        } else {
-                                            (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(1000)
+                                            SharedPreferencesState.addPropertyString("status", status)
+
+                                            supportActionBar!!.title = ("$nameGbr $call ( $status )").toString()
+
+                                            Alive = false
+                                            if (Build.VERSION.SDK_INT >= 26) {
+                                                (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
+                                            } else {
+                                                (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(1000)
+                                            }
+
+                                            val trevoga = MediaPlayer.create(this@StartActivity, R.raw.trevoga)
+                                            trevoga.start()
+
+                                            val alertDialog = AlertDialog.Builder(this@StartActivity)
+                                            val view = layoutInflater.inflate(R.layout.dialog_alarm, null)
+                                            alertDialog.setView(view)
+                                            val dialog: AlertDialog = alertDialog.create()
+                                            dialog.setCancelable(false)
+                                            dialog.show()
+
+                                            val acceptAlertButton: Button = view!!.findViewById(R.id.AcceptAlert)
+                                            val dialogObjectName: TextView = view.findViewById(R.id.dialog_objectName)
+                                            val dialogObjectAddress: TextView = view.findViewById(R.id.dialog_objectAddress)
+
+                                            dialogObjectName.text = jsonMessage.getString("name")
+                                            dialogObjectAddress.text = jsonMessage.getString("address")
+
+
+                                            acceptAlertButton.setOnClickListener {
+                                                trevoga.stop()
+
+                                                if(trevoga.isPlaying){
+                                                    trevoga.stop()
+                                                    trevoga.reset()
+                                                }
+
+                                                val objectActivity = Intent(this@StartActivity, ObjectActivity::class.java)
+                                                objectActivity.putExtra("info",jsonMessage.toString())
+                                                startActivity(objectActivity)
+
+                                                acceptAlarm(jsonMessage)
+
+                                                NetworkService.messageBroker.clear()
+
+                                                dialog.cancel()
+                                            }
                                         }
-
-                                        val trevoga = MediaPlayer.create(this@StartActivity, R.raw.trevoga)
-                                        trevoga.start()
-
-                                        val alertDialog = AlertDialog.Builder(this@StartActivity)
-                                        val view = layoutInflater.inflate(R.layout.dialog_alarm, null)
-                                        alertDialog.setView(view)
-                                        val dialog: AlertDialog = alertDialog.create()
-                                        dialog.setCancelable(false)
-                                        dialog.show()
-
-                                        val acceptAlertButton: Button = view!!.findViewById(R.id.AcceptAlert)
-                                        val dialogObjectName: TextView = view.findViewById(R.id.dialog_objectName)
-                                        val dialogObjectAddress: TextView = view.findViewById(R.id.dialog_objectAddress)
-
-                                        dialogObjectName.text = jsonMessage.getString("name")
-                                        dialogObjectAddress.text = jsonMessage.getString("address")
-
-
-                                        acceptAlertButton.setOnClickListener {
-                                            trevoga.stop()
-
-                                            val objectActivity = Intent(this@StartActivity, ObjectActivity::class.java)
-                                            objectActivity.putExtra("info",jsonMessage.toString())
-                                            startActivity(objectActivity)
-                                            acceptAlarm = true
-                                            acceptAlarm(jsonMessage)
-                                            NetworkService.messageBroker.removeAt(i)
-                                            dialog.cancel()
-                                        }
-                                    }
-
+                                    NetworkService.messageBroker.removeAt(i)
+                                    continue@closeReceiver
                                 }
 
                                 "disconnected"->{
@@ -554,7 +562,8 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                                             success:Boolean->
                                         if (success){
                                             Log.d("Connected","true")
-                                            connectionLostDialog.cancel()
+                                            if(connectionLostDialog!=null)
+                                            connectionLostDialog!!.cancel()
                                         }
                                         else{
                                             Log.d("Connected","false")
@@ -564,7 +573,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                                     runOnUiThread {
 
                                         if(!isShowing){
-                                            connectionLostDialog.show()
+                                            connectionLostDialog?.show()
                                             isShowing = true
 
                                         }
@@ -575,7 +584,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
                                 "reconnection"->{
                                     if(isShowing)
-                                        connectionLostDialog.cancel()
+                                        connectionLostDialog?.cancel()
 
                                     isShowing = false
 
@@ -595,7 +604,6 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                 sleep(100)
             }
         }
-    }
 
     private fun acceptAlarm(jsonObject: JSONObject) {
         thread{
@@ -621,7 +629,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
             val title =
                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "") + " " +
                         getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "") +
-                        " (" + getSharedPreferences("state", Context.MODE_PRIVATE).getString("status", "") + ")"
+                        " ( " + getSharedPreferences("state", Context.MODE_PRIVATE).getString("status", "") + " )"
             supportActionBar!!.title = title
         }
 
@@ -644,7 +652,9 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                 if (latiduet != 0.toDouble()) {
                     closeProgressBar()
                     try {
+
                         mMapView.controller.animateTo(GeoPoint(locationOverlay.lastFix.latitude, locationOverlay.lastFix.longitude))
+                        receiver()
                     } catch (e: Exception) {}
                 }
             }
@@ -753,7 +763,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                     val title =
                         getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "") + " " +
                                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "") +
-                                " (" + getSharedPreferences("state", Context.MODE_PRIVATE).getString("status", "") + ")"
+                                " ( " + getSharedPreferences("state", Context.MODE_PRIVATE).getString("status", "") + " )"
                     supportActionBar!!.title = title
                 }
             }
