@@ -151,7 +151,9 @@ class NetworkService: Service(),NetworkServiceDelegate {
 
     companion object {
         var currentLocation: Location? = null
-        lateinit var socket: DatagramSocket
+
+        var socket: DatagramSocket = DatagramSocket(null)
+
         val packetsToSend = PriorityQueue<Packet>()
 
         var outcomingTransmissions = LongSparseArray<OutcomingTransmission>()
@@ -231,10 +233,9 @@ class NetworkService: Service(),NetworkServiceDelegate {
 
     fun initSocket(ip: String?, port: Int) {
         try {
-            socket = DatagramSocket(null)
             socket.reuseAddress = true
             socket.connect(InetSocketAddress(ip, port))
-//            socket.bind(InetSocketAddress(socket.localPort))
+            socket.bind(InetSocketAddress(socket.localPort))
         } catch (e: Exception) {
             e.printStackTrace()
         }

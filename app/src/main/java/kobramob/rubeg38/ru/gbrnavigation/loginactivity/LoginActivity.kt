@@ -202,6 +202,11 @@ class LoginActivity : AppCompatActivity() {
 
         val startService = Intent(this,NetworkService::class.java)
 
+        networkService.initSocket(
+            ip,
+            port
+        )
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(startService)
         }
@@ -213,10 +218,7 @@ class LoginActivity : AppCompatActivity() {
         val myLocation = MyLocation()
         myLocation.initLocation(this)
 
-        networkService.initSocket(
-            ip,
-            port
-        )
+
 
         val message = JSONObject()
         message.put("\$c$", "reg")
@@ -311,6 +313,11 @@ class LoginActivity : AppCompatActivity() {
 
         val startService = Intent(this,NetworkService::class.java)
 
+        networkService.initSocket(
+            getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
+            getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
+        )
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(startService)
         }
@@ -325,10 +332,7 @@ class LoginActivity : AppCompatActivity() {
         ipInput.setText(getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!)
         portInput.setText(getSharedPreferences("state",Context.MODE_PRIVATE).getInt("port",9010).toString())
 
-        networkService.initSocket(
-            getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
-            getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
-        )
+
 
         val message = JSONObject()
         message.put("\$c$", "reg")
@@ -477,7 +481,17 @@ class LoginActivity : AppCompatActivity() {
                                     }
                                 runOnUiThread {
                                     closeProgressBar()
-                                    NetworkService.messageBroker.removeAt(i)
+
+                                    try {
+                                        if( NetworkService.messageBroker.count()>0){
+                                            NetworkService.messageBroker.removeAt(i)
+                                        }
+                                    }catch (e:Exception){
+                                        e.printStackTrace()
+                                    }
+
+
+
                                     startActivity(Intent(this@LoginActivity, StartActivity::class.java))
                                 }
 
@@ -488,6 +502,7 @@ class LoginActivity : AppCompatActivity() {
                                     val startService = Intent(this,NetworkService::class.java)
                                     stopService(startService)
                                     Toast.makeText(this,"Соединение с сервером не найдено",Toast.LENGTH_LONG).show()
+                                    if( NetworkService.messageBroker.count()>0)
                                     NetworkService.messageBroker.removeAt(i)
                                 }
 

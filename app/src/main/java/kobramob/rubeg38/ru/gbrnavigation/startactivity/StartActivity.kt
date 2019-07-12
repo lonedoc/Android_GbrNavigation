@@ -570,7 +570,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                                         }
                                     }
 
-                                    runOnUiThread {
+                                      runOnUiThread {
 
                                         if(!isShowing){
                                             connectionLostDialog?.show()
@@ -592,6 +592,10 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                                         Toast.makeText(this@StartActivity,"Соединение с сервером восстановлено",Toast.LENGTH_LONG).show()
                                     }
 
+                                    NetworkService.messageBroker.removeAt(i)
+                                }
+                                "regok"->{
+                                    if(NetworkService.messageBroker.count()>0)
                                     NetworkService.messageBroker.removeAt(i)
                                 }
                             }
