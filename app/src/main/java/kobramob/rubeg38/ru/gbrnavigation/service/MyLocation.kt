@@ -6,12 +6,11 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
-import android.util.Log
 import java.lang.Exception
 
-class MyLocation:LocationListener {
-    companion object{
-        var imHere:Location? = null
+class MyLocation : LocationListener {
+    companion object {
+        var imHere: Location? = null
     }
 
     @SuppressLint("MissingPermission")
@@ -27,7 +26,7 @@ class MyLocation:LocationListener {
             locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER,
                 8000,
-                 100.toFloat(),
+                100.toFloat(),
                 this
             )
         } catch (e: Exception) {

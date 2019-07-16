@@ -12,13 +12,13 @@
 >
 
 
-    <android.support.v7.widget.Toolbar
+    <androidx.appcompat.widget.Toolbar
             android:id="@+id/startToolbar"
             style="@style/Toolbar"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
     />
 
-    <android.support.design.widget.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:clickable="true" app:srcCompat="@drawable/ic_direction_walk"
@@ -28,7 +28,7 @@
             app:backgroundTint="@color/textWhite"
             app:rippleColor="@color/colorAccent"/>
 
-    <android.support.design.widget.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/my_location"
             android:layout_width="100dp"
             android:layout_height="100dp"

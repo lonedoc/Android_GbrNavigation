@@ -1,6 +1,8 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
 import java.net.DatagramPacket
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 enum class PacketType {
     connection, acknowledgment, data
@@ -11,6 +13,7 @@ interface Packet {
     var headers: Headers?
     var data: ByteArray?
     fun encode(): DatagramPacket
+ /*   fun encode(): ByteBuffer*/
 }
 
 class PacketUtils {
@@ -73,6 +76,16 @@ class DataPacket() :
         val packet = coder.encoder(this.data!!, this.headers!!)
         return DatagramPacket(packet, packet.size)
     }
+   /* override fun encode(): ByteBuffer {
+        this.type = PacketType.data
+
+        val coder = Coder()
+        val packet = coder.encoder(this.data!!, this.headers!!)
+        val buffer:ByteBuffer = ByteBuffer.allocate(packet.count())
+        buffer.order(ByteOrder.LITTLE_ENDIAN)
+        buffer.put(packet)
+        return buffer
+    }*/
 }
 
 class AcknowledgmentPacket() :
@@ -110,6 +123,15 @@ class AcknowledgmentPacket() :
         val packet = coder.encoderAcknowledgment(this.headers!!)
         return DatagramPacket(packet, packet!!.size)
     }
+   /* override fun encode(): ByteBuffer {
+        val coder = Coder()
+        val packet = coder.encoderAcknowledgment(this.headers!!)
+        val buffer:ByteBuffer = ByteBuffer.allocate(packet!!.count())
+
+        buffer.order(ByteOrder.LITTLE_ENDIAN)
+        buffer.put(packet)
+        return buffer
+    }*/
 }
 
 class ConnectionPacket : Packet {
@@ -142,4 +164,13 @@ class ConnectionPacket : Packet {
         val packet = coder.encoder(null, this.headers!!)
         return DatagramPacket(packet, packet.size)
     }
+ /* override fun encode(): ByteBuffer {
+      val coder = Coder()
+      val packet = coder.encoder(null, this.headers!!)
+      val buffer:ByteBuffer = ByteBuffer.allocate(packet.count())
+
+      buffer.order(ByteOrder.LITTLE_ENDIAN)
+      buffer.put(packet)
+      return buffer
+  }*/
 }

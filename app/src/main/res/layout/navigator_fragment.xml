@@ -5,7 +5,7 @@
                 xmlns:app="http://schemas.android.com/apk/res-auto"
                 tools:context=".objectactivity.NavigatorFragment">
 
-    <android.support.design.widget.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:clickable="true"
@@ -18,7 +18,7 @@
             app:rippleColor="@color/colorAccent" android:layout_alignEnd="@+id/navigator_view"
             android:layout_below="@+id/my_location_fragment"/>
 
-    <android.support.design.widget.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:clickable="true" app:srcCompat="@drawable/ic_gps_fixed"
@@ -29,7 +29,7 @@
             app:rippleColor="@color/colorAccent"
             android:layout_alignTop="@+id/navigator_view"/>
 
-    <android.support.design.widget.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:clickable="true" app:srcCompat="@drawable/ic_yandex"

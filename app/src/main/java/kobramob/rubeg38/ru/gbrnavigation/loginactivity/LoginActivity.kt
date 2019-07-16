@@ -3,28 +3,27 @@ package kobramob.rubeg38.ru.gbrnavigation.loginactivity
 import android.annotation.SuppressLint
 import android.content.*
 import android.content.pm.PackageManager
-import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
-import android.support.design.widget.TextInputEditText
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AlertDialog
-import android.telephony.TelephonyManager
-import android.widget.Button
 import android.os.Build
-import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
-import org.json.JSONObject
+import android.os.Bundle
 import android.os.StrictMode
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.WindowManager
+import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.material.textfield.TextInputEditText
+import java.lang.Exception
+import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.service.*
-import org.greenrobot.eventbus.Subscribe
-import java.lang.Exception
-import java.lang.Thread.sleep
+import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import kotlin.concurrent.thread
+import org.json.JSONObject
 
 class LoginActivity : AppCompatActivity() {
 
@@ -38,12 +37,11 @@ class LoginActivity : AppCompatActivity() {
         var Alive = false
     }
     private var progressBarOpen: String = "close"
-    
+
     private lateinit var cancelDialog: AlertDialog
 
-
     private var permissionGranted = PackageManager.PERMISSION_GRANTED
-    
+
     @SuppressLint("InflateParams")
     private fun showProgressBar() {
         if (progressBarOpen == "close") {
@@ -54,11 +52,11 @@ class LoginActivity : AppCompatActivity() {
             dialog.setPositiveButton("Отмена") { dialog, which ->
                 dialog.cancel()
                 progressBarOpen = "close"
-
-                val startService = Intent(this,NetworkService::class.java)
+                Alive = false
+                val startService = Intent(this, NetworkService::class.java)
                 stopService(startService)
 
-                Toast.makeText(this,"Возможно произошел обрыв соединения с сервером, попробуйте войти снова",Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Возможно произошел обрыв соединения с сервером, попробуйте войти снова", Toast.LENGTH_LONG).show()
             }
             cancelDialog = dialog.create()
             cancelDialog.show()
@@ -76,7 +74,6 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-
     }
 
     @SuppressLint("HardwareIds")
@@ -112,9 +109,7 @@ class LoginActivity : AppCompatActivity() {
                     permissionGranted
                 )
             }
-        }
-        else
-        {
+        } else {
             val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
             imei = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 telephonyMgr.imei
@@ -144,13 +139,12 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun enterToApp(){
+    private fun enterToApp() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (Build.VERSION.SDK_INT >= 21) {
             val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
             StrictMode.setThreadPolicy(policy)
         }
-
 
         if (getSharedPreferences("state", Context.MODE_PRIVATE).contains("ip") &&
             getSharedPreferences("state", Context.MODE_PRIVATE).contains("port") &&
@@ -192,7 +186,6 @@ class LoginActivity : AppCompatActivity() {
                         portInput.setText("")
                     }.show()
             } else {
-
                 registration(ipInput.text.toString(), portInput.text.toString().toInt(), imei)
             }
         }
@@ -200,7 +193,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun registration(ip: String, port: Int, imei: String) {
 
-        val startService = Intent(this,NetworkService::class.java)
+        val startService = Intent(this, NetworkService::class.java)
 
         networkService.initSocket(
             ip,
@@ -209,109 +202,105 @@ class LoginActivity : AppCompatActivity() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(startService)
-        }
-        else
-        {
+        } else {
             startService(startService)
         }
 
         val myLocation = MyLocation()
         myLocation.initLocation(this)
 
-
-
         val message = JSONObject()
         message.put("\$c$", "reg")
         message.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
         message.put("password", imei)
 
-        receiver(ip,port,imei)
+        Alive = true
+
+        receiver(ip, port, imei)
 
         networkService.request(message.toString(), sessionID = null) {
-                        success: Boolean, data: ByteArray? ->
-                    if (success) {
-                        Log.d("Registration","success")
-                        if (data != null) {
-                            val jsonObject = JSONObject(String(data))
+            success: Boolean, data: ByteArray? ->
+                if (success) {
+                    Log.d("Registration", "success")
+                    if (data != null) {
+                        val jsonObject = JSONObject(String(data))
 
-                            SharedPreferencesState.init(this@LoginActivity)
+                        SharedPreferencesState.init(this@LoginActivity)
 
+                        SharedPreferencesState.addPropertyString(
+                            "ip",
+                            ip
+                        )
+
+                        SharedPreferencesState.addPropertyInt(
+                            "port",
+                            port
+                        )
+
+                        SharedPreferencesState.addPropertyString(
+                            "imei",
+                            imei
+                        )
+
+                        SharedPreferencesState.addPropertyString(
+                            "tid",
+                            jsonObject.getString("tid")
+                        )
+
+                        networkService.initData(jsonObject.getString("tid"), imei, this)
+
+                        try {
                             SharedPreferencesState.addPropertyString(
-                                "ip",
-                                ip
+                                "routeserver",
+                                jsonObject.getJSONArray("routeserver").getString(0)
                             )
-
-                            SharedPreferencesState.addPropertyInt(
-                                "port",
-                                port
-                            )
-
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        try {
                             SharedPreferencesState.addPropertyString(
-                                "imei",
-                                imei
+                                "namegbr",
+                                jsonObject.getString("namegbr")
                             )
-
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        try {
                             SharedPreferencesState.addPropertyString(
-                                "tid",
-                                jsonObject.getString("tid")
+                                "call",
+                                jsonObject.getString("call")
                             )
-
-                            networkService.initData(jsonObject.getString("tid"), imei,this)
-
-                            try {
-                                SharedPreferencesState.addPropertyString(
-                                    "routeserver",
-                                    jsonObject.getJSONArray("routeserver").getString(0)
-                                )
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                            try {
-                                SharedPreferencesState.addPropertyString(
-                                    "namegbr",
-                                    jsonObject.getString("namegbr")
-                                )
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                            try {
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            runOnUiThread {
                                 SharedPreferencesState.addPropertyString(
                                     "call",
-                                    jsonObject.getString("call")
+                                    ""
                                 )
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                                runOnUiThread {
-                                    Toast.makeText(this,"Данная группа не была поставлена на дежурство в дежурном операторе",Toast.LENGTH_LONG).show()
-                                }
-
+                                Toast.makeText(this, "Данная группа не была поставлена на дежурство в дежурном операторе", Toast.LENGTH_LONG).show()
                             }
-
-                            closeProgressBar()
-                            startActivity(Intent(this@LoginActivity, StartActivity::class.java))
                         }
+
+                        closeProgressBar()
+                        startActivity(Intent(this@LoginActivity, StartActivity::class.java))
                     }
-                    else
-                    {
-                        runOnUiThread {
-                            Log.d("Registration","failed")
-                            closeProgressBar()
+                } else {
+                    runOnUiThread {
+                        Log.d("Registration", "failed")
+                        closeProgressBar()
 
-                            val startService = Intent(this,NetworkService::class.java)
-                            stopService(startService)
+                        val startService = Intent(this, NetworkService::class.java)
+                        stopService(startService)
 
-                            Toast.makeText(this@LoginActivity,"Нет соединения с сервером",Toast.LENGTH_LONG).show()
-                        }
-
-
+                        Toast.makeText(this@LoginActivity, "Нет соединения с сервером", Toast.LENGTH_LONG).show()
                     }
                 }
-
+            }
     }
 
     private fun authorization() {
 
-        val startService = Intent(this,NetworkService::class.java)
+        val startService = Intent(this, NetworkService::class.java)
 
         networkService.initSocket(
             getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
@@ -320,9 +309,7 @@ class LoginActivity : AppCompatActivity() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(startService)
-        }
-        else
-        {
+        } else {
             startService(startService)
         }
 
@@ -330,185 +317,181 @@ class LoginActivity : AppCompatActivity() {
         myLocation.initLocation(this)
 
         ipInput.setText(getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!)
-        portInput.setText(getSharedPreferences("state",Context.MODE_PRIVATE).getInt("port",9010).toString())
-
-
+        portInput.setText(getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010).toString())
 
         val message = JSONObject()
         message.put("\$c$", "reg")
         message.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
         message.put("password", imei)
 
-        receiver(getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
-            getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010)
-            ,imei)
+        Alive = true
+        receiver(
+            getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", "")!!,
+            getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 9010), imei
+        )
 
         networkService.request(message = message.toString(), sessionID = null) { success: Boolean, data: ByteArray? ->
-                    if (success) {
-                        Log.d("Authorization", "success")
+            if (success) {
+                Log.d("Authorization", "success")
 
-                        if (data != null) {
+                if (data != null) {
 
-                            Log.d("Authorization",String(data))
-                            val jsonObject = JSONObject(String(data))
+                    Log.d("Authorization", String(data))
+                    val jsonObject = JSONObject(String(data))
 
-                            SharedPreferencesState.init(this@LoginActivity)
+                    SharedPreferencesState.init(this@LoginActivity)
+                    SharedPreferencesState.addPropertyString(
+                        "tid",
+                        jsonObject.getString("tid")
+                    )
+                    networkService.initData(jsonObject.getString("tid"), imei, this)
+                    try {
+                        if (jsonObject.getString("namegbr") !=
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
+                        ) {
                             SharedPreferencesState.addPropertyString(
-                                "tid",
-                                jsonObject.getString("tid")
+                                "namegbr",
+                                jsonObject.getString("namegbr")
                             )
-                            networkService.initData(jsonObject.getString("tid"),imei,this)
-                            try {
-                                if (jsonObject.getString("namegbr") !=
-                                    getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")
-                                ) {
-                                    SharedPreferencesState.addPropertyString(
-                                        "namegbr",
-                                        jsonObject.getString("namegbr")
-                                    )
-                                }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                            try{
-                                if(jsonObject.getString("status")!=null){
-                                    SharedPreferencesState.addPropertyString(
-                                        "status",
-                                        jsonObject.getString("status")
-                                    )
-                                }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                            try {
-                                if (jsonObject.getString("call") !=
-                                    getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "")
-                                ) {
-                                    SharedPreferencesState.addPropertyString(
-                                        "call",
-                                        jsonObject.getString("call")
-                                    )
-                                }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                                runOnUiThread {
-                                    Toast.makeText(this,"Данная группа не была поставлена на дежурство в дежурном операторе",Toast.LENGTH_LONG).show()
-                                }
-                            }
-
-                            closeProgressBar()
-                            startActivity(Intent(this@LoginActivity, StartActivity::class.java))
                         }
-                    } else
-                    {
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    try {
+                        if (jsonObject.getString("status") != null) {
+                            SharedPreferencesState.addPropertyString(
+                                "status",
+                                jsonObject.getString("status")
+                            )
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    try {
+                        if (jsonObject.getString("call") !=
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "")
+                        ) {
+                            SharedPreferencesState.addPropertyString(
+                                "call",
+                                jsonObject.getString("call")
+                            )
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                         runOnUiThread {
-                            Log.d("Authorization", "failed")
-                            closeProgressBar()
-                            val startService = Intent(this,NetworkService::class.java)
-                            stopService(startService)
-                            Toast.makeText(this@LoginActivity,"Нет соединения с сервером",Toast.LENGTH_LONG).show()
+                            Toast.makeText(this, "Данная группа не была поставлена на дежурство в дежурном операторе", Toast.LENGTH_LONG).show()
                         }
-
                     }
 
+                    closeProgressBar()
+                    startActivity(Intent(this@LoginActivity, StartActivity::class.java))
                 }
-
+            } else {
+                runOnUiThread {
+                    Log.d("Authorization", "failed")
+                    closeProgressBar()
+                    val startService = Intent(this, NetworkService::class.java)
+                    stopService(startService)
+                    Toast.makeText(this@LoginActivity, "Нет соединения с сервером", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
-    private fun receiver(ip:String,port: Int,imei: String){
-        thread{
-            while(Alive){
-                if(NetworkService.messageBroker.count()>0){
-                    for(i in 0 until NetworkService.messageBroker.count()){
+    private fun receiver(ip: String, port: Int, imei: String) {
+        thread {
+            while (Alive) {
+                if (NetworkService.messageBroker.count()> 0) {
+                    for (i in 0 until NetworkService.messageBroker.count()) {
                         SharedPreferencesState.init(this@LoginActivity)
-                        Log.d("LoginReceiver",NetworkService.messageBroker[i])
+                        Log.d("LoginReceiver", NetworkService.messageBroker[i])
                         val length = NetworkService.messageBroker.count()
                         val jsonMessage = JSONObject(NetworkService.messageBroker[i])
 
-                        when(jsonMessage.getString("command")){
-                            "regok"->{
-                                    SharedPreferencesState.init(this@LoginActivity)
+                        when (jsonMessage.getString("command")) {
+                            "regok" -> {
+                                SharedPreferencesState.init(this@LoginActivity)
 
+                                SharedPreferencesState.addPropertyString(
+                                    "ip",
+                                    ip
+                                )
+
+                                SharedPreferencesState.addPropertyInt(
+                                    "port",
+                                    port
+                                )
+
+                                SharedPreferencesState.addPropertyString(
+                                    "imei",
+                                    imei
+                                )
+
+                                SharedPreferencesState.addPropertyString(
+                                    "tid",
+                                    jsonMessage.getString("tid")
+                                )
+
+                                networkService.initData(jsonMessage.getString("tid"), imei, this)
+
+                                try {
                                     SharedPreferencesState.addPropertyString(
-                                        "ip",
-                                        ip
+                                        "routeserver",
+                                        jsonMessage.getJSONArray("routeserver").getString(0)
                                     )
-
-                                    SharedPreferencesState.addPropertyInt(
-                                        "port",
-                                        port
-                                    )
-
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                                try {
                                     SharedPreferencesState.addPropertyString(
-                                        "imei",
-                                        imei
+                                        "namegbr",
+                                        jsonMessage.getString("namegbr")
                                     )
-
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                                try {
                                     SharedPreferencesState.addPropertyString(
-                                        "tid",
-                                        jsonMessage.getString("tid")
+                                        "call",
+                                        jsonMessage.getString("call")
                                     )
-
-                                    networkService.initData(jsonMessage.getString("tid"), imei,this)
-
-                                    try {
-                                        SharedPreferencesState.addPropertyString(
-                                            "routeserver",
-                                            jsonMessage.getJSONArray("routeserver").getString(0)
-                                        )
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    }
-                                    try {
-                                        SharedPreferencesState.addPropertyString(
-                                            "namegbr",
-                                            jsonMessage.getString("namegbr")
-                                        )
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    }
-                                    try {
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                    runOnUiThread {
                                         SharedPreferencesState.addPropertyString(
                                             "call",
-                                            jsonMessage.getString("call")
+                                            ""
                                         )
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                        runOnUiThread {
-                                            Toast.makeText(this,"Данная группа не была поставлена на дежурство в дежурном операторе",Toast.LENGTH_LONG).show()
-                                        }
-
+                                        Toast.makeText(this, "Данная группа не была поставлена на дежурство в дежурном операторе", Toast.LENGTH_LONG).show()
                                     }
+                                }
                                 runOnUiThread {
                                     closeProgressBar()
 
                                     try {
-                                        if( NetworkService.messageBroker.count()>0){
+                                        if (NetworkService.messageBroker.count()> 0) {
                                             NetworkService.messageBroker.removeAt(i)
                                         }
-                                    }catch (e:Exception){
+                                    } catch (e: Exception) {
                                         e.printStackTrace()
                                     }
-
-
 
                                     startActivity(Intent(this@LoginActivity, StartActivity::class.java))
                                 }
-
-                                }
-                            "disconnected"->{
+                            }
+                            "disconnected" -> {
                                 runOnUiThread {
                                     closeProgressBar()
-                                    val startService = Intent(this,NetworkService::class.java)
+                                    Alive = false
+                                    val startService = Intent(this, NetworkService::class.java)
                                     stopService(startService)
-                                    Toast.makeText(this,"Соединение с сервером не найдено",Toast.LENGTH_LONG).show()
-                                    if( NetworkService.messageBroker.count()>0)
-                                    NetworkService.messageBroker.removeAt(i)
+                                    Toast.makeText(this, "Соединение с сервером не найдено", Toast.LENGTH_LONG).show()
+                                    if (NetworkService.messageBroker.count()> 0)
+                                        NetworkService.messageBroker.removeAt(i)
                                 }
-
                             }
                         }
-                        if(length>NetworkService.messageBroker.count())
+                        if (length> NetworkService.messageBroker.count())
                             break
                     }
                 }
@@ -529,7 +512,6 @@ class LoginActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
     private fun checkPermission() {
@@ -567,7 +549,7 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        val startService = Intent(this,NetworkService::class.java)
+        val startService = Intent(this, NetworkService::class.java)
         stopService(startService)
     }
 }

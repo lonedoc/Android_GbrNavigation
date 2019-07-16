@@ -125,6 +125,8 @@ class Coder {
         val firstSize = headersBuffer.getInt(9)
         val secondSize = headersBuffer.getInt(13)
 
+        Log.d("PacketSize",packetSize.toString())
+
         val headers = Headers(
             contentType,
             messageNumber,
@@ -138,6 +140,7 @@ class Coder {
             null
         )
         var body: ByteArray? = null
+
         if (contentType != ContentType.acknowledgement && packetSize> 0) {
             // data
             val bodyBuffer = ByteArray(packetSize)
@@ -147,6 +150,8 @@ class Coder {
                 code(bodyBuffer)
 
                 System.arraycopy(bodyBuffer, 2, body, 0, packetSize - 2)
+
+                Log.d("MessageSize",body.size.toString())
             }
         }
 
@@ -197,261 +202,5 @@ class Coder {
             else
                 shiftLeft = 255
         }
-    }
-
-    // old function
-    fun encoderOne(message: String, count: Long, typePacket: Byte, tid: String): ByteBuffer {
-
-        val messageByteArray = message.toByteArray()
-        var tidByteArray: ByteArray = tid.toByteArray()
-        val length = messageByteArray.size
-        val packetSize = length + 2
-        val sizeFullPacket = headersSize + 2 + 2 + length
-        val positionOnMassive = 0
-        val allPacket = 1
-        val TPacket = 1
-        val allSize: Int = sizeFullPacket
-
-        if (tid != "") {
-            tidByteArray = hexStringToByte(tid).toByteArray()
-        }
-        // Формируем заголовок
-        val heading: ByteBuffer = ByteBuffer.allocate(headersSize + 2)
-        heading.order(ByteOrder.LITTLE_ENDIAN)
-        fillHeaders(heading, typePacket, packetSize, 0, 0, positionOnMassive, allSize, count, allPacket, TPacket, tidByteArray)
-        val headingArray = heading.array()
-        code(headingArray)
-
-        // Формируем пакет
-        val packet: ByteBuffer = ByteBuffer.allocate(packetSize)
-        packet.order(ByteOrder.LITTLE_ENDIAN)
-        xor2(packet)
-        packet.position(2)
-        packet.put(messageByteArray)
-        val packetArray: ByteArray = packet.array()
-        coderPacket(packetArray, vector, length)
-
-        // Соединили
-        val request: ByteBuffer = ByteBuffer.allocate(sizeFullPacket)
-        request.order(ByteOrder.LITTLE_ENDIAN)
-        request.put(headingArray)
-        request.put(packetArray)
-        return request
-    }
-
-    fun decoderPacketOne(message: ByteArray): String {
-        // Декодим заголовок
-        val headingArray: ByteArray = ByteArray(57)
-        System.arraycopy(message, 0, headingArray, 0, headingArray.size)
-        code(headingArray)
-        // Узнаем размер пакета, Декодим пакет
-        when (headingArray[4].toInt() and 255) {
-            255 -> {
-                return Arrays.toString(headingArray)
-            }
-            0 -> {
-                val lengthPacket: Int = calculateSize(headingArray)
-                if (lengthPacket> 0)
-                    return packetString(message, lengthPacket)
-            }
-            1 -> {
-                val lengthPacket: Int = calculateSize(headingArray)
-                if (lengthPacket> 0)
-                    return packetString(message, lengthPacket)
-            }
-            2 -> {
-                val lengthPacket: Int = calculateSize(headingArray)
-                if (lengthPacket> 0)
-                    return packetString(message, lengthPacket)
-            }
-            else -> { return "Null" }
-        }
-        return "Null"
-    }
-
-    private fun packetString(message: ByteArray, lengthPacket: Int): String {
-        val packetArray = ByteArray(lengthPacket)
-        System.arraycopy(message, 57, packetArray, 0, lengthPacket)
-        coderPacket(packetArray, vector, lengthPacket - 2)
-        val result = ByteArray(lengthPacket - 2)
-        System.arraycopy(packetArray, 2, result, 0, lengthPacket - 2)
-        return String(result)
-    }
-    fun packetString(message: ByteArray): String {
-        return String(message)
-    }
-    private fun coderPacket(temporaryArray: ByteArray, mass1: ByteArray, length: Int) {
-        var shiftRight = temporaryArray[0].toInt() and 255
-        var shiftLeft = temporaryArray[1].toInt() and 255
-        for (z in 0 until length) {
-            temporaryArray[2 + z] = (temporaryArray[2 + z].toInt() xor mass1[shiftRight].toInt() xor mass1[shiftLeft].toInt()).toByte()
-
-            if (shiftRight <255)
-                shiftRight++
-            else
-                shiftRight = 0
-
-            if (shiftLeft> 0)
-                shiftLeft--
-            else
-                shiftLeft = 255
-        }
-    }
-
-    private fun fillHeaders(
-        heading: ByteBuffer,
-        typepacket: Byte,
-        sizepacket: Int,
-        sizeFirst: Int,
-        sizeSecond: Int,
-        positionOnMassive: Int,
-        allSize: Int,
-        count: Long,
-        allPacket: Int,
-        tPacket: Int,
-        tidByteArray: ByteArray
-    ) {
-        heading.position(2)
-        heading.put(0xAA.toByte())
-        heading.put(0xFF.toByte())
-        heading.put(typepacket)
-        heading.putInt(sizepacket)
-        heading.putInt(sizeFirst)
-        heading.putInt(sizeSecond)
-        heading.putInt(positionOnMassive)
-        heading.putInt(allSize)
-        heading.putLong(count)
-        heading.putInt(allPacket)
-        heading.putInt(tPacket)
-        heading.put(tidByteArray)
-        val a = ByteArray(2)
-        var v: Byte
-        val r = Random()
-        for (j in 0..1) {
-
-            for (ignored in a) {
-                r.nextBytes(a)
-            }
-            v = (a[0] xor a[1])
-            heading.position(j)
-            heading.put(v)
-        }
-    }
-
-    private fun xor2(dat: ByteBuffer) {
-
-        val a = ByteArray(2)
-        var v: Byte
-        val r = Random()
-        for (j in 0..1) {
-            for (ignored in a) {
-                r.nextBytes(a)
-            }
-            v = (a[0] xor a[1])
-            dat.position(j)
-            dat.put(v)
-        }
-    }
-
-    private fun calculateSize(heading: ByteArray): Int {
-        val byteBuffer: ByteBuffer = ByteBuffer.allocate(57)
-        byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
-        byteBuffer.put(heading)
-        return byteBuffer.getInt(5)
-    }
-
-    fun packetType255(message: ByteArray): ByteBuffer {
-        var headingArray: ByteArray = ByteArray(57)
-        System.arraycopy(message, 0, headingArray, 0, headingArray.size)
-        code(headingArray)
-
-        val byteBuffer: ByteBuffer = ByteBuffer.allocate(57)
-        byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
-        byteBuffer.put(headingArray)
-
-        val tPacket = byteBuffer.getInt(37)
-        val allPacket: Int = byteBuffer.getInt(33)
-        val count: Long = byteBuffer.getLong(25)
-        val allSize: Int = byteBuffer.getInt(21)
-        val positionOnMassive = byteBuffer.getInt(17)
-        val sizeSecont: Int = byteBuffer.getInt(13)
-        val sizeFirst: Int = byteBuffer.getInt(9)
-        val typePacket: Byte = 0xFF.toByte()
-        val tidByteArray: ByteArray = ByteArray(16)
-        byteBuffer.position(41)
-        byteBuffer.get(tidByteArray)
-        byteBuffer.clear()
-
-        fillHeaders(
-            byteBuffer,
-            typePacket,
-            0,
-            sizeFirst,
-            sizeSecont,
-            positionOnMassive,
-            allSize,
-            count,
-            allPacket,
-            tPacket,
-            tidByteArray
-        )
-        headingArray = byteBuffer.array()
-        Log.d("255", Arrays.toString(headingArray))
-        code(headingArray)
-        byteBuffer.position(0)
-        byteBuffer.put(headingArray)
-        return byteBuffer
-    }
-
-    fun packetType254(tid: String): ByteBuffer {
-        val byteBuffer: ByteBuffer = ByteBuffer.allocate(57)
-        byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
-        fillHeaders(
-            byteBuffer,
-            0xFE.toByte(),
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            hexStringToByte(tid).toByteArray()
-        )
-        val headingArray = byteBuffer.array()
-        code(headingArray)
-        byteBuffer.position(0)
-        byteBuffer.put(headingArray)
-        return byteBuffer
-    }
-
-    fun numberOfPackages(message: ByteArray): Int {
-        val headingArray: ByteArray = ByteArray(57)
-        System.arraycopy(message, 0, headingArray, 0, headingArray.size)
-        code(headingArray)
-        val byteBuffer: ByteBuffer = ByteBuffer.allocate(57)
-        byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
-        byteBuffer.put(headingArray)
-        return byteBuffer.getInt(33)
-    }
-
-    fun typePacket(message: ByteArray): Int {
-
-        val headingArray: ByteArray = ByteArray(57)
-        System.arraycopy(message, 0, headingArray, 0, headingArray.size)
-        code(headingArray)
-
-        return (headingArray[4].toInt() and 255)
-    }
-
-    fun countReceiver(message: ByteArray): Long {
-        val headingArray = ByteArray(57)
-        System.arraycopy(message, 0, headingArray, 0, headingArray.size)
-        code(headingArray)
-        val headingBuffer: ByteBuffer = ByteBuffer.allocate(57)
-        headingBuffer.order(ByteOrder.LITTLE_ENDIAN)
-        headingBuffer.put(headingArray)
-        return headingBuffer.getLong(25)
     }
 }

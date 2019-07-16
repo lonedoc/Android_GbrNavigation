@@ -10,15 +10,10 @@ import android.graphics.Color
 import android.location.Location
 import android.os.Build
 import android.os.IBinder
-import android.support.annotation.RequiresApi
-import android.support.v4.app.NotificationCompat
 import android.util.Log
 import android.util.LongSparseArray
-import kobramob.rubeg38.ru.gbrnavigation.R
-import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
-import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
-import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
-import org.json.JSONObject
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
 import java.lang.Exception
 import java.lang.Thread.sleep
 import java.net.DatagramPacket
@@ -26,61 +21,63 @@ import java.net.DatagramSocket
 import java.net.InetSocketAddress
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
+import kobramob.rubeg38.ru.gbrnavigation.R
+import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
+import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
+import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import kotlin.concurrent.thread
+import org.json.JSONObject
+import java.net.SocketOptions.SO_REUSEADDR
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.channels.DatagramChannel
+import java.nio.channels.SelectionKey
+import java.nio.channels.Selector
 
-
-class NetworkService: Service(),NetworkServiceDelegate {
+class NetworkService : Service(), NetworkServiceDelegate {
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
 
     override fun messageReceived(message: ByteArray) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun messageReceived(message: String) {
-        Log.d("MessageReceiver",message)
+        Log.d("MessageReceiver", message)
 
-        if(!StartActivity.Alive && !LoginActivity.Alive && !ObjectActivity.Alive){
-            when(JSONObject(message).getString("command")){
-                "alarm"->{
-
+        if (!StartActivity.Alive && !LoginActivity.Alive && !ObjectActivity.Alive) {
+            when (JSONObject(message).getString("command")) {
+                "alarm" -> {
                 }
-                "gbrstatus"->{
-
+                "gbrstatus" -> {
                 }
 
-                "notalarm"->{
-
+                "notalarm" -> {
                 }
             }
         }
 
-        try{
-
-        }catch (e:Exception){
+        try {
+        } catch (e: Exception) {
             e.printStackTrace()
-            //TODO access denied
+            // TODO access denied
         }
-        if(JSONObject(message).getString("command")=="gbrstatus"){
-            for(i in 0 until  messageBroker.count()){
-                if(JSONObject(messageBroker[i]).getString("command")=="gbrstatus")
-                {
+        if (JSONObject(message).getString("command") == "gbrstatus") {
+            for (i in 0 until messageBroker.count()) {
+                if (JSONObject(messageBroker[i]).getString("command") == "gbrstatus") {
                     messageBroker.removeAt(i)
                     messageBroker.add(message)
                     return
                 }
             }
             messageBroker.add(message)
-        }
-        else
-        {
-            if(JSONObject(message).getString("command")=="regok"){
-                if(lostConnected) {
+        } else {
+            if (JSONObject(message).getString("command") == "regok") {
+                if (lostConnected) {
 
-                    for( i in 0 until messageBroker.count()){
-                        if(JSONObject(messageBroker[i]).getString("command")=="disconnected")
-                        {
+                    for (i in 0 until messageBroker.count()) {
+                        if (JSONObject(messageBroker[i]).getString("command") == "disconnected") {
                             messageBroker.removeAt(i)
                         }
                     }
@@ -89,47 +86,39 @@ class NetworkService: Service(),NetworkServiceDelegate {
                     val reconnectMessage = JSONObject()
                     reconnectMessage.put("command", "reconnection")
                     messageBroker.add(reconnectMessage.toString())
-                    lostConnected=false
+                    lostConnected = false
+                } else {
+                    messageBroker.add(message)
                 }
-                else{
-                   messageBroker.add(message)
-                }
-            }
-            else{
+            } else {
                 messageBroker.add(message)
             }
-
         }
     }
 
     override fun connectionLost() {
-        if(!lostConnected){
+        if (!lostConnected) {
             val disconnectMessage = JSONObject()
-            disconnectMessage.put("command","disconnected")
+            disconnectMessage.put("command", "disconnected")
             messageBroker.add(disconnectMessage.toString())
             lostConnected = true
-
-        }
-        else
-        {
-            Log.d("ConnectionLost",attempts.toString())
-            if(attempts>=ATTEMPTS_COUNT){
+        } else {
+            Log.d("ConnectionLost", attempts.toString())
+            if (attempts >= ATTEMPTS_COUNT) {
                 attempts = 0
                 val sendMessage = JSONObject()
                 sendMessage.put("\$c$", "reg")
                 sendMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
                 sendMessage.put("password", thisImei)
 
-                send(sendMessage.toString(),null){
-                        success:Boolean->
-                    if (success){
-                        Log.d("Connected","true")
+                send(sendMessage.toString(), null) {
+                    success: Boolean ->
+                        if (success) {
+                            Log.d("Connected", "true")
+                        }
                     }
-                }
             }
-
         }
-
     }
 
     private val MAX_PACKETS_COUNT = 20
@@ -147,31 +136,31 @@ class NetworkService: Service(),NetworkServiceDelegate {
     private var lostConnected = false
     private var attempts = 0
 
-    var channelId:String? = null
+    var channelId: String? = null
 
     companion object {
         var currentLocation: Location? = null
 
         var socket: DatagramSocket = DatagramSocket(null)
 
+        val channel:DatagramChannel = DatagramChannel.open()
+
         val packetsToSend = PriorityQueue<Packet>()
 
         var outcomingTransmissions = LongSparseArray<OutcomingTransmission>()
         var incomingTransmissions = LongSparseArray<IncomingTransmission>()
 
-        var messageBroker:CopyOnWriteArrayList<String> = CopyOnWriteArrayList()
+        var messageBroker: CopyOnWriteArrayList<String> = CopyOnWriteArrayList()
         var serviceAlive = true
-        var thisSessionId:String? = null
-        var thisImei:String = ""
+        var thisSessionId: String? = null
+        var thisImei: String = ""
     }
 
+    private var context: Context? = null
 
-    private var context:Context? = null
-
-
-    private fun startForeground(){
+    private fun startForeground() {
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        channelId= if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        channelId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel()
         } else {
             TODO("VERSION.SDK_INT < O")
@@ -188,11 +177,10 @@ class NetworkService: Service(),NetworkServiceDelegate {
         startForeground(channelId!!.toInt(), notification)
 
         startService()
-
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel():String{
+    private fun createNotificationChannel(): String {
         val channelID = "101"
         val channelName = "MyBackgroundService"
         val chan = NotificationChannel(
@@ -213,16 +201,13 @@ class NetworkService: Service(),NetworkServiceDelegate {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForeground()
-        }
-        else
-        {
+        } else {
             startService()
         }
         return START_STICKY
     }
-
 
     override fun onDestroy() {
         super.onDestroy()
@@ -235,19 +220,28 @@ class NetworkService: Service(),NetworkServiceDelegate {
         try {
             socket.reuseAddress = true
             socket.connect(InetSocketAddress(ip, port))
-            socket.bind(InetSocketAddress(socket.localPort))
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
+       /* try{
+            channel.configureBlocking(false)
+            channel.socket().reuseAddress = true
+            channel.connect(InetSocketAddress(ip,port))
+            val selector:Selector = Selector.open()
+            channel.register(selector, SelectionKey.OP_READ)
+        }catch (e:Exception){
+            e.printStackTrace()
+        }*/
     }
 
-    fun initData(sessionID: String?, imei: String,context:Context){
+    fun initData(sessionID: String?, imei: String, context: Context) {
         thisSessionId = sessionID
         thisImei = imei
         this.context = context
     }
 
-    fun startService() {
+    private fun startService() {
         lastResponseTime = System.currentTimeMillis()
         lastRequestTime = System.currentTimeMillis()
         serviceAlive = true
@@ -261,9 +255,8 @@ class NetworkService: Service(),NetworkServiceDelegate {
         coordinateLoop()
     }
 
-    fun stopService(){
+    fun stopService() {
         serviceAlive = false
-
     }
 
     fun request(data: ByteArray, sessionID: String?, responseHandler: ResponseHandler) {
@@ -368,8 +361,8 @@ class NetworkService: Service(),NetworkServiceDelegate {
 
     private fun coordinateLoop() {
         thread {
-            while(serviceAlive){
-                if(MyLocation.imHere!=null){
+            while (serviceAlive) {
+                if (MyLocation.imHere != null) {
                     val message = JSONObject()
                     message.put("\$c$", "gbrkobra")
                     message.put("command", "location")
@@ -377,18 +370,16 @@ class NetworkService: Service(),NetworkServiceDelegate {
                     message.put("lon", MyLocation.imHere?.longitude)
                     message.put("lat", MyLocation.imHere?.latitude)
                     message.put("speed", MyLocation.imHere?.speed)
-                    send(message.toString(),thisSessionId){
-                        if(it){
-                            Log.d("Coordinate","CoordinatePacket")
-                        }
-                        else
+                    send(message.toString(), thisSessionId) {
+                        if (it) {
+                            Log.d("Coordinate", "CoordinatePacket")
+                        } else
                             connectionLost()
                     }
                     sleep(8000)
                 }
             }
         }
-
     }
 
     private fun connectionLoop() {
@@ -428,9 +419,9 @@ class NetworkService: Service(),NetworkServiceDelegate {
                                 continue
                             }
 
-                            if(lostConnected){
+                            if (lostConnected) {
                                 attempts++
-                                Log.d("Attempts",attempts.toString())
+                                Log.d("Attempts", attempts.toString())
                             }
                             val packet1 = this.onAirPackets[i].first
                             val timeOnAirPlus10 = timeOnAir + 10000
@@ -447,10 +438,9 @@ class NetworkService: Service(),NetworkServiceDelegate {
                                 connectionLost()
                             }
                         }
-                    }catch (e: Exception){
+                    } catch (e: Exception) {
                         e.printStackTrace()
                     }
-
                 }
                 // remove packet
                 val failedPacket = this.onAirPackets.filter { it.third > this.ATTEMPTS_COUNT }
@@ -458,17 +448,17 @@ class NetworkService: Service(),NetworkServiceDelegate {
                 for (i in 0 until failedPacket.size) {
                     val messageNumber = failedPacket[i].first.headers!!.messageNumber
                     packetsToSend.removeAll { it.headers!!.messageNumber == messageNumber }
-                    try{
+                    try {
                         outcomingTransmissions[messageNumber].responseHandler(false, null)
                         outcomingTransmissions.remove(messageNumber)
-                    }catch (e:Exception){
+                    } catch (e: Exception) {
                         e.printStackTrace()
                     }
                 }
 
                 try {
                     onAirPackets.removeAll { it.third > this.ATTEMPTS_COUNT }
-                }catch (e: Exception){
+                } catch (e: Exception) {
                     e.printStackTrace()
                 }
 
@@ -489,7 +479,7 @@ class NetworkService: Service(),NetworkServiceDelegate {
                             ) {
                                 this.onAirPackets.add(Triple(packet, time + 10000, 1))
                             } else {
-                                Log.d("SendLoop","ConnectionPacket")
+                                Log.d("SendLoop", "ConnectionPacket")
                             }
 
                             try {
@@ -509,10 +499,9 @@ class NetworkService: Service(),NetworkServiceDelegate {
     }
 
     private fun receiverLoop() {
-        Log.d("Receiver", "Start")
         thread {
             sleep(500)
-            socket.soTimeout = 0
+            socket.soTimeout = 1000
             while (serviceAlive) {
                 if (lastResponseTime + 10000 < System.currentTimeMillis()) {
                     Log.d("Receiver", "ConnectionLost")
@@ -527,19 +516,17 @@ class NetworkService: Service(),NetworkServiceDelegate {
                 }
                 // Создаем буффер
                 val receiverBuffer = ByteArray(MAX_PACKET_SIZE + 57)
+
                 // Создаем датаграмму для приема
                 val receiverPacket = DatagramPacket(receiverBuffer, receiverBuffer.size)
                 try {
-                    // Принимаем то что лежит в сокете
-                    // Теперь могу даже перехватить если упал сокет,каеф
+
                     socket.receive(receiverPacket)
 
-                    if (receiverPacket.length == 0) {
+                    if (receiverBuffer.count { it>0 } == 0) {
                         continue
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    attempts++
                     continue
                 }
 
@@ -563,7 +550,7 @@ class NetworkService: Service(),NetworkServiceDelegate {
                     }
                 }
                 // Remove fail packet
-                try{
+                try {
                     for (i in 0 until incomingTransmissions.size()) {
                         if (incomingTransmissions[i.toLong()].timeToFail <= System.currentTimeMillis()) {
                             incomingTransmissions[i.toLong()].responseHandler(false, null)
@@ -574,9 +561,8 @@ class NetworkService: Service(),NetworkServiceDelegate {
                             incomingTransmissions.delete(i.toLong())
                         }
                     }
-                }catch (e: Exception){
+                } catch (e: Exception) {
                 }
-
             }
         }
     }
@@ -587,16 +573,15 @@ class NetworkService: Service(),NetworkServiceDelegate {
 
         val messageNumber = packet.headers!!.messageNumber
 
-        Log.d("DataPacket",messageNumber.toString())
-        Log.d("DataPacket",incommingMessagesCount.toString())
+        Log.d("DataPacket", messageNumber.toString())
+        Log.d("DataPacket", incommingMessagesCount.toString())
 
-        if(messageNumber<incommingMessagesCount && incomingTransmissions[messageNumber]==null)
+        if (messageNumber <incommingMessagesCount && incomingTransmissions[messageNumber] == null)
             return
 
         if (messageNumber> this.incommingMessagesCount) {
             incommingMessagesCount = messageNumber
         }
-
 
         if (incomingTransmissions[messageNumber] == null) {
             val handler: ResponseHandler

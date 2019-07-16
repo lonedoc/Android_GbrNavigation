@@ -1,9 +1,9 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
 import android.util.Log
-import kotlinx.coroutines.*
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlinx.coroutines.*
 
 enum class Priority(value: Int) {
     low(1), medium(2), high(3);
@@ -36,8 +36,8 @@ class PriorityQueue<T> {
     }
 
     @Synchronized fun remove() {
-        if(items.count()>0)
-        items.removeAt(0)
+        if (items.count()> 0)
+            items.removeAt(0)
     }
     @Synchronized fun removeAll(predicate: (T) -> Boolean) {
         items = CopyOnWriteArrayList(items.filter { !predicate(it.first) })

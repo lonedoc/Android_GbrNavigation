@@ -3,8 +3,6 @@ package kobramob.rubeg38.ru.gbrnavigation.objectactivity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.support.v7.widget.CardView
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,8 +10,10 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import kobramob.rubeg38.ru.gbrnavigation.R
+import androidx.cardview.widget.CardView
+import androidx.recyclerview.widget.RecyclerView
 import java.lang.Exception
+import kobramob.rubeg38.ru.gbrnavigation.R
 
 class AdapterResponsibleList internal constructor(
     private val fioList: ArrayList<String>,
@@ -23,7 +23,7 @@ class AdapterResponsibleList internal constructor(
     private val homeList: ArrayList<String>,
     private val workList: ArrayList<String>,
     private val context: Context?
-) : RecyclerView.Adapter<AdapterResponsibleList.ViewHolder>() {
+) : androidx.recyclerview.widget.RecyclerView.Adapter<AdapterResponsibleList.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, p1: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_responsible, parent, false)
@@ -97,14 +97,14 @@ class AdapterResponsibleList internal constructor(
             }*/
     }
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class ViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
         var textFIO: TextView = itemView.findViewById(R.id.textFIO)
         var textAddress: TextView = itemView.findViewById(R.id.Address)
         var textPosition: TextView = itemView.findViewById(R.id.Position)
         var buttonPhone: Button = itemView.findViewById(R.id.phone_button)
         var buttonHome: Button = itemView.findViewById(R.id.home_button)
         var buttonWork: Button = itemView.findViewById(R.id.work_button)
-        var parentContainer: CardView = itemView.findViewById(R.id.parent_container)
+        var parentContainer: androidx.cardview.widget.CardView = itemView.findViewById(R.id.parent_container)
         var additionalContainer: LinearLayout = itemView.findViewById(R.id.additionalInformation)
     }
 }

@@ -9,21 +9,21 @@ import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.support.design.widget.BottomNavigationView
-import android.support.design.widget.FloatingActionButton
-import android.support.v4.app.Fragment
-import android.support.v7.app.AlertDialog
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.service.NetworkService
-import kobramob.rubeg38.ru.gbrnavigation.service.Request
+import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.navigator_fragment.*
 import org.json.JSONObject
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
@@ -41,10 +41,8 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import java.util.*
-import kotlin.concurrent.thread
 
-class NavigatorFragment : Fragment(), MapEventsReceiver {
+class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
     private val request: Request = Request()
     var enableFollowMe = false
@@ -363,20 +361,20 @@ class NavigatorFragment : Fragment(), MapEventsReceiver {
 
     private fun arrivedToObject(jsonObject: JSONObject) {
 
-            val message = JSONObject()
-            message.put("\$c$", "gbrkobra")
-            message.put("command", "alarmpr")
-            message.put("number", jsonObject.getString("number"))
-        val sessionId = activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid","")
-        thread{
-            networkService.send(message = message.toString(),sessionID = sessionId){
-                success:Boolean->
-                if(success){
-                    activity!!.runOnUiThread {
-                        Toast.makeText(activity,"Прибытие подтверждено",Toast.LENGTH_LONG).show()
+        val message = JSONObject()
+        message.put("\$c$", "gbrkobra")
+        message.put("command", "alarmpr")
+        message.put("number", jsonObject.getString("number"))
+        val sessionId = activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")
+        thread {
+            networkService.send(message = message.toString(), sessionID = sessionId) {
+                success: Boolean ->
+                    if (success) {
+                        activity!!.runOnUiThread {
+                            Toast.makeText(activity, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
-            }
         }
     }
 

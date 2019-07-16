@@ -1,11 +1,11 @@
 package kobramob.rubeg38.ru.gbrnavigation.objectactivity
 
 import android.content.Context
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentPagerAdapter
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentPagerAdapter
 
-class SampleFragmentPagerAdapter(fm: FragmentManager?, private val context: Context) : FragmentPagerAdapter(fm) {
+class SampleFragmentPagerAdapter(fm: androidx.fragment.app.FragmentManager?, private val context: Context) : androidx.fragment.app.FragmentPagerAdapter(fm) {
 
     override fun getCount(): Int {
         return 3
@@ -13,8 +13,8 @@ class SampleFragmentPagerAdapter(fm: FragmentManager?, private val context: Cont
 
     private val tabTitles = arrayOf("Карточка объекта", "Ответственные", "План - схема")
 
-    override fun getItem(position: Int): Fragment {
-        var fragment: Fragment? = null
+    override fun getItem(position: Int): androidx.fragment.app.Fragment {
+        var fragment: androidx.fragment.app.Fragment? = null
         when (position) {
             0 -> { fragment = ObjectFragment() }
             1 -> { fragment = ResponsibleFragment() }
