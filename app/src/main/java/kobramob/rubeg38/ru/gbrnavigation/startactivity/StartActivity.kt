@@ -30,7 +30,7 @@ import java.lang.Exception
 import java.lang.Thread.sleep
 import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.*
-import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
+import kobramob.rubeg38.ru.gbrnavigation.loginactivity.OldLoginActivity
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.NavigatorFragment
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
@@ -207,7 +207,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                     port_server.text.toString().toInt()
                 )
 
-                startActivity(Intent(this, LoginActivity::class.java))
+                startActivity(Intent(this, OldLoginActivity::class.java))
             }
         }.show()
     }
@@ -224,6 +224,11 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
         val actionMenu: FloatingActionMenu = findViewById(R.id.parent_menu)
         actionMenu.isIconAnimated = false
+        val actionButton = com.github.clans.fab.FloatingActionButton(this)
+        actionButton.labelText = "Mama"
+        actionMenu.addMenuButton(actionButton)
+
+
         toolbar = findViewById(R.id.startToolbar)
         centerButton = findViewById(R.id.my_location)
         followButton = findViewById(R.id.follow_me)
@@ -353,8 +358,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     }
 
     private fun setCenter() {
-        val density = resources.displayMetrics.densityDpi
-        when (density) {
+        when (resources.displayMetrics.densityDpi) {
             480 -> {
                 mMapView.controller.animateTo(
                     locationOverlay.myLocation.destinationPoint(
@@ -449,13 +453,13 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
         thread {
             closeReceiver@
             while (Alive) {
-                if (NetworkService.messageBroker.count()> 0) {
+                if (NetworkService.stringMessageBroker.count()> 0) {
                     receiver@
-                    for (i in 0 until NetworkService.messageBroker.count()) {
+                    for (i in 0 until NetworkService.stringMessageBroker.count()) {
                         SharedPreferencesState.init(this@StartActivity)
-                        Log.d("StartReceiver", NetworkService.messageBroker[i])
-                        val lenght = NetworkService.messageBroker.count()
-                        val jsonMessage = JSONObject(NetworkService.messageBroker[i])
+                        Log.d("StartReceiver", NetworkService.stringMessageBroker[i])
+                        val length = NetworkService.stringMessageBroker.count()
+                        val jsonMessage = JSONObject(NetworkService.stringMessageBroker[i])
 
                         when (jsonMessage.getString("command")) {
                             "gbrstatus" -> {
@@ -468,7 +472,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
                                     supportActionBar!!.title = ("$nameGbr $call ( $status )").toString()
                                 }
-                                NetworkService.messageBroker.removeAt(i)
+                                NetworkService.stringMessageBroker.removeAt(i)
                             }
 
                             "alarmpok" -> {
@@ -479,7 +483,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                                         e.printStackTrace()
                                     }
                                 }
-                                NetworkService.messageBroker.removeAt(i)
+                                NetworkService.stringMessageBroker.removeAt(i)
                             }
 
                             "alarm" -> {
@@ -498,6 +502,33 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                                     } else {
                                         (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(1000)
                                     }
+
+                                    thread { sleep(100)
+                                        val message = JSONObject()
+                                        message.put("\$c$", "getfile")
+                                        message.put("nameinserv", jsonMessage.getJSONArray("plan")[0])
+                                        message.put("name", "firsttry")
+
+                                        Log.d("StartReceiver", message.toString())
+                                        networkService.request(message.toString(), getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")) {
+                                                it:Boolean,data:ByteArray?->
+                                            if (it) {
+                                                thread{
+                                                    Log.d("StartReciveFile",String(data!!))
+                                                    val jsonObject = JSONObject()
+                                                    jsonObject.put("\$c$", "startrecivefile")
+                                                    Log.d("StartReciveFile", jsonObject.toString())
+                                                    networkService.send(jsonObject.toString(), getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")) {
+                                                        if (it) {
+                                                            Log.d("Picture", "WaitSend")
+                                                        }
+                                                    }
+                                                    Log.d("Picture", "Receive")
+                                                }
+                                            }
+                                        }
+                                    }
+
 
                                     val trevoga = MediaPlayer.create(this@StartActivity, R.raw.trevoga)
                                     trevoga.start()
@@ -530,12 +561,17 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
                                         acceptAlarm(jsonMessage)
 
-                                        NetworkService.messageBroker.clear()
+                                        NetworkService.stringMessageBroker.clear()
 
                                         dialog.cancel()
                                     }
                                 }
-                                NetworkService.messageBroker.removeAt(i)
+                                try{
+                                    NetworkService.stringMessageBroker.removeAt(i)
+                                }catch (e:Exception){
+                                    e.printStackTrace()
+                                }
+
                                 continue@closeReceiver
                             }
 
@@ -571,7 +607,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                                         isShowing = true
                                     }
                                 }
-                                NetworkService.messageBroker.removeAt(i)
+                                NetworkService.stringMessageBroker.removeAt(i)
                             }
 
                             "reconnection" -> {
@@ -584,14 +620,14 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                                     Toast.makeText(this@StartActivity, "Соединение с сервером восстановлено", Toast.LENGTH_LONG).show()
                                 }
 
-                                NetworkService.messageBroker.removeAt(i)
+                                NetworkService.stringMessageBroker.removeAt(i)
                             }
                             "regok" -> {
-                                if (NetworkService.messageBroker.count()> 0)
-                                    NetworkService.messageBroker.removeAt(i)
+                                if (NetworkService.stringMessageBroker.count()> 0)
+                                    NetworkService.stringMessageBroker.removeAt(i)
                             }
                         }
-                        if (lenght> NetworkService.messageBroker.count())
+                        if (length> NetworkService.stringMessageBroker.count())
                             break
                     }
                 }
@@ -740,7 +776,30 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     }
 
     private fun statusChanged(floatingActionButton: com.github.clans.fab.FloatingActionButton) {
+   /*     val message = JSONObject()
+        message.put("\$c$","sendfile")
+        message.put("name","firsttry.png")
+        message.put("nameinserv","firsttry.png")
+        networkService.request(message.toString(),null){
+                it:Boolean,data->
+            if(it){
+                if(JSONObject(String(data!!)).getString("\$c$") == "startrecivefile")
+                {
+                    thread{
+                        sleep(2000)
+                        val now = System.currentTimeMillis()
+                        val bytearray:ByteArray = ByteArray(100000000) {1.toByte()}
 
+                        networkService.send(bytearray,null){
+                            if(it){
+                                Log.d("Picture","send")
+                                Log.d("picture",((System.currentTimeMillis()-now)/1000).toString())
+                            }
+                        }
+                    }
+                }
+            }
+        }*/
         val message = JSONObject()
         message.put("\$c$", "gbrkobra")
         message.put("command", "status")
@@ -755,7 +814,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                         SharedPreferencesState.addPropertyString("status", jsonObject.getString("status"))
 
                         val title =
-                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "") + " " +
+                            getSharedPreferences("state", Context.MODE_PRIVATE).getString("namegbr", "")!! + " " +
                                 getSharedPreferences("state", Context.MODE_PRIVATE).getString("call", "") +
                                 " ( " + getSharedPreferences("state", Context.MODE_PRIVATE).getString("status", "") + " )"
                         supportActionBar!!.title = title

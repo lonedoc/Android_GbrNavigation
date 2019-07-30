@@ -16,6 +16,7 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.*
@@ -24,6 +25,7 @@ import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.service.NetworkService
 import kotlin.concurrent.thread
+import kotlinx.android.synthetic.main.activity_main_map.*
 import kotlinx.android.synthetic.main.navigator_fragment.*
 import org.json.JSONObject
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
@@ -44,12 +46,11 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
-    private val request: Request = Request()
     var enableFollowMe = false
     private var timer = Timer()
     lateinit var oldLocation: GeoPoint
-    var lat: Double = 0.0
-    var lon: Double = 0.0
+    private var lat: Double = 0.0
+    private var lon: Double = 0.0
 
     private lateinit var mMapView: MapView
     private lateinit var rotationGestureOverlay: RotationGestureOverlay
@@ -58,7 +59,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
     private var arrivedToObject: Boolean = false
     private var progressBarOpen: String = "close"
     private lateinit var cancelDialog: AlertDialog
-    var latitude: Double = 0.toDouble()
+    private var latitude: Double = 0.toDouble()
 
     private val networkService = NetworkService()
 
@@ -70,7 +71,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
     private fun showProgressBar() {
         if (progressBarOpen == "close") {
             val dialog = AlertDialog.Builder(activity!!)
-            val dialogView = layoutInflater.inflate(R.layout.progress_bar_location, null)
+            val dialogView = layoutInflater.inflate(R.layout.progress_bar_location, parent, false)
             dialog.setView(dialogView)
             dialog.setCancelable(false)
             cancelDialog = dialog.create()
@@ -93,8 +94,8 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
     override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
         if (enableFollowMe) {
             timer.cancel()
-            follow_me_fragment.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
-            follow_me_fragment.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
+            follow_me_fragment.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textWhite))
+            follow_me_fragment.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textDark))
             enableFollowMe = false
         }
         return true
@@ -124,25 +125,25 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                 // TODO слушатель на карту
                 if (enableFollowMe) {
                     timer.cancel()
-                    follow_me_fragment.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
-                    follow_me_fragment.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
+                    follow_me_fragment.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textWhite))
+                    follow_me_fragment.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textDark))
                     enableFollowMe = false
                 }
                 return true
             }
         })
 
-        val follow_me: FloatingActionButton = rootView.findViewById(R.id.follow_me_fragment)
-        val my_location: FloatingActionButton = rootView.findViewById(R.id.my_location_fragment)
+        val followMe: FloatingActionButton = rootView.findViewById(R.id.follow_me_fragment)
+        val myLocation: FloatingActionButton = rootView.findViewById(R.id.my_location_fragment)
 
-        follow_me.setOnClickListener {
+        followMe.setOnClickListener {
             if (enableFollowMe) {
 
                 /*startActivityModel.stopFollowMe()*/
 
                 timer.cancel()
-                follow_me.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
-                follow_me.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
+                followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textWhite))
+                followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textDark))
                 enableFollowMe = false
             } else {
 
@@ -156,19 +157,19 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
                     timer = Timer()
                     timer.scheduleAtFixedRate(NavigatorTask(), 0, 1000)
-                    follow_me.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.colorAccent))
-                    follow_me.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
+                    followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.colorAccent))
+                    followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textWhite))
 
                     enableFollowMe = true
                 } catch (e: Exception) {}
             }
         }
 
-        my_location.setOnClickListener {
+        myLocation.setOnClickListener {
             if (enableFollowMe) {
                 timer.cancel()
-                follow_me.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
-                follow_me.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
+                followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textWhite))
+                followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textDark))
                 enableFollowMe = false
             }
 
@@ -180,8 +181,8 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
             SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
         }
 
-        val yandex_api: FloatingActionButton = rootView.findViewById(R.id.yandex_api)
-        yandex_api.setOnClickListener {
+        val yandexApi: FloatingActionButton = rootView.findViewById(R.id.yandex_api)
+        yandexApi.setOnClickListener {
             if (lat != 0.0 && lon != 0.0) {
                 try {
                     val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=$lat&lon_to=$lon")
@@ -324,13 +325,13 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                                     road.mRouteHigh.clear()
                                     activity!!.runOnUiThread {
                                         val alertDialog = AlertDialog.Builder(activity!!)
-                                        val view = layoutInflater.inflate(R.layout.arrived_dialog, null)
+                                        val view = layoutInflater.inflate(R.layout.arrived_dialog, parent, false)
                                         alertDialog.setView(view)
                                         alertDialog.setCancelable(false)
                                         val dialog: AlertDialog = alertDialog.create()
                                         dialog.show()
-                                        val arrive_button: LinearLayout = view!!.findViewById(R.id.arrived_button)
-                                        arrive_button.setOnClickListener {
+                                        val arriveButton: LinearLayout = view!!.findViewById(R.id.arrived_button)
+                                        arriveButton.setOnClickListener {
                                             val arriveThread = Runnable {
                                                 arrivedToObject(jsonObject = jsonObject)
                                                 dialog.cancel()
@@ -607,10 +608,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
             resources,
             drawable
         )
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
     }
 
     override fun onDestroy() {

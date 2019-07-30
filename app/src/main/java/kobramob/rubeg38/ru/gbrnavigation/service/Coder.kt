@@ -1,6 +1,5 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
-import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
@@ -20,12 +19,11 @@ class Coder {
             sessionIDBytes = hexStringToByte(headers.sessionID.toString()).toByteArray()
         }
 
-        var packetSize = 0
-
-        packetSize = if (data != null) {
+        val packetSize: Int = if (data != null) {
             data.size + 2
         } else
             0
+
         // headers
         val headersBuffer = ByteBuffer.allocate(headersSize + 2)
         headersBuffer.order(ByteOrder.LITTLE_ENDIAN)
@@ -125,8 +123,6 @@ class Coder {
         val firstSize = headersBuffer.getInt(9)
         val secondSize = headersBuffer.getInt(13)
 
-        Log.d("PacketSize",packetSize.toString())
-
         val headers = Headers(
             contentType,
             messageNumber,
@@ -150,8 +146,6 @@ class Coder {
                 code(bodyBuffer)
 
                 System.arraycopy(bodyBuffer, 2, body, 0, packetSize - 2)
-
-                Log.d("MessageSize",body.size.toString())
             }
         }
 

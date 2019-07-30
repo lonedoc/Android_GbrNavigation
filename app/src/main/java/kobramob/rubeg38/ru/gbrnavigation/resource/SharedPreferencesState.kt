@@ -6,7 +6,7 @@ import android.content.SharedPreferences
 
 @SuppressLint("StaticFieldLeak")
 object SharedPreferencesState {
-    private val STORAGE_NAME = "state"
+    private const val STORAGE_NAME = "state"
 
     private var settings: SharedPreferences? = null
     private var editor: SharedPreferences.Editor? = null

@@ -65,7 +65,9 @@
             android:layout_marginTop="?attr/actionBarSize"
     />
 
+
     <com.github.clans.fab.FloatingActionMenu
+
             android:id="@+id/parent_menu"
             android:layout_width="wrap_content"
             android:layout_height="100dp"
@@ -79,6 +81,7 @@
             android:layout_alignBottom="@+id/startMap"
             android:layout_marginStart="10dp" android:layout_alignStart="@+id/startMap"
             app:menu_labels_position="right"
+
     >
         <com.github.clans.fab.FloatingActionButton
                 android:id="@+id/change_status_dinner"
@@ -88,7 +91,8 @@
                 app:fab_colorNormal="@color/textWhite"
                 app:fab_colorPressed="@color/colorAccent"
                 android:src="@drawable/ic_dinner"
-                app:fab_label="Обед"/>
+                app:fab_label="Обед"
+        />
         <com.github.clans.fab.FloatingActionButton
                 android:id="@+id/change_status_refueling"
                 android:layout_width="wrap_content"

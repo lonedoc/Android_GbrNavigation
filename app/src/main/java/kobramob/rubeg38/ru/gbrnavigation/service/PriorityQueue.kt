@@ -24,9 +24,12 @@ class PriorityQueue<T> {
     }
 
     fun enqueue(item: T) {
-        this.enqueue(item, 1)
+        this.enqueue(item, 2)
     }
 
+    @Synchronized fun countToQueue(): Int {
+        return items.count()
+    }
     @Synchronized fun dequeue(): T? {
         return if (items.count()> 0) {
             items.getOrNull(0)!!.first

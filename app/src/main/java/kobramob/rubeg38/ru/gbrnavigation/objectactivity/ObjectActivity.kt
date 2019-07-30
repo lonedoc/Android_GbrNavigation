@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
@@ -88,13 +87,13 @@ class ObjectActivity : AppCompatActivity() {
         thread {
             while (Alive) {
                 if (!closeReceiver) {
-                    if (NetworkService.messageBroker.count() > 0) {
+                    if (NetworkService.stringMessageBroker.count() > 0) {
                         receiver@
-                        for (i in 0 until NetworkService.messageBroker.count()) {
+                        for (i in 0 until NetworkService.stringMessageBroker.count()) {
                             SharedPreferencesState.init(this@ObjectActivity)
-                            Log.d("ObjectReceiver", NetworkService.messageBroker[i])
-                            val lenght = NetworkService.messageBroker.count()
-                            val jsonMessage = JSONObject(NetworkService.messageBroker[i])
+                            Log.d("ObjectReceiver", NetworkService.stringMessageBroker[i])
+                            val lenght = NetworkService.stringMessageBroker.count()
+                            val jsonMessage = JSONObject(NetworkService.stringMessageBroker[i])
 
                             when (jsonMessage.getString("command")) {
                                 "disconnect" -> {
@@ -121,14 +120,14 @@ class ObjectActivity : AppCompatActivity() {
                                             }
                                         dialog.show()
                                     }
-                                    NetworkService.messageBroker.removeAt(i)
+                                    NetworkService.stringMessageBroker.removeAt(i)
                                 }
                                 "reconnect" -> {
                                     runOnUiThread {
                                         Toast.makeText(this@ObjectActivity, "Соединение с сервером восстановлено", Toast.LENGTH_LONG).show()
                                     }
 
-                                    NetworkService.messageBroker.removeAt(i)
+                                    NetworkService.stringMessageBroker.removeAt(i)
                                 }
                                 "gbrstatus" -> {
                                     if (jsonMessage.getString("status") != "На тревоге") {
@@ -143,7 +142,7 @@ class ObjectActivity : AppCompatActivity() {
                                             startActivity(Intent(this@ObjectActivity, StartActivity::class.java))
                                         }
                                     }
-                                    NetworkService.messageBroker.removeAt(i)
+                                    NetworkService.stringMessageBroker.removeAt(i)
                                 }
                                 "alarmpok" -> {
                                     runOnUiThread {
@@ -153,7 +152,7 @@ class ObjectActivity : AppCompatActivity() {
                                             e.printStackTrace()
                                         }
                                     }
-                                    NetworkService.messageBroker.removeAt(i)
+                                    NetworkService.stringMessageBroker.removeAt(i)
                                 }
 
                                 "notalarm" -> {
@@ -165,10 +164,10 @@ class ObjectActivity : AppCompatActivity() {
                                         SharedPreferencesState.addPropertyString("status", "Свободен")
                                         startActivity(Intent(this@ObjectActivity, StartActivity::class.java))
                                     }
-                                    NetworkService.messageBroker.removeAt(i)
+                                    NetworkService.stringMessageBroker.removeAt(i)
                                 }
                             }
-                            if (lenght> NetworkService.messageBroker.count())
+                            if (lenght> NetworkService.stringMessageBroker.count())
                                 break
                         }
                     }

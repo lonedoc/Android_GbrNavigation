@@ -15,4 +15,10 @@
     <string name="inputIP">Введите IP адрес сервера</string>
     <string name="inputGroupName">Введите наименование группы</string>
     <string name="title_activity_permission">PermissionActivity</string>
+    <string name="title_activity_test">TestActivity</string>
+    <string name="landscape_icon">Лендскейпная иконка</string>
+    <string name="portrait_icon">Портретная иконка</string>
+    <string name="waitCheckData">Проверка данных, подождите...</string>
+    <string name="welcome">Добро пожаловать!</string>
+
 </resources>

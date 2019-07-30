@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <color name="colorPrimary">#850000</color>
     <color name="colorPrimaryDark">#470000</color>
-    <color name="colorAccent">#D32F2F</color>
+    <color name="colorAccent">#CF081B</color>
+
+    <color name="viewBackground">#FFFFFF</color>
+
     <color name="textDark">#000000</color>
     <color name="textWhite">#FFFFFF</color>
     <color name="rippleColor">#1976D2</color>

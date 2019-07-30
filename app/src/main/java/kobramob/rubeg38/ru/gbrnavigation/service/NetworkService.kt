@@ -7,14 +7,12 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.location.Location
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.util.LongSparseArray
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import java.lang.Exception
 import java.lang.Thread.sleep
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -22,77 +20,97 @@ import java.net.InetSocketAddress
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import kobramob.rubeg38.ru.gbrnavigation.R
-import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
+import kobramob.rubeg38.ru.gbrnavigation.loginactivity.OldLoginActivity
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
 import kotlin.concurrent.thread
 import org.json.JSONObject
-import java.net.SocketOptions.SO_REUSEADDR
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.channels.DatagramChannel
-import java.nio.channels.SelectionKey
-import java.nio.channels.Selector
 
 class NetworkService : Service(), NetworkServiceDelegate {
+
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
 
     override fun messageReceived(message: ByteArray) {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        Log.d("MessageReceiver", Arrays.toString(message))
+        Log.d("MessageReceiver", message.count().toString())
+
+        byteMessageBroker.add(message)
     }
+
+    private var waitPicture = false
 
     override fun messageReceived(message: String) {
         Log.d("MessageReceiver", message)
 
-        if (!StartActivity.Alive && !LoginActivity.Alive && !ObjectActivity.Alive) {
-            when (JSONObject(message).getString("command")) {
-                "alarm" -> {
-                }
-                "gbrstatus" -> {
-                }
 
-                "notalarm" -> {
+        try{
+            when(JSONObject(message).getString("\$c$")){
+                "sendfile"->{
+                      /*  val jsonObject = JSONObject()
+                        jsonObject.put("\$c$", "getfileok")
+                        jsonObject.put("name", jsonObject.getString("name"))
+                        send(message = jsonObject.toString(), sessionID = thisSessionId) {
+                            if (it) {
+                                Log.d("MessageReceiver", "PictureReceive")
+                                waitPicture = false
+                            }
+                        }*/
                 }
+                else->{}
             }
+        }catch (e:Exception){
         }
 
         try {
-        } catch (e: Exception) {
-            e.printStackTrace()
-            // TODO access denied
-        }
-        if (JSONObject(message).getString("command") == "gbrstatus") {
-            for (i in 0 until messageBroker.count()) {
-                if (JSONObject(messageBroker[i]).getString("command") == "gbrstatus") {
-                    messageBroker.removeAt(i)
-                    messageBroker.add(message)
-                    return
-                }
-            }
-            messageBroker.add(message)
-        } else {
-            if (JSONObject(message).getString("command") == "regok") {
-                if (lostConnected) {
-
-                    for (i in 0 until messageBroker.count()) {
-                        if (JSONObject(messageBroker[i]).getString("command") == "disconnected") {
-                            messageBroker.removeAt(i)
-                        }
+            if (!StartActivity.Alive && !OldLoginActivity.Alive && !ObjectActivity.Alive) {
+                when (JSONObject(message).getString("command")) {
+                    "alarm" -> {
+                    }
+                    "gbrstatus" -> {
                     }
 
-                    thisSessionId = JSONObject(message).getString("tid")
-                    val reconnectMessage = JSONObject()
-                    reconnectMessage.put("command", "reconnection")
-                    messageBroker.add(reconnectMessage.toString())
-                    lostConnected = false
-                } else {
-                    messageBroker.add(message)
+                    "notalarm" -> {
+                    }
                 }
-            } else {
-                messageBroker.add(message)
             }
+        } catch (e: Exception) {
+        }
+
+        try {
+            if (JSONObject(message).getString("command") == "gbrstatus") {
+                for (i in 0 until stringMessageBroker.count()) {
+                    if (JSONObject(stringMessageBroker[i]).getString("command") == "gbrstatus") {
+                        stringMessageBroker.removeAt(i)
+                        stringMessageBroker.add(message)
+                        return
+                    }
+                }
+                stringMessageBroker.add(message)
+            } else {
+                if (JSONObject(message).getString("command") == "regok") {
+                    if (lostConnected) {
+
+                        for (i in 0 until stringMessageBroker.count()) {
+                            if (JSONObject(stringMessageBroker[i]).getString("command") == "disconnected") {
+                                stringMessageBroker.removeAt(i)
+                            }
+                        }
+
+                        thisSessionId = JSONObject(message).getString("tid")
+                        val reconnectMessage = JSONObject()
+                        reconnectMessage.put("command", "reconnection")
+                        stringMessageBroker.add(reconnectMessage.toString())
+                        lostConnected = false
+                    } else {
+                        stringMessageBroker.add(message)
+                    }
+                } else {
+                    stringMessageBroker.add(message)
+                }
+            }
+        } catch (e: Exception) {
         }
     }
 
@@ -100,7 +118,7 @@ class NetworkService : Service(), NetworkServiceDelegate {
         if (!lostConnected) {
             val disconnectMessage = JSONObject()
             disconnectMessage.put("command", "disconnected")
-            messageBroker.add(disconnectMessage.toString())
+            stringMessageBroker.add(disconnectMessage.toString())
             lostConnected = true
         } else {
             Log.d("ConnectionLost", attempts.toString())
@@ -121,9 +139,10 @@ class NetworkService : Service(), NetworkServiceDelegate {
         }
     }
 
-    private val MAX_PACKETS_COUNT = 20
+    private val MAX_PACKETS_COUNT = 36
     private val ATTEMPTS_COUNT = 3
     private val MAX_PACKET_SIZE = 962
+    private var MAX_SLEEP_TIME = 0
 
     private var outcommingMessagesCount: Long = 0
     private var incommingMessagesCount: Long = 0
@@ -139,18 +158,19 @@ class NetworkService : Service(), NetworkServiceDelegate {
     var channelId: String? = null
 
     companion object {
-        var currentLocation: Location? = null
 
         var socket: DatagramSocket = DatagramSocket(null)
-
-        val channel:DatagramChannel = DatagramChannel.open()
 
         val packetsToSend = PriorityQueue<Packet>()
 
         var outcomingTransmissions = LongSparseArray<OutcomingTransmission>()
         var incomingTransmissions = LongSparseArray<IncomingTransmission>()
 
-        var messageBroker: CopyOnWriteArrayList<String> = CopyOnWriteArrayList()
+        var stringMessageBroker: CopyOnWriteArrayList<String> = CopyOnWriteArrayList()
+
+        var byteMessageBroker: CopyOnWriteArrayList<ByteArray> = CopyOnWriteArrayList()
+
+
         var serviceAlive = true
         var thisSessionId: String? = null
         var thisImei: String = ""
@@ -196,10 +216,6 @@ class NetworkService : Service(), NetworkServiceDelegate {
         return channelID
     }
 
-    override fun onCreate() {
-        super.onCreate()
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForeground()
@@ -223,16 +239,6 @@ class NetworkService : Service(), NetworkServiceDelegate {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
-       /* try{
-            channel.configureBlocking(false)
-            channel.socket().reuseAddress = true
-            channel.connect(InetSocketAddress(ip,port))
-            val selector:Selector = Selector.open()
-            channel.register(selector, SelectionKey.OP_READ)
-        }catch (e:Exception){
-            e.printStackTrace()
-        }*/
     }
 
     fun initData(sessionID: String?, imei: String, context: Context) {
@@ -255,14 +261,10 @@ class NetworkService : Service(), NetworkServiceDelegate {
         coordinateLoop()
     }
 
-    fun stopService() {
-        serviceAlive = false
-    }
-
     fun request(data: ByteArray, sessionID: String?, responseHandler: ResponseHandler) {
         this.createPacketOnQueue(
             data = data,
-            sessionID = sessionID,
+            sessionID = thisSessionId,
             contentType = ContentType.binary,
             isWaitingForResponse = true,
             responseHandler = responseHandler
@@ -273,7 +275,7 @@ class NetworkService : Service(), NetworkServiceDelegate {
         val data = message.toByteArray()
         this.createPacketOnQueue(
             data = data,
-            sessionID = sessionID,
+            sessionID = thisSessionId,
             contentType = ContentType.string,
             isWaitingForResponse = true,
             responseHandler = responseHandler
@@ -288,7 +290,7 @@ class NetworkService : Service(), NetworkServiceDelegate {
         val data = message.toByteArray()
         this.createPacketOnQueue(
             data = data,
-            sessionID = sessionID,
+            sessionID = thisSessionId,
             contentType = ContentType.string,
             isWaitingForResponse = false
         ) { succes: Boolean, _: ByteArray? ->
@@ -303,7 +305,7 @@ class NetworkService : Service(), NetworkServiceDelegate {
     ) {
         this.createPacketOnQueue(
             data = data,
-            sessionID = sessionID,
+            sessionID = thisSessionId,
             contentType = ContentType.binary,
             isWaitingForResponse = false
         ) { succes: Boolean, _: ByteArray? ->
@@ -356,26 +358,33 @@ class NetworkService : Service(), NetworkServiceDelegate {
                 subPacketNumber++
                 leftBound += MAX_PACKET_SIZE
             }
+            Log.d("countSubPacket",subPacketNumber.toString())
         }
     }
 
     private fun coordinateLoop() {
         thread {
+            var speed:Float = 0.toFloat()
             while (serviceAlive) {
                 if (MyLocation.imHere != null) {
-                    val message = JSONObject()
-                    message.put("\$c$", "gbrkobra")
-                    message.put("command", "location")
-                    message.put("id", thisImei)
-                    message.put("lon", MyLocation.imHere?.longitude)
-                    message.put("lat", MyLocation.imHere?.latitude)
-                    message.put("speed", MyLocation.imHere?.speed)
-                    send(message.toString(), thisSessionId) {
-                        if (it) {
-                            Log.d("Coordinate", "CoordinatePacket")
-                        } else
-                            connectionLost()
+                    if(MyLocation.imHere?.speed != speed)
+                    {
+                        val message = JSONObject()
+                        message.put("\$c$", "gbrkobra")
+                        message.put("command", "location")
+                        message.put("id", thisImei)
+                        message.put("lon", MyLocation.imHere?.longitude)
+                        message.put("lat", MyLocation.imHere?.latitude)
+                        message.put("speed", MyLocation.imHere?.speed)
+                        send(message.toString(), thisSessionId) {
+                            if (it) {
+                                Log.d("Coordinate", "CoordinatePacket")
+                            } else
+                                connectionLost()
+                        }
+                        speed = MyLocation.imHere?.speed!!
                     }
+
                     sleep(8000)
                 }
             }
@@ -385,6 +394,7 @@ class NetworkService : Service(), NetworkServiceDelegate {
     private fun connectionLoop() {
         thread {
             while (serviceAlive) {
+
                 if (lastRequestTime + 5000 <= System.currentTimeMillis()) {
                     outcommingMessagesCount += 1
                     val messageNumber = outcommingMessagesCount
@@ -392,7 +402,8 @@ class NetworkService : Service(), NetworkServiceDelegate {
                     val packet = ConnectionPacket(messageNumber = messageNumber, sessionID = sessionID)
                     packetsToSend.enqueue(packet, 3)
                 }
-                sleep(6000)
+
+                sleep(7000)
             }
         }
     }
@@ -400,29 +411,37 @@ class NetworkService : Service(), NetworkServiceDelegate {
     private fun sendLoop() {
         thread {
             while (serviceAlive) {
+                sleep(MAX_SLEEP_TIME.toLong())
                 val time = System.currentTimeMillis()
                 for (i in 0 until this.onAirPackets.count()) {
                     try {
                         if (this.onAirPackets[i].second <= time) {
-                            Log.d("SendLoop", "PacketRetransmitted")
+                            Log.d("Send", "PacketRetransmitted")
 
                             val packet = this.onAirPackets[i].first
+
+                            Log.d("PacketRetransmitted",String(packet.data!!))
                             val timeOnAir = this.onAirPackets[i].second
                             val count = this.onAirPackets[i].third
 
                             this.onAirPackets.removeAt(i)
 
+                            try{
+                                if(JSONObject(String(packet.data!!)).getString("\$c$") == "getfile")
+                                {
+                                    continue
+                                }
+                            }catch (e:Exception){
+                            }
+
+
                             this.onAirPackets.add(i, Triple(packet, timeOnAir, count + 1))
 
                             if (this.onAirPackets[i].third> this.MAX_PACKETS_COUNT) {
-                                Log.d("SendLoop", "PacketFailed")
+                                Log.d("Send", "PacketFailed")
                                 continue
                             }
 
-                            if (lostConnected) {
-                                attempts++
-                                Log.d("Attempts", attempts.toString())
-                            }
                             val packet1 = this.onAirPackets[i].first
                             val timeOnAirPlus10 = timeOnAir + 10000
                             val count1 = this.onAirPackets[i].third
@@ -462,24 +481,27 @@ class NetworkService : Service(), NetworkServiceDelegate {
                     e.printStackTrace()
                 }
 
-                sleep(1500)
+
                 // add new packet
                 try {
                     if (this.onAirPackets.count() <this.MAX_PACKETS_COUNT) {
                         val packet: Packet?
 
                         if (packetsToSend.dequeue() != null) {
-                            Log.d("SendLoop", "AddNewPacket")
-
                             packet = packetsToSend.dequeue()
                             packetsToSend.remove()
 
                             if (packet!!.headers!!.contentType == ContentType.string ||
                                 packet.headers!!.contentType == ContentType.binary
                             ) {
+                                Log.d("Send", "Packet")
                                 this.onAirPackets.add(Triple(packet, time + 10000, 1))
                             } else {
-                                Log.d("SendLoop", "ConnectionPacket")
+                                if (packet.headers!!.contentType == ContentType.acknowledgement) {
+                                    Log.d("Send", "Acknowledgement")
+                                } else {
+                                    Log.d("Send", "ConnectionPacket")
+                                }
                             }
 
                             try {
@@ -494,17 +516,21 @@ class NetworkService : Service(), NetworkServiceDelegate {
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
+
+                MAX_SLEEP_TIME = if(packetsToSend.countToQueue()==0){
+                    500
+                } else {
+                    0
+                }
             }
         }
     }
 
     private fun receiverLoop() {
         thread {
-            sleep(500)
             socket.soTimeout = 1000
             while (serviceAlive) {
                 if (lastResponseTime + 10000 < System.currentTimeMillis()) {
-                    Log.d("Receiver", "ConnectionLost")
                     lastResponseTime = System.currentTimeMillis()
                     connected = false
 
@@ -523,7 +549,7 @@ class NetworkService : Service(), NetworkServiceDelegate {
 
                     socket.receive(receiverPacket)
 
-                    if (receiverBuffer.count { it>0 } == 0) {
+                    if (receiverBuffer.count { it> 0 } == 0) {
                         continue
                     }
                 } catch (e: Exception) {
@@ -531,9 +557,11 @@ class NetworkService : Service(), NetworkServiceDelegate {
                 }
 
                 connected = true
-                lastResponseTime = System.currentTimeMillis()
+                lastResponseTime = System.currentTimeMillis() + 1000
 
                 val packet = PacketUtils.decode(receiverPacket)
+
+                Log.d("ReceiverInfo", packet.headers!!.contentType.toString())
 
                 when (packet.headers!!.contentType) {
                     ContentType.acknowledgement -> {
@@ -546,6 +574,7 @@ class NetworkService : Service(), NetworkServiceDelegate {
                         }
                     }
                     else -> {
+
                         handleDataPacket(packet as DataPacket)
                     }
                 }
@@ -569,12 +598,9 @@ class NetworkService : Service(), NetworkServiceDelegate {
 
     private fun handleDataPacket(packet: DataPacket) {
         val acknowledgment = AcknowledgmentPacket(packet = packet)
-        packetsToSend.enqueue(item = acknowledgment, priority = 2)
+        packetsToSend.enqueue(item = acknowledgment, priority = 1)
 
         val messageNumber = packet.headers!!.messageNumber
-
-        Log.d("DataPacket", messageNumber.toString())
-        Log.d("DataPacket", incommingMessagesCount.toString())
 
         if (messageNumber <incommingMessagesCount && incomingTransmissions[messageNumber] == null)
             return
@@ -629,10 +655,12 @@ class NetworkService : Service(), NetworkServiceDelegate {
             val sameMessageNumber = current.headers!!.messageNumber == packet.headers!!.messageNumber
             val samePacketsCount = current.headers!!.packetsCount == packet.headers!!.packetsCount
             val samePacketNumber = current.headers!!.packetNumber == packet.headers!!.packetNumber
+
             if (sameMessageNumber && samePacketNumber && samePacketsCount) {
                 onAirPackets.removeAt(i)
                 break
             }
+
         }
 
         val messageNumber = packet.headers!!.messageNumber

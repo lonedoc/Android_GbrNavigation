@@ -1,4 +1,4 @@
-package kobramob.rubeg38.ru.gbrnavigation
+package kobramob.rubeg38.ru.gbrnavigation.raw
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -15,6 +15,8 @@ import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
+import kobramob.rubeg38.ru.gbrnavigation.R
 import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.resource.TileSource
 import org.osmdroid.api.IMapController
@@ -30,7 +32,7 @@ import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
-class NavigatorActivity : Activity(), LocationListener {
+class OldActivity : Activity(), LocationListener {
 
     internal var mMapView: MapView? = null
     internal var mRelativeLayout: RelativeLayout? = null
@@ -76,7 +78,7 @@ class NavigatorActivity : Activity(), LocationListener {
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_old)
 
         mMapView = findViewById(R.id.mapview)
         mRelativeLayout = findViewById(R.id.parent_container)
@@ -187,12 +189,6 @@ class NavigatorActivity : Activity(), LocationListener {
                                                         roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
                                                         mMapView!!.overlays.add(roadOverlay)
                                                         oldDistance = distance(road)
-                                                        /* if(mLocationOverlay.isFollowLocationEnabled)
-                                                         {*/
-
-                                                         /*}
-                                                          else
-                                                              mMapView!!.mapOrientation = 0F*/
                                                     } else {
                                                         mMapView!!.controller.setCenter(road.mRouteHigh[0])
 
@@ -229,7 +225,7 @@ class NavigatorActivity : Activity(), LocationListener {
                                             } else {
                                                 road.mRouteHigh.clear()
                                                 stopUpdateRoad = true
-                                                Toast.makeText(this@NavigatorActivity, "Конец пути", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(this@OldActivity, "Конец пути", Toast.LENGTH_SHORT).show()
                                                 mMapView!!.overlays.removeAt(mMapView!!.overlays.size - 1)
                                             }
                                         }
@@ -410,11 +406,11 @@ class NavigatorActivity : Activity(), LocationListener {
             createRoad = 1
         }
 
-        /* Toast.makeText(this@NavigatorActivity, "Longitude " + location.longitude + " Latitude " + location.latitude, Toast.LENGTH_SHORT).show()*/
+        /* Toast.makeText(this@OldActivity, "Longitude " + location.longitude + " Latitude " + location.latitude, Toast.LENGTH_SHORT).show()*/
     }
 
     override fun onProviderDisabled(provider: String) {
-        /*Toast.makeText(this@NavigatorActivity, "Please Enable GPS and Internet", Toast.LENGTH_SHORT).show()*/
+        /*Toast.makeText(this@OldActivity, "Please Enable GPS and Internet", Toast.LENGTH_SHORT).show()*/
     }
 
     override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {

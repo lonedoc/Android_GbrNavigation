@@ -1,4 +1,4 @@
-package kobramob.rubeg38.ru.gbrnavigation.mainmapactivity
+package kobramob.rubeg38.ru.gbrnavigation.raw
 
 import android.content.Context
 import android.content.pm.PackageManager
@@ -534,7 +534,7 @@ class MainMapActivity :
     }
 
     override fun onProviderDisabled(provider: String) {
-        /*Toast.makeText(this@NavigatorActivity, "Please Enable GPS and Internet", Toast.LENGTH_SHORT).show()*/
+        /*Toast.makeText(this@OldActivity, "Please Enable GPS and Internet", Toast.LENGTH_SHORT).show()*/
     }
 
     override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {

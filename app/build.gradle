@@ -77,7 +77,7 @@ dependencies {
         description = "Fix Kotlin code style deviations."
         classpath = configurations.ktlint
         main = "com.pinterest.ktlint.Main"
-        args "--experimental","-F", "src/**/*.kt"
+        args "--experimental", "-F", "src/**/*.kt"
     }
 
     implementation 'com.github.MKergall:osmbonuspack:6.6.0'
@@ -96,8 +96,14 @@ dependencies {
     implementation 'org.redundent:kotlin-xml-builder:1.5.1'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1"
     implementation 'org.greenrobot:eventbus:3.1.1'
+
+    implementation 'com.daimajia.easing:library:2.0@aar'
+    implementation 'com.daimajia.androidanimations:library:2.3@aar'
+
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test:runner:1.1.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    implementation 'com.redmadrobot:input-mask-android:4.3.1'
 
 }
