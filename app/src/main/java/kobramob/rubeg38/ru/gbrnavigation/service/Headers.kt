@@ -10,5 +10,5 @@ class Headers(
     var shift: Int,
     var firstSize: Int,
     var secondSize: Int,
-    var sessionID: String?
+    var sessionId: String?
 )

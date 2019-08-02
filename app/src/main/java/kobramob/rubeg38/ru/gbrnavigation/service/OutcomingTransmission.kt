@@ -1,24 +1,20 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
 class OutcomingTransmission {
-    private lateinit var acknowledgements: BooleanArray
-
+    private var acknowledgements: BooleanArray
     var isResponseExpected: Boolean
-        private set
+    var responseHandler: ResponseHandler
 
-    lateinit var responseHandler: ResponseHandler
-        private set
-
-    constructor(packetCount: Int, isResponseExpected: Boolean, responseHandler: ResponseHandler) {
-        this.acknowledgements = BooleanArray(packetCount)
+    constructor(packetsCount: Int, isResponseExpected: Boolean, responseHandler: ResponseHandler) {
+        this.acknowledgements = BooleanArray(packetsCount)
         this.isResponseExpected = isResponseExpected
         this.responseHandler = responseHandler
     }
 
-    var done: () -> Boolean = {
-        acknowledgements.all { it }
-    }
-    fun addAcknowledgements(packetNumber: Int) {
-        acknowledgements[packetNumber] = true
+    val done: Boolean
+        get() = this.acknowledgements.all { it }
+
+    fun addAcknowledgement(packetNumber: Int) {
+        this.acknowledgements[packetNumber] = true
     }
 }

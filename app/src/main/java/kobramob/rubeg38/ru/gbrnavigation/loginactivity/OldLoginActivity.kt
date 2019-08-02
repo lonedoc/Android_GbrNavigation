@@ -27,8 +27,6 @@ import org.json.JSONObject
 
 class OldLoginActivity : AppCompatActivity() {
 
-    private val networkService: NetworkService = NetworkService()
-
     lateinit var imei: String
     lateinit var ipInput: TextInputEditText
     lateinit var portInput: TextInputEditText
@@ -76,7 +74,7 @@ class OldLoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_oldlogin)
     }
 
-    @SuppressLint("HardwareIds")
+    /*@SuppressLint("HardwareIds")
     override fun onStart() {
         super.onStart()
         Alive = true
@@ -490,5 +488,5 @@ class OldLoginActivity : AppCompatActivity() {
         super.onDestroy()
         val startService = Intent(this, NetworkService::class.java)
         stopService(startService)
-    }
+    }*/
 }

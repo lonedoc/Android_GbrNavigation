@@ -9,183 +9,35 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
-import android.util.LongSparseArray
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import java.io.IOException
 import java.lang.Thread.sleep
-import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetSocketAddress
+import java.nio.ByteBuffer
+import java.nio.channels.DatagramChannel
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Semaphore
 import kobramob.rubeg38.ru.gbrnavigation.R
-import kobramob.rubeg38.ru.gbrnavigation.loginactivity.OldLoginActivity
-import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
-import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
+import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
-import org.json.JSONObject
 
-class NetworkService : Service(), NetworkServiceDelegate {
+class NetworkService : Service {
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
+    override fun onBind(p0: Intent?): IBinder? {
+        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
-
-    override fun messageReceived(message: ByteArray) {
-        Log.d("MessageReceiver", Arrays.toString(message))
-        Log.d("MessageReceiver", message.count().toString())
-
-        byteMessageBroker.add(message)
-    }
-
-    private var waitPicture = false
-
-    override fun messageReceived(message: String) {
-        Log.d("MessageReceiver", message)
-
-
-        try{
-            when(JSONObject(message).getString("\$c$")){
-                "sendfile"->{
-                      /*  val jsonObject = JSONObject()
-                        jsonObject.put("\$c$", "getfileok")
-                        jsonObject.put("name", jsonObject.getString("name"))
-                        send(message = jsonObject.toString(), sessionID = thisSessionId) {
-                            if (it) {
-                                Log.d("MessageReceiver", "PictureReceive")
-                                waitPicture = false
-                            }
-                        }*/
-                }
-                else->{}
-            }
-        }catch (e:Exception){
-        }
-
-        try {
-            if (!StartActivity.Alive && !OldLoginActivity.Alive && !ObjectActivity.Alive) {
-                when (JSONObject(message).getString("command")) {
-                    "alarm" -> {
-                    }
-                    "gbrstatus" -> {
-                    }
-
-                    "notalarm" -> {
-                    }
-                }
-            }
-        } catch (e: Exception) {
-        }
-
-        try {
-            if (JSONObject(message).getString("command") == "gbrstatus") {
-                for (i in 0 until stringMessageBroker.count()) {
-                    if (JSONObject(stringMessageBroker[i]).getString("command") == "gbrstatus") {
-                        stringMessageBroker.removeAt(i)
-                        stringMessageBroker.add(message)
-                        return
-                    }
-                }
-                stringMessageBroker.add(message)
-            } else {
-                if (JSONObject(message).getString("command") == "regok") {
-                    if (lostConnected) {
-
-                        for (i in 0 until stringMessageBroker.count()) {
-                            if (JSONObject(stringMessageBroker[i]).getString("command") == "disconnected") {
-                                stringMessageBroker.removeAt(i)
-                            }
-                        }
-
-                        thisSessionId = JSONObject(message).getString("tid")
-                        val reconnectMessage = JSONObject()
-                        reconnectMessage.put("command", "reconnection")
-                        stringMessageBroker.add(reconnectMessage.toString())
-                        lostConnected = false
-                    } else {
-                        stringMessageBroker.add(message)
-                    }
-                } else {
-                    stringMessageBroker.add(message)
-                }
-            }
-        } catch (e: Exception) {
-        }
-    }
-
-    override fun connectionLost() {
-        if (!lostConnected) {
-            val disconnectMessage = JSONObject()
-            disconnectMessage.put("command", "disconnected")
-            stringMessageBroker.add(disconnectMessage.toString())
-            lostConnected = true
-        } else {
-            Log.d("ConnectionLost", attempts.toString())
-            if (attempts >= ATTEMPTS_COUNT) {
-                attempts = 0
-                val sendMessage = JSONObject()
-                sendMessage.put("\$c$", "reg")
-                sendMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
-                sendMessage.put("password", thisImei)
-
-                send(sendMessage.toString(), null) {
-                    success: Boolean ->
-                        if (success) {
-                            Log.d("Connected", "true")
-                        }
-                    }
-            }
-        }
-    }
-
-    private val MAX_PACKETS_COUNT = 36
-    private val ATTEMPTS_COUNT = 3
-    private val MAX_PACKET_SIZE = 962
-    private var MAX_SLEEP_TIME = 0
-
-    private var outcommingMessagesCount: Long = 0
-    private var incommingMessagesCount: Long = 0
-
-    private var onAirPackets = CopyOnWriteArrayList<Triple<Packet, Long, Int>>()
-
-    private var lastRequestTime: Long = System.currentTimeMillis()
-    private var lastResponseTime: Long = System.currentTimeMillis()
-    private var connected: Boolean = false
-    private var lostConnected = false
-    private var attempts = 0
-
-    var channelId: String? = null
-
-    companion object {
-
-        var socket: DatagramSocket = DatagramSocket(null)
-
-        val packetsToSend = PriorityQueue<Packet>()
-
-        var outcomingTransmissions = LongSparseArray<OutcomingTransmission>()
-        var incomingTransmissions = LongSparseArray<IncomingTransmission>()
-
-        var stringMessageBroker: CopyOnWriteArrayList<String> = CopyOnWriteArrayList()
-
-        var byteMessageBroker: CopyOnWriteArrayList<ByteArray> = CopyOnWriteArrayList()
-
-
-        var serviceAlive = true
-        var thisSessionId: String? = null
-        var thisImei: String = ""
-    }
-
-    private var context: Context? = null
 
     private fun startForeground() {
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        channelId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channelId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel()
         } else {
             TODO("VERSION.SDK_INT < O")
         }
-        val notificationBuilder = NotificationCompat.Builder(this, channelId!!)
+        val notificationBuilder = NotificationCompat.Builder(this, channelId)
         val notification =
             notificationBuilder.setOngoing(true)
                 .setSmallIcon(R.mipmap.ic_launcher)
@@ -194,9 +46,9 @@ class NetworkService : Service(), NetworkServiceDelegate {
                 .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build()
-        startForeground(channelId!!.toInt(), notification)
+        startForeground(channelId.toInt(), notification)
 
-        startService()
+        start()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -208,6 +60,7 @@ class NetworkService : Service(), NetworkServiceDelegate {
             channelName,
             NotificationManager.IMPORTANCE_HIGH
         )
+
         chan.lightColor = Color.GRAY
         chan.importance = NotificationManager.IMPORTANCE_NONE
         chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
@@ -220,464 +73,430 @@ class NetworkService : Service(), NetworkServiceDelegate {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForeground()
         } else {
-            startService()
+            start()
         }
+
         return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        serviceAlive = false
         stopForeground(false)
         stopSelf()
     }
 
-    fun initSocket(ip: String?, port: Int) {
-        try {
-            socket.reuseAddress = true
-            socket.connect(InetSocketAddress(ip, port))
-        } catch (e: Exception) {
-            e.printStackTrace()
+    private val PACKET_SIZE = 962
+    private val SLEEP_INTERVAL: Long = 100
+    private val CONNECTION_SYNC_INTERVAL = 5000
+    private val MAX_PACKETS_COUNT = 32
+    private val ATTEMPTS_COUNT = 3
+
+    private val semaphore: Semaphore
+
+    private val hosts: ArrayList<InetSocketAddress>
+    private var currentHostIndex: Int
+
+    private val socket: DatagramSocket
+    private val channel: DatagramChannel
+
+    private var lastRequestTime: Long
+    private var lastResponseTime: Long
+
+    var connected: Boolean
+
+    private var outcomingMessagesCount: Long
+    private var incomingMessagesCount: Long
+
+    private val packetsToSend: PriorityQueue<Packet>
+    private var onAirPackets: CopyOnWriteArrayList<RetransmissionInfo>
+    private var unhandledAcks: Queue<AcknowledgementPacket>
+
+    private var outcomingTransmissions: HashMap<Long, OutcomingTransmission>
+    private var incomingTransmissions: HashMap<Long, IncomingTransmission>
+
+    var delegate: NetworkServiceDelegate?
+
+    constructor(ips: ArrayList<String>, port: Int) {
+        if (ips.count() == 0) throw IllegalArgumentException("At least one ip address required")
+
+        this.hosts = ArrayList()
+
+        for (ip in ips) {
+            this.hosts.add(InetSocketAddress(ip, port))
         }
+
+        this.currentHostIndex = 0
+
+        this.socket = DatagramSocket(null)
+        this.socket.reuseAddress = false
+        this.socket.soTimeout = 1
+
+        this.lastRequestTime = System.currentTimeMillis()
+        this.lastResponseTime = System.currentTimeMillis()
+
+        this.connected = false
+
+        this.outcomingMessagesCount = 0
+        this.incomingMessagesCount = 0
+
+        this.packetsToSend = PriorityQueue()
+        this.onAirPackets = CopyOnWriteArrayList()
+        this.unhandledAcks = Queue()
+
+        this.outcomingTransmissions = HashMap()
+        this.incomingTransmissions = HashMap()
+
+        this.delegate = null
+
+        this.semaphore = Semaphore(1)
+
+        this.channel = DatagramChannel.open()
     }
 
-    fun initData(sessionID: String?, imei: String, context: Context) {
-        thisSessionId = sessionID
-        thisImei = imei
-        this.context = context
-    }
-
-    private fun startService() {
-        lastResponseTime = System.currentTimeMillis()
-        lastRequestTime = System.currentTimeMillis()
-        serviceAlive = true
-
-        sendLoop()
-
-        receiverLoop()
-
-        connectionLoop()
-
-        coordinateLoop()
-    }
-
-    fun request(data: ByteArray, sessionID: String?, responseHandler: ResponseHandler) {
-        this.createPacketOnQueue(
-            data = data,
-            sessionID = thisSessionId,
-            contentType = ContentType.binary,
-            isWaitingForResponse = true,
-            responseHandler = responseHandler
+    fun request(message: String, responseHandler: ResponseHandler) {
+        this.send(
+            message.toByteArray(),
+            ContentType.STRING,
+            this.delegate?.sessionId,
+            true,
+            responseHandler
         )
     }
 
-    fun request(message: String, sessionID: String?, responseHandler: ResponseHandler) {
-        val data = message.toByteArray()
-        this.createPacketOnQueue(
-            data = data,
-            sessionID = thisSessionId,
-            contentType = ContentType.string,
-            isWaitingForResponse = true,
-            responseHandler = responseHandler
+    fun request(data: ByteArray, responseHandler: ResponseHandler) {
+        this.send(
+            data,
+            ContentType.BINARY,
+            this.delegate?.sessionId,
+            true,
+            responseHandler
         )
     }
 
-    fun send(
-        message: String,
-        sessionID: String?,
-        resultHandler: ResultHandler
-    ) {
-        val data = message.toByteArray()
-        this.createPacketOnQueue(
-            data = data,
-            sessionID = thisSessionId,
-            contentType = ContentType.string,
-            isWaitingForResponse = false
-        ) { succes: Boolean, _: ByteArray? ->
-            resultHandler(succes)
-        }
+    fun send(message: String, resultHandler: ResultHandler) {
+        this.send(
+            message.toByteArray(),
+            ContentType.STRING,
+            this.delegate?.sessionId,
+            false
+        ) { success, _ -> resultHandler(success) }
     }
 
-    fun send(
-        data: ByteArray,
-        sessionID: String?,
-        resultHandler: ResultHandler
-    ) {
-        this.createPacketOnQueue(
-            data = data,
-            sessionID = thisSessionId,
-            contentType = ContentType.binary,
-            isWaitingForResponse = false
-        ) { succes: Boolean, _: ByteArray? ->
-            resultHandler(succes)
-        }
+    fun send(data: ByteArray, resultHandler: ResultHandler) {
+        this.send(
+            data,
+            ContentType.BINARY,
+            this.delegate?.sessionId,
+            false
+        ) { success, _ -> resultHandler(success) }
     }
 
-    private fun createPacketOnQueue(data: ByteArray, sessionID: String?, contentType: ContentType, isWaitingForResponse: Boolean, responseHandler: ResponseHandler) {
-
+    private fun send(data: ByteArray, contentType: ContentType, sessionId: String?, isResponseExpected: Boolean, responseHandler: ResponseHandler) {
         thread {
-            this.outcommingMessagesCount += 1
+            this.outcomingMessagesCount++
 
-            val messageNumber = this.outcommingMessagesCount
+            val messageNumber = this.outcomingMessagesCount
 
-            var packetCount = data.size / MAX_PACKET_SIZE
-            if (data.size % MAX_PACKET_SIZE != 0) {
-                packetCount += 1
+            // Count of packets
+            var packetsCount = data.count() / PACKET_SIZE
+
+            if (data.count() % PACKET_SIZE != 0) {
+                packetsCount++
             }
 
-            val booleanArray = BooleanArray(packetCount)
-            for (i in 0 until packetCount) {
-                booleanArray[i] = false
-            }
+            // Transmission control
+            this.outcomingTransmissions[messageNumber] = OutcomingTransmission(
+                packetsCount,
+                isResponseExpected,
+                responseHandler
+            )
 
-            outcomingTransmissions.put(messageNumber, OutcomingTransmission(packetCount, isWaitingForResponse, responseHandler))
+            // Create packets
+            var packetNumber = 1
 
-            var subPacketNumber = 1
             var leftBound = 0
-            while (leftBound <data.count()) {
-                val rightBound = if (leftBound + 962 <data.count()) {
-                    leftBound + 962
-                } else
-                    data.count()
+            while (leftBound < data.count()) {
+                val rightBound = if (leftBound + PACKET_SIZE < data.count()) leftBound + PACKET_SIZE else data.count()
 
-                val chunk = data.slice(IntRange(leftBound, rightBound - 1))
+                val chunk = data.sliceArray(leftBound until rightBound)
 
                 val packet = DataPacket(
-                    data = chunk.toByteArray(),
-                    sessionID = sessionID,
-                    contentType = contentType,
-                    messageNumber = messageNumber,
-                    messageSize = data.count(),
-                    shift = leftBound,
-                    packetCount = packetCount,
-                    packetNumber = subPacketNumber
+                    chunk,
+                    sessionId,
+                    contentType,
+                    messageNumber,
+                    data.count(),
+                    leftBound,
+                    packetsCount,
+                    packetNumber
                 )
 
-                packetsToSend.enqueue(packet)
+                this.packetsToSend.enqueue(packet, Priority.MEDIUM)
 
-                subPacketNumber++
-                leftBound += MAX_PACKET_SIZE
-            }
-            Log.d("countSubPacket",subPacketNumber.toString())
-        }
-    }
-
-    private fun coordinateLoop() {
-        thread {
-            var speed:Float = 0.toFloat()
-            while (serviceAlive) {
-                if (MyLocation.imHere != null) {
-                    if(MyLocation.imHere?.speed != speed)
-                    {
-                        val message = JSONObject()
-                        message.put("\$c$", "gbrkobra")
-                        message.put("command", "location")
-                        message.put("id", thisImei)
-                        message.put("lon", MyLocation.imHere?.longitude)
-                        message.put("lat", MyLocation.imHere?.latitude)
-                        message.put("speed", MyLocation.imHere?.speed)
-                        send(message.toString(), thisSessionId) {
-                            if (it) {
-                                Log.d("Coordinate", "CoordinatePacket")
-                            } else
-                                connectionLost()
-                        }
-                        speed = MyLocation.imHere?.speed!!
-                    }
-
-                    sleep(8000)
-                }
+                packetNumber++
+                leftBound += PACKET_SIZE
             }
         }
     }
 
-    private fun connectionLoop() {
-        thread {
-            while (serviceAlive) {
-
-                if (lastRequestTime + 5000 <= System.currentTimeMillis()) {
-                    outcommingMessagesCount += 1
-                    val messageNumber = outcommingMessagesCount
-                    val sessionID = thisSessionId
-                    val packet = ConnectionPacket(messageNumber = messageNumber, sessionID = sessionID)
-                    packetsToSend.enqueue(packet, 3)
-                }
-
-                sleep(7000)
-            }
-        }
+    private fun start() {
+        this.startSendLoop()
+        this.startReadLoop()
     }
 
-    private fun sendLoop() {
+    private fun startReadLoop() {
         thread {
-            while (serviceAlive) {
-                sleep(MAX_SLEEP_TIME.toLong())
-                val time = System.currentTimeMillis()
-                for (i in 0 until this.onAirPackets.count()) {
-                    try {
-                        if (this.onAirPackets[i].second <= time) {
-                            Log.d("Send", "PacketRetransmitted")
+            while (true) {
+                if (this.lastResponseTime + 10000 <= System.currentTimeMillis()) {
+                    this.lastResponseTime = System.currentTimeMillis()
 
-                            val packet = this.onAirPackets[i].first
+                    this.connected = false
 
-                            Log.d("PacketRetransmitted",String(packet.data!!))
-                            val timeOnAir = this.onAirPackets[i].second
-                            val count = this.onAirPackets[i].third
+                    this.onAirPackets.removeAll { true }
+                    this.packetsToSend.removeAll { true }
 
-                            this.onAirPackets.removeAt(i)
+                    this.incomingTransmissions.clear()
+                    this.outcomingTransmissions.clear()
 
-                            try{
-                                if(JSONObject(String(packet.data!!)).getString("\$c$") == "getfile")
-                                {
-                                    continue
-                                }
-                            }catch (e:Exception){
-                            }
+                    this.delegate?.connectionLost()
 
-
-                            this.onAirPackets.add(i, Triple(packet, timeOnAir, count + 1))
-
-                            if (this.onAirPackets[i].third> this.MAX_PACKETS_COUNT) {
-                                Log.d("Send", "PacketFailed")
-                                continue
-                            }
-
-                            val packet1 = this.onAirPackets[i].first
-                            val timeOnAirPlus10 = timeOnAir + 10000
-                            val count1 = this.onAirPackets[i].third
-                            this.onAirPackets.removeAt(i)
-
-                            this.onAirPackets.add(i, Triple(packet1, timeOnAirPlus10, count1))
-
-                            try {
-                                socket.send(onAirPackets[i].first.encode())
-                                this.lastRequestTime = System.currentTimeMillis()
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                                connectionLost()
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+                    this.currentHostIndex++
                 }
-                // remove packet
-                val failedPacket = this.onAirPackets.filter { it.third > this.ATTEMPTS_COUNT }
 
-                for (i in 0 until failedPacket.size) {
-                    val messageNumber = failedPacket[i].first.headers!!.messageNumber
-                    packetsToSend.removeAll { it.headers!!.messageNumber == messageNumber }
-                    try {
-                        outcomingTransmissions[messageNumber].responseHandler(false, null)
-                        outcomingTransmissions.remove(messageNumber)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
+                val buffer = ByteBuffer.allocate(1536)
 
                 try {
-                    onAirPackets.removeAll { it.third > this.ATTEMPTS_COUNT }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                    this.channel.receive(buffer)
 
+                    buffer.flip()
 
-                // add new packet
-                try {
-                    if (this.onAirPackets.count() <this.MAX_PACKETS_COUNT) {
-                        val packet: Packet?
-
-                        if (packetsToSend.dequeue() != null) {
-                            packet = packetsToSend.dequeue()
-                            packetsToSend.remove()
-
-                            if (packet!!.headers!!.contentType == ContentType.string ||
-                                packet.headers!!.contentType == ContentType.binary
-                            ) {
-                                Log.d("Send", "Packet")
-                                this.onAirPackets.add(Triple(packet, time + 10000, 1))
-                            } else {
-                                if (packet.headers!!.contentType == ContentType.acknowledgement) {
-                                    Log.d("Send", "Acknowledgement")
-                                } else {
-                                    Log.d("Send", "ConnectionPacket")
-                                }
-                            }
-
-                            try {
-                                socket.send(packet.encode())
-                                this.lastRequestTime = System.currentTimeMillis()
-                            } catch (e: Exception) {
-                                Log.d("Socket", "SendFailed")
-                                e.printStackTrace()
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-
-                MAX_SLEEP_TIME = if(packetsToSend.countToQueue()==0){
-                    500
-                } else {
-                    0
-                }
-            }
-        }
-    }
-
-    private fun receiverLoop() {
-        thread {
-            socket.soTimeout = 1000
-            while (serviceAlive) {
-                if (lastResponseTime + 10000 < System.currentTimeMillis()) {
-                    lastResponseTime = System.currentTimeMillis()
-                    connected = false
-
-                    onAirPackets.removeAll { true }
-                    incomingTransmissions.clear()
-                    outcomingTransmissions.clear()
-
-                    connectionLost()
-                }
-                // Создаем буффер
-                val receiverBuffer = ByteArray(MAX_PACKET_SIZE + 57)
-
-                // Создаем датаграмму для приема
-                val receiverPacket = DatagramPacket(receiverBuffer, receiverBuffer.size)
-                try {
-
-                    socket.receive(receiverPacket)
-
-                    if (receiverBuffer.count { it> 0 } == 0) {
+                    if (!buffer.hasRemaining())
                         continue
-                    }
-                } catch (e: Exception) {
+                } catch (ex: IOException) {
                     continue
                 }
 
-                connected = true
-                lastResponseTime = System.currentTimeMillis() + 1000
+                this.connected = true
+                this.lastResponseTime = System.currentTimeMillis()
 
-                val packet = PacketUtils.decode(receiverPacket)
+                val packet = PacketUtils.decode(buffer.array())
 
-                Log.d("ReceiverInfo", packet.headers!!.contentType.toString())
+                // debug
+                println("<- { content type: ${packet.headers.contentType},  message: ${packet.headers.messageNumber}, packet number: ${packet.headers.packetNumber} }")
 
-                when (packet.headers!!.contentType) {
-                    ContentType.acknowledgement -> {
-                        handleAcknowledgmentPacket(packet as AcknowledgmentPacket)
-                    }
-                    ContentType.connection -> {
-                        val messageNumber = packet.headers!!.messageNumber
-                        if (messageNumber> incommingMessagesCount) {
-                            incommingMessagesCount = messageNumber
-                        }
-                    }
-                    else -> {
+                if (packet.headers.contentType == ContentType.ACKNOWLEDGEMENT) {
+                    handleAcknowledgementPacket(packet as AcknowledgementPacket)
+                } else if (packet.headers.contentType == ContentType.CONNECTION) {
+                    val messageNumber = packet.headers.messageNumber
 
-                        handleDataPacket(packet as DataPacket)
-                    }
+                    if (messageNumber > this.incomingMessagesCount)
+                        this.incomingMessagesCount = messageNumber
+                } else {
+                    handleDataPacket(packet as DataPacket)
                 }
-                // Remove fail packet
-                try {
-                    for (i in 0 until incomingTransmissions.size()) {
-                        if (incomingTransmissions[i.toLong()].timeToFail <= System.currentTimeMillis()) {
-                            incomingTransmissions[i.toLong()].responseHandler(false, null)
-                        }
-                    }
-                    for (i in 0 until incomingTransmissions.size()) {
-                        if (incomingTransmissions[i.toLong()].timeToFail <= System.currentTimeMillis()) {
-                            incomingTransmissions.delete(i.toLong())
-                        }
-                    }
-                } catch (e: Exception) {
+
+                // Handle failed messages
+                val failedTransmissions = this.incomingTransmissions.filter { it.value.failed }
+
+                failedTransmissions.forEach {
+                    it.value.responseHandler(false, null)
+                    this.incomingTransmissions.remove(it.key)
                 }
             }
         }
+    }
+
+    private fun startSendLoop() {
+        thread {
+            while (true) {
+                // Handle acknowledgements
+                var ack = this.unhandledAcks.dequeue()
+
+                while (ack != null) {
+                    this.onAirPackets.removeAll {
+                        this.samePacketSignature(ack!!, it.packet)
+                    }
+
+                    ack = this.unhandledAcks.dequeue()
+                }
+
+                // Retransmit packets
+                this.onAirPackets.forEach { info -> // TODO: Rename retransmission info
+                    if (info.lastAttemptTime + 10000 <= System.currentTimeMillis()) {
+                        if (info.attemptsCount < ATTEMPTS_COUNT) { // TODO: Rename to MAX_ATTEMPTS_COUNT
+                            try {
+                                this.sendPacket(info.packet)
+                            } catch (ex: IOException) {
+                                ex.printStackTrace()
+                            }
+
+                            info.lastAttemptTime = System.currentTimeMillis()
+
+                            // debug
+                            println("-> -> { attempt: ${info.attemptsCount}, content type: ${info.packet.headers.contentType}, message number: ${info.packet.headers.messageNumber}, packet number: ${info.packet.headers.packetNumber} }")
+                        }
+
+                        info.attemptsCount++
+                    }
+                }
+
+                // Remove failed
+                val failedPackets = this.onAirPackets.filter { it.attemptsCount > ATTEMPTS_COUNT }
+
+                failedPackets.forEach { failedPacket ->
+                    val messageNumber = failedPacket.packet.headers.messageNumber
+
+                    this.packetsToSend.removeAll { it.headers.messageNumber == messageNumber }
+
+                    this.outcomingTransmissions[messageNumber]?.responseHandler?.invoke(false, null)
+                    this.outcomingTransmissions.remove(messageNumber)
+                }
+
+                this.onAirPackets.removeAll { it.attemptsCount > ATTEMPTS_COUNT }
+
+                // Send
+                val windowIsFull = this.onAirPackets.count() >= MAX_PACKETS_COUNT
+                val nothingToSend = this.packetsToSend.count() == 0
+                val syncTimeHasCome = this.lastRequestTime + 8900 <= System.currentTimeMillis() // 10s - (max RTT + interval)
+
+                if (!nothingToSend && !windowIsFull) {
+                    val packet = this.packetsToSend.dequeue()
+
+                    if (packet != null) {
+                        if (packet.headers.contentType == ContentType.STRING || packet.headers.contentType == ContentType.BINARY) {
+                            this.onAirPackets.add(
+                                RetransmissionInfo(
+                                    packet,
+                                    System.currentTimeMillis(),
+                                    1
+                                )
+                            )
+                        }
+
+                        try {
+                            this.sendPacket(packet)
+                        } catch (ex: IOException) {
+                            ex.printStackTrace()
+                        }
+
+                        continue
+                    }
+                }
+
+                // Maintain connection
+                if (syncTimeHasCome) {
+                    val sessionId = this.delegate?.sessionId
+
+                    if (sessionId != null) {
+                        val connectionPacket = ConnectionPacket(sessionId)
+
+                        try {
+                            this.sendPacket(connectionPacket)
+                        } catch (ex: IOException) {
+                            ex.printStackTrace()
+                        }
+                    }
+                }
+
+                if (nothingToSend)
+                    sleep(100) // interval
+            }
+        }
+    }
+
+    private fun sendPacket(packet: Packet) {
+        val buffer = ByteBuffer.wrap(packet.encode())
+
+        val host = this.hosts[this.currentHostIndex % this.hosts.count()]
+
+        this.channel.send(buffer, host)
+
+        this.lastRequestTime = System.currentTimeMillis()
+
+        // debug
+        println("-> { content type: ${packet.headers.contentType}, message number: ${packet.headers.messageNumber}, packet number: ${packet.headers.packetNumber} }")
+    }
+
+    private fun samePacketSignature(packetA: Packet, packetB: Packet): Boolean {
+        val sameMessageNumber = packetA.headers.messageNumber == packetB.headers.messageNumber
+        val samePacketsCount = packetA.headers.packetsCount == packetB.headers.packetsCount
+        val samePacketNumber = packetA.headers.packetNumber == packetB.headers.packetNumber
+
+        return sameMessageNumber && samePacketsCount && samePacketNumber
     }
 
     private fun handleDataPacket(packet: DataPacket) {
-        val acknowledgment = AcknowledgmentPacket(packet = packet)
-        packetsToSend.enqueue(item = acknowledgment, priority = 1)
+        val messageNumber = packet.headers.messageNumber
 
-        val messageNumber = packet.headers!!.messageNumber
-
-        if (messageNumber <incommingMessagesCount && incomingTransmissions[messageNumber] == null)
+        if (!this.incomingTransmissions.containsKey(messageNumber) && messageNumber < this.incomingMessagesCount) {
             return
-
-        if (messageNumber> this.incommingMessagesCount) {
-            incommingMessagesCount = messageNumber
         }
 
-        if (incomingTransmissions[messageNumber] == null) {
+        val acknowledgement = AcknowledgementPacket(packet)
+
+        this.packetsToSend.enqueue(acknowledgement, Priority.HIGH)
+
+        if (messageNumber > this.incomingMessagesCount) {
+            this.incomingMessagesCount = messageNumber
+        }
+
+        if (!this.incomingTransmissions.containsKey(messageNumber)) {
             val handler: ResponseHandler
 
-            when (packet.headers!!.contentType) {
-                ContentType.string -> {
+            handler = if (packet.headers.contentType == ContentType.STRING) {
+                h1@{ success, data ->
+                    if (!success)
+                        return@h1
 
-                    handler = handler@{ success: Boolean, data: ByteArray? ->
-                        if (!success)
-                            return@handler
-                        if (data != null) {
-                            messageReceived(String(data))
-                        }
-                    }
+                    val text = String(data!!)
+
+                    this.delegate?.messageReceived(text)
                 }
-                ContentType.binary -> {
-                    handler = handler@{ succes: Boolean, data: ByteArray? ->
-                        if (succes) {
-                            if (data != null)
-                                messageReceived(data)
-                        } else {
-                            return@handler
-                        }
-                    }
+            } else {
+                { success, data ->
+                    if (success)
+                        this.delegate?.messageReceived(data!!)
                 }
-                ContentType.acknowledgement -> TODO()
-                ContentType.connection -> TODO()
             }
-            incomingTransmissions.put(messageNumber, IncomingTransmission(handler))
+
+            this.incomingTransmissions[messageNumber] = IncomingTransmission(handler)
         }
-        if (incomingTransmissions[messageNumber] != null) {
-            val transmission = incomingTransmissions[messageNumber]
+
+        if (this.incomingTransmissions.containsKey(messageNumber)) {
+            val transmission = this.incomingTransmissions[messageNumber]!!
+
             transmission.addPacket(packet)
-            if (transmission.done()) {
-                transmission.responseHandler(true, transmission.message())
-                incomingTransmissions.remove(messageNumber)
+
+            if (transmission.done) {
+                transmission.responseHandler(true, transmission.message)
+
+                this.incomingTransmissions.remove(messageNumber)
             }
         }
     }
 
-    private fun handleAcknowledgmentPacket(packet: AcknowledgmentPacket) {
-        for (i in 0 until onAirPackets.count()) {
-            val current = onAirPackets[i].first
+    private fun handleAcknowledgementPacket(packet: AcknowledgementPacket) {
+        this.unhandledAcks.enqueue(packet)
 
-            val sameMessageNumber = current.headers!!.messageNumber == packet.headers!!.messageNumber
-            val samePacketsCount = current.headers!!.packetsCount == packet.headers!!.packetsCount
-            val samePacketNumber = current.headers!!.packetNumber == packet.headers!!.packetNumber
+        val messageNumber = packet.headers.messageNumber
+        val packetNumber = packet.headers.packetNumber
 
-            if (sameMessageNumber && samePacketNumber && samePacketsCount) {
-                onAirPackets.removeAt(i)
-                break
-            }
+        // Update messages transmission info
+        val transmission = this.outcomingTransmissions[messageNumber]
 
-        }
+        if (transmission != null) {
+            transmission.addAcknowledgement(packetNumber - 1)
 
-        val messageNumber = packet.headers!!.messageNumber
-        val packetNumber = packet.headers!!.packetNumber
-
-        if (outcomingTransmissions[messageNumber] != null) {
-            val transmission: OutcomingTransmission = outcomingTransmissions[messageNumber]
-            transmission.addAcknowledgements(packetNumber - 1)
-            if (transmission.done()) {
+            if (transmission.done) {
                 if (transmission.isResponseExpected) {
-                    val responseHandler = transmission.responseHandler
-                    val expectedNumber = incommingMessagesCount + 1
-                    incomingTransmissions.put(expectedNumber, IncomingTransmission(responseHandler))
+                    val expectedNumber = this.incomingMessagesCount + 1
+
+                    this.incomingTransmissions[expectedNumber] = IncomingTransmission(transmission.responseHandler)
                 } else {
                     transmission.responseHandler(true, null)
                 }
-                outcomingTransmissions.remove(messageNumber)
+
+                this.outcomingTransmissions.remove(messageNumber)
             }
         }
     }

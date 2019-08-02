@@ -1,59 +1,43 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
-import android.util.Log
-import java.lang.Exception
 import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.util.*
 
-class IncomingTransmission() {
-    private var packets: BooleanArray? = null
-    private var data: ByteBuffer? = null
-    var timeToFail: Long = 0
-        private set
-    lateinit var responseHandler: ResponseHandler
-        private set
+class IncomingTransmission {
+    private var packets: BooleanArray?
+    private var data: ByteBuffer?
+    var timeToFail: Long
+    var responseHandler: ResponseHandler
 
-    constructor(responseHandler: ResponseHandler) : this() {
-        this.responseHandler = responseHandler
+    constructor(responseHandler: ResponseHandler) {
+        this.packets = null
+        this.data = null
+
         this.timeToFail = System.currentTimeMillis() + 30000
+        this.responseHandler = responseHandler
     }
 
-    var done: () -> Boolean = {
-        if (packets == null)
-            false
-        else
-            packets!!.all { it }
-    }
+    val done: Boolean
+        get() = this.packets?.all { it } ?: false
 
-    var failed: () -> Boolean = {
-        this.timeToFail < System.currentTimeMillis()
-    }
+    val failed: Boolean
+        get() = this.timeToFail < System.currentTimeMillis()
 
-    var message: () -> ByteArray? = {
-        if (done()) {
-            this.data!!.array()
-        } else {
-            null
-        }
-    }
+    val message: ByteArray?
+        get() = if (this.done) this.data?.array() else null
 
     fun addPacket(packet: Packet) {
-        if (this.packets == null) {
-            packets = BooleanArray(packet.headers!!.packetsCount)
-        }
-        if (this.data == null) {
-            this.data = ByteBuffer.allocate(packet.headers!!.messageSize)
-            data!!.order(ByteOrder.LITTLE_ENDIAN)
-        }
-        try {
-            this.data!!.position(packet.headers!!.shift)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        if (this.packets == null)
+            this.packets = BooleanArray(packet.headers.packetsCount)
 
-        this.data!!.put(packet.data)
-        this.packets!![packet.headers!!.packetNumber - 1] = true
+        if (this.data == null)
+            this.data = ByteBuffer.allocate(packet.headers.messageSize)
+
+        this.data!!.position(packet.headers.shift)
+        this.data!!.put(packet.data!!)
+
+        this.packets!![packet.headers.packetNumber - 1] = true
+
         this.timeToFail = System.currentTimeMillis() + 30000
     }
 }

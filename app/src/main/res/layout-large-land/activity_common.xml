@@ -11,17 +11,53 @@
     <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
+        <org.osmdroid.views.MapView
+                android:id="@+id/common_mapView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+        />
         <com.github.clans.fab.FloatingActionMenu
                 android:id="@+id/common_fab_menu"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentStart="true"
+                android:layout_alignBottom="@+id/common_mapView" android:layout_alignStart="@+id/common_mapView"
                 android:layout_marginBottom="8dp"
                 android:layout_marginStart="8dp"
                 android:focusable="true"
                 android:clickable="true"
+                app:menu_labels_colorNormal="@color/colorAccent"
+                app:menu_icon="@drawable/ic_change_status"
                 app:menu_labels_position="right"
+                app:menu_labels_textSize="18sp"
         />
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/common_myLocation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="8dp"
+                android:layout_alignTop="@+id/common_mapView"
+                android:layout_alignEnd="@+id/common_mapView"
+                app:srcCompat="@drawable/ic_gps_fixed"
+                app:rippleColor="@color/colorAccent"
+                android:onClick="fabClick"
+                app:backgroundTint="@color/viewBackground"/>
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/common_followMe"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginEnd="8dp"
+                android:layout_marginTop="24dp"
+                android:layout_alignEnd="@+id/common_mapView"
+                android:layout_below="@+id/common_myLocation"
+                app:srcCompat="@drawable/ic_direction_walk"
+                app:rippleColor="@color/colorAccent"
+                android:onClick="fabClick"
+                app:backgroundTint="@color/viewBackground"
+                android:adjustViewBounds="false"/>
     </RelativeLayout>
 </LinearLayout>

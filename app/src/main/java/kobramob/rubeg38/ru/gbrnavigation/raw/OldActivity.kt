@@ -15,9 +15,9 @@ import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
-import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.resource.TileSource
 import org.osmdroid.api.IMapController
 import org.osmdroid.bonuspack.routing.OSRMRoadManager

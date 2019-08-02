@@ -1,48 +1,79 @@
 package kobramob.rubeg38.ru.gbrnavigation.service
 
-import android.util.Log
+import android.util.Pair
 import java.util.*
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Semaphore
 import kotlinx.coroutines.*
 
-enum class Priority(value: Int) {
-    low(1), medium(2), high(3);
+enum class Priority {
+    LOW, MEDIUM, HIGH
 }
+
 class PriorityQueue<T> {
-
-    private var items: CopyOnWriteArrayList<Pair<T, Int>> = CopyOnWriteArrayList()
-
-    @Synchronized fun enqueue(item: T, priority: Int) {
-        for (i in 0 until items.count()) {
-            if (priority > items[i].second) {
-                Log.d("Enqueue>", items.count().toString())
-                items.add(i, Pair(item, priority))
-                return
-            }
-        }
-        items.add(Pair(item, priority))
-    }
+    private val array: ArrayList<Pair<T, Priority>> = ArrayList()
+    private val semaphore: Semaphore = Semaphore(1)
 
     fun enqueue(item: T) {
-        this.enqueue(item, 2)
+        this.enqueue(item, Priority.LOW)
     }
 
-    @Synchronized fun countToQueue(): Int {
-        return items.count()
-    }
-    @Synchronized fun dequeue(): T? {
-        return if (items.count()> 0) {
-            items.getOrNull(0)!!.first
-        } else {
-            null
+    fun enqueue(item: T, priority: Priority) {
+        var i = 0
+        while (true) {
+            this.semaphore.acquire()
+
+            if (i >= this.array.size - 1) {
+                this.semaphore.release()
+
+                break
+            }
+
+            if (this.array[i].second < priority)
+                this.array.add(i, Pair(item, priority))
+
+            this.semaphore.release()
+
+            i++
         }
+
+        this.semaphore.acquire()
+
+        this.array.add(Pair(item, priority))
+
+        this.semaphore.release()
     }
 
-    @Synchronized fun remove() {
-        if (items.count()> 0)
-            items.removeAt(0)
+    fun dequeue(): T? {
+        this.semaphore.acquire()
+
+        val item = if (this.array.count() > 0) this.array.removeAt(0).first else null
+
+        this.semaphore.release()
+
+        return item
     }
-    @Synchronized fun removeAll(predicate: (T) -> Boolean) {
-        items = CopyOnWriteArrayList(items.filter { !predicate(it.first) })
+
+    fun removeAll(predicate: (T) -> Boolean) {
+        this.semaphore.acquire()
+
+        // debug
+        println("Clear queue. Count: ${this.array.count()}")
+
+        this.array.removeAll { predicate(it.first) }
+
+        // debug
+        println("Queue was cleared. Count: ${this.array.count()}")
+
+        this.semaphore.release()
+    }
+
+    fun count(): Int {
+        this.semaphore.acquire()
+
+        val count = this.array.count()
+
+        this.semaphore.release()
+
+        return count
     }
 }

@@ -60,8 +60,8 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
     private var progressBarOpen: String = "close"
     private lateinit var cancelDialog: AlertDialog
     private var latitude: Double = 0.toDouble()
-
-    private val networkService = NetworkService()
+//
+//    private val networkService = NetworkService()
 
     companion object {
         var firstTime = true
@@ -333,7 +333,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                                         val arriveButton: LinearLayout = view!!.findViewById(R.id.arrived_button)
                                         arriveButton.setOnClickListener {
                                             val arriveThread = Runnable {
-                                                arrivedToObject(jsonObject = jsonObject)
+                                              /*  arrivedToObject(jsonObject = jsonObject)*/
                                                 dialog.cancel()
                                             }; Thread(arriveThread).start()
                                         }
@@ -359,7 +359,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
             }
         }; updateTrackingThread.start()
     }
-
+/*
     private fun arrivedToObject(jsonObject: JSONObject) {
 
         val message = JSONObject()
@@ -377,7 +377,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                     }
                 }
         }
-    }
+    }*/
 
     private fun distance(road: Road): Float {
         return try {

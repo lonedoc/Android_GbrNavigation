@@ -13,14 +13,14 @@ android {
             storeFile file('C:\\Users\\User\\AndroidStudioProjects\\keyStore\\gbrNavigationKey.jks')
         }
     }
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
         applicationId "kobramob.rubeg38.ru.gbrnavigation"
         minSdkVersion 21
-        targetSdkVersion 28
+        targetSdkVersion 29
         versionCode 12
         versionName "1.6"
-
+        vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
@@ -39,20 +39,6 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.0.2'
-    implementation 'com.google.android.material:material:1.0.0'
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.vectordrawable:vectordrawable-animated:1.0.0'
-    implementation 'com.gabrielittner.ktlint:ktlint-rules:0.2.0'
-
-    implementation "android.arch.work:work-runtime:1.0.1"
-
-    //ПЕрейти на AndroidX
-    implementation 'com.google.android.gms:play-services-location:17.0.0' //you can use newer GMS version if you need
-    implementation 'com.google.android.gms:play-services-places:17.0.0'
-    implementation 'com.google.android.gms:play-services-maps:17.0.0'
 
     configurations {
         ktlint
@@ -80,30 +66,48 @@ dependencies {
         args "--experimental", "-F", "src/**/*.kt"
     }
 
+
+
+    testImplementation 'junit:junit:4.13-beta-3'
+    androidTestImplementation 'androidx.test:runner:1.3.0-alpha02'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0-alpha02'
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'androidx.appcompat:appcompat:1.1.0-rc01'
+    implementation 'com.google.android.material:material:1.1.0-alpha09'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.vectordrawable:vectordrawable-animated:1.1.0-rc01'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0-beta01'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-beta2'
+    implementation 'com.github.chrisbanes:PhotoView:2.1.3'
+    implementation 'com.github.clans:fab:1.6.4'
+
+    implementation 'com.gabrielittner.ktlint:ktlint-rules:0.2.0'
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1"
+    implementation 'org.redundent:kotlin-xml-builder:1.5.1'
+
+    implementation "android.arch.work:work-runtime:1.0.1"
+
+    implementation 'com.google.android.gms:play-services-location:17.0.0' //you can use newer GMS version if you need
+    implementation 'com.google.android.gms:play-services-places:17.0.0'
+    implementation 'com.google.android.gms:play-services-maps:17.0.0'
+
+
+
     implementation 'com.github.MKergall:osmbonuspack:6.6.0'
     implementation 'org.osmdroid:osmdroid-android:6.1.0'
 
-    implementation 'androidx.recyclerview:recyclerview:1.0.0'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+
 
     implementation 'com.google.code.gson:gson:2.8.5'
-    implementation 'org.apache.commons:commons-lang3:3.5'
-    implementation 'com.squareup.okhttp3:okhttp:3.14.2'
-    implementation 'com.github.chrisbanes:PhotoView:2.1.3'
+    implementation 'org.apache.commons:commons-lang3:3.9'
+    implementation 'com.squareup.okhttp3:okhttp:4.0.1'
     implementation 'pl.charmas.android:android-reactive-location2:2.1@aar'
-    implementation 'com.github.clans:fab:1.6.4'
-    implementation 'ru.tinkoff.decoro:decoro:1.1.1'
-    implementation 'org.redundent:kotlin-xml-builder:1.5.1'
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1"
+    implementation 'ru.tinkoff.decoro:decoro:1.3.5'
     implementation 'org.greenrobot:eventbus:3.1.1'
-
-    implementation 'com.daimajia.easing:library:2.0@aar'
-    implementation 'com.daimajia.androidanimations:library:2.3@aar'
-
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test:runner:1.2.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-
+    implementation 'com.daimajia.easing:library:2.1@aar'
     implementation 'com.redmadrobot:input-mask-android:4.3.1'
 
+    implementation 'com.daimajia.androidanimations:library:2.3@aar'
+    implementation 'com.gitlab.rubeg-npo:rubeg_network_protocol_android:1.0.1'
 }

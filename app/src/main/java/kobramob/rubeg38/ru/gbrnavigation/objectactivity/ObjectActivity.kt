@@ -21,7 +21,7 @@ class ObjectActivity : AppCompatActivity() {
 
     private val tabFragment: TabFragment = TabFragment()
     private val navigatorFragment: NavigatorFragment = NavigatorFragment()
-    private val networkService = NetworkService()
+    /*private val networkService = NetworkService()*/
 
     companion object {
         var Alive = false
@@ -79,10 +79,10 @@ class ObjectActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         Alive = true
-        receiver()
+        /*receiver()*/
     }
 
-    var closeReceiver = false
+/*    var closeReceiver = false
     private fun receiver() {
         thread {
             while (Alive) {
@@ -182,5 +182,5 @@ class ObjectActivity : AppCompatActivity() {
         super.onStop()
         Alive = false
         println("onStop")
-    }
+    }*/
 }

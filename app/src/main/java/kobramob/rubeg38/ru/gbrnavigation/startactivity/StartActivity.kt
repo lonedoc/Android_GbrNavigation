@@ -57,7 +57,6 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     private var progressBarOpen: String = "close"
     private lateinit var cancelDialog: AlertDialog
 
-    private var networkService = NetworkService()
 
     @SuppressLint("InflateParams")
     private fun showProgressBar() {
@@ -228,7 +227,6 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
         actionButton.labelText = "Mama"
         actionMenu.addMenuButton(actionButton)
 
-
         toolbar = findViewById(R.id.startToolbar)
         centerButton = findViewById(R.id.my_location)
         followButton = findViewById(R.id.follow_me)
@@ -249,7 +247,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
             supportActionBar!!.title = title
         }
 
-        initFloatingMenu()
+      /*  initFloatingMenu()
         initMapView(mMapView)
 
         addOverlays(mMapView)
@@ -258,10 +256,10 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
         clickFollowButton(followButton)
 
-        centerMap()
+        centerMap()*/
     }
 
-    override fun onStart() {
+/*    override fun onStart() {
         super.onStart()
         Alive = true
     }
@@ -283,13 +281,13 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
         followButton!!.setOnClickListener {
             if (enableFollowMe) {
 
-                /*startActivityModel.stopFollowMe()*/
+                *//*startActivityModel.stopFollowMe()*//*
                 timer.cancel()
                 followButton.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.textWhite))
                 followButton.imageTintList = ColorStateList.valueOf(resources.getColor(R.color.textDark))
                 enableFollowMe = false
             } else {
-                /*startActivityModel.followMe(mMapView,locationOverlay)*/
+                *//*startActivityModel.followMe(mMapView,locationOverlay)*//*
                 try {
                     oldLocation = locationOverlay.myLocation
                     setCenter()
@@ -503,7 +501,8 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                                         (this@StartActivity.getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(1000)
                                     }
 
-                                    thread { sleep(100)
+                                    thread {
+                                        sleep(100)
                                         val message = JSONObject()
                                         message.put("\$c$", "getfile")
                                         message.put("nameinserv", jsonMessage.getJSONArray("plan")[0])
@@ -511,24 +510,23 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
 
                                         Log.d("StartReceiver", message.toString())
                                         networkService.request(message.toString(), getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")) {
-                                                it:Boolean,data:ByteArray?->
-                                            if (it) {
-                                                thread{
-                                                    Log.d("StartReciveFile",String(data!!))
-                                                    val jsonObject = JSONObject()
-                                                    jsonObject.put("\$c$", "startrecivefile")
-                                                    Log.d("StartReciveFile", jsonObject.toString())
-                                                    networkService.send(jsonObject.toString(), getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")) {
-                                                        if (it) {
-                                                            Log.d("Picture", "WaitSend")
+                                            it: Boolean, data: ByteArray? ->
+                                                if (it) {
+                                                    thread {
+                                                        Log.d("StartReciveFile", String(data!!))
+                                                        val jsonObject = JSONObject()
+                                                        jsonObject.put("\$c$", "startrecivefile")
+                                                        Log.d("StartReciveFile", jsonObject.toString())
+                                                        networkService.send(jsonObject.toString(), getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")) {
+                                                            if (it) {
+                                                                Log.d("Picture", "WaitSend")
+                                                            }
                                                         }
+                                                        Log.d("Picture", "Receive")
                                                     }
-                                                    Log.d("Picture", "Receive")
                                                 }
                                             }
-                                        }
                                     }
-
 
                                     val trevoga = MediaPlayer.create(this@StartActivity, R.raw.trevoga)
                                     trevoga.start()
@@ -566,9 +564,9 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                                         dialog.cancel()
                                     }
                                 }
-                                try{
+                                try {
                                     NetworkService.stringMessageBroker.removeAt(i)
-                                }catch (e:Exception){
+                                } catch (e: Exception) {
                                     e.printStackTrace()
                                 }
 
@@ -776,7 +774,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
     }
 
     private fun statusChanged(floatingActionButton: com.github.clans.fab.FloatingActionButton) {
-   /*     val message = JSONObject()
+   *//*     val message = JSONObject()
         message.put("\$c$","sendfile")
         message.put("name","firsttry.png")
         message.put("nameinserv","firsttry.png")
@@ -799,7 +797,7 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
                     }
                 }
             }
-        }*/
+        }*//*
         val message = JSONObject()
         message.put("\$c$", "gbrkobra")
         message.put("command", "status")
@@ -850,5 +848,5 @@ class StartActivity : AppCompatActivity(), MapEventsReceiver {
         val clean = getSharedPreferences("state", Context.MODE_PRIVATE).edit()
         clean.remove("tid")
         clean.apply()
-    }
+    }*/
 }
