@@ -4,10 +4,10 @@
             android:id="@+id/server_setting"
             android:orderInCategory="100"
             app:showAsAction="never"
-            android:title="Настройки сервера" />
+            android:title="@string/changeServer" />
     <item
             android:id="@+id/change_map"
             android:orderInCategory="100"
             app:showAsAction="never"
-            android:title="Выбор карты" />
+            android:title="@string/changeMap" />
 </menu>

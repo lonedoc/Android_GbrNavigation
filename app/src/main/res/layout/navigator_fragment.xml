@@ -10,39 +10,42 @@
             android:layout_height="100dp"
             android:clickable="true"
             app:srcCompat="@drawable/ic_direction_walk"
-            android:id="@+id/follow_me_fragment"
+            android:id="@+id/navigator_followMe"
             android:layout_marginEnd="15dp"
             android:layout_marginTop="15dp"
             android:focusable="true"
             app:backgroundTint="@color/textWhite"
-            app:rippleColor="@color/colorAccent" android:layout_alignEnd="@+id/navigator_view"
-            android:layout_below="@+id/my_location_fragment"/>
+            app:rippleColor="@color/colorAccent" android:layout_alignEnd="@+id/navigator_mapview"
+            android:layout_below="@+id/navigator_myLocation"
+    />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:clickable="true" app:srcCompat="@drawable/ic_gps_fixed"
-            android:id="@+id/my_location_fragment" android:layout_alignParentEnd="true"
+            android:id="@+id/navigator_myLocation" android:layout_alignParentEnd="true"
             android:layout_marginEnd="15dp" android:layout_marginTop="15dp"
             android:focusable="true"
             app:backgroundTint="@color/textWhite"
             app:rippleColor="@color/colorAccent"
-            android:layout_alignTop="@+id/navigator_view"/>
+            android:layout_alignTop="@+id/navigator_mapview"
+    />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:clickable="true" app:srcCompat="@drawable/ic_yandex"
-            android:id="@+id/yandex_api" android:layout_alignParentEnd="true"
+            android:id="@+id/navigator_yandex" android:layout_alignParentEnd="true"
             android:layout_marginEnd="15dp"
             android:focusable="true"
             app:backgroundTint="@color/textWhite"
             app:rippleColor="@color/colorAccent"
             android:layout_alignParentBottom="true"
-            android:layout_marginBottom="15dp"/>
+            android:layout_marginBottom="15dp"
+    />
 
     <org.osmdroid.views.MapView
-            android:id="@+id/navigator_view"
+            android:id="@+id/navigator_mapview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
     />

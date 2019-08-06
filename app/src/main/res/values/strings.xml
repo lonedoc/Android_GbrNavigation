@@ -18,7 +18,23 @@
     <string name="title_activity_test">TestActivity</string>
     <string name="landscape_icon">Лендскейпная иконка</string>
     <string name="portrait_icon">Портретная иконка</string>
-    <string name="waitCheckData">Проверка данных, подождите...</string>
+    <string name="waitCheckData">Проверка данных, подождите…</string>
     <string name="welcome">Добро пожаловать!</string>
+    <string name="alarmDialog">alarmDialog</string>
+    <string name="alarmInObject">Тревога на объекте</string>
+    <string name="objectName">Наименование объекта</string>
+    <string name="objectAddress">Адрес объекта</string>
+    <string name="accept">Принять</string>
+    <string name="anyoneEvent">Какое то событие</string>
+    <string name="changeTypeMap">Выберите тип карты</string>
+    <string name="changeServer">Сменить сервер</string>
+    <string name="changeMap">Выбор карты</string>
+    <string name="object">Объект</string>
+    <string name="navigator">Навигатор</string>
+    <string name="waitServerResponse">Ожидание ответа сервера, пожалуйста, подождите…</string>
+    <string name="defineToLocation">Определяем ваше месторасположение, пожалуйста, подождите…</string>
+    <string name="planandphoto">planAndPhoto</string>
+    <string name="fragmentimage">fragmentImage</string>
+    <string name="exit">Закрыть</string>
 
 </resources>

@@ -61,7 +61,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="start|center"
-                    android:text="Адрес"
                     android:textColor="@color/textDark"
                     android:textSize="16sp"
                     android:ellipsize="marquee"
@@ -80,7 +79,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="start|center"
-                    android:text="Должность"
                     android:textColor="@color/textDark"
                     android:textSize="16sp"
                     android:ellipsize="marquee"
@@ -99,7 +97,6 @@
                         android:id="@+id/home_button"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+79041472887"
                         android:textSize="18sp"
                         style="@style/Widget.MaterialComponents.Button.TextButton.Dialog.Icon"
                 />
@@ -107,21 +104,10 @@
                         android:id="@+id/work_button"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="+79041472887"
                         android:textSize="18sp"
                         style="@style/Widget.MaterialComponents.Button.TextButton.Dialog.Icon"
                 />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-
-     <!--   <Button
-                android:id="@+id/phone_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="+79041472887"
-                android:textSize="18sp"
-                style="@style/Widget.MaterialComponents.Button.TextButton.Dialog.Icon"
-        />-->
-
 </androidx.cardview.widget.CardView>

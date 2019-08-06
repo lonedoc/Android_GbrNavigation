@@ -3,27 +3,12 @@
     <item
             android:icon="@drawable/ic_object"
             android:id="@+id/cardObject"
-            android:title="Объект"
+            android:title="@string/object"
 
     />
-<!--    <item
-            android:icon="@drawable/ic_feed"
-            android:id="@+id/feedList"
-            android:title="Лента событий"
-    />
-    <item
-            android:icon="@drawable/ic_responsible"
-            android:id="@+id/responsible"
-            android:title="Ответственные"
-    />
-    <item
-            android:icon="@drawable/ic_plan"
-            android:id="@+id/planDiagram"
-            android:title="План-схема"
-    />-->
     <item
             android:icon="@drawable/ic_navigator"
             android:id="@+id/navigator"
-            android:title="Навигатор"
+            android:title="@string/navigator"
     />
 </menu>

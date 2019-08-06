@@ -9,6 +9,4 @@
 
     <color name="textDark">#000000</color>
     <color name="textWhite">#FFFFFF</color>
-    <color name="rippleColor">#1976D2</color>
-    <color name="clickButton">#4290F0</color>
 </resources>

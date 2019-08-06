@@ -1,6 +1,7 @@
 package kobramob.rubeg38.ru.gbrnavigation.mainactivity
 
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,21 +19,31 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
-import java.lang.Exception
-import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
-import kobramob.rubeg38.ru.gbrnavigation.service.MyLocation
-import kobramob.rubeg38.ru.gbrnavigation.service.NetworkServiceDelegate
-import kobramob.rubeg38.ru.gbrnavigation.service.RubegNetworkService
+import kobramob.rubeg38.ru.gbrnavigation.resource.DataBase
+import kobramob.rubeg38.ru.gbrnavigation.resource.SPGbrNavigation
+import kobramob.rubeg38.ru.gbrnavigation.workservice.MessageEvent
+import kobramob.rubeg38.ru.gbrnavigation.workservice.MyLocation
+import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
+import java.lang.Thread.sleep
 import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity() {
 
-    private val networkService:RubegNetworkService = RubegNetworkService()
+   companion object{
+       var isAlive = false
+   }
 
+
+    private var register = false
+    private var authorization = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -44,6 +55,9 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState != null) {
             progressBar.visibility = View.VISIBLE
             textView.visibility = View.VISIBLE
+            if(!register && !authorization){
+                checkData()
+            }
         } else {
             YoYo.with(Techniques.FadeIn)
                 .duration(2500)
@@ -78,6 +92,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun authorization() {
+        authorization = true
         val myLocation = MyLocation()
         myLocation.initLocation(this)
 
@@ -87,33 +102,112 @@ class MainActivity : AppCompatActivity() {
             while (longitude == 0.0) {
                 try {
                     longitude = MyLocation.imHere!!.longitude
-                } catch (e: Exception) {}
+                } catch (e: Exception) {
+                }
             }
 
-            val ip:ArrayList<String> = ArrayList()
-            ip.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip","")!!)
+            val ip: ArrayList<String> = ArrayList()
+            ip.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
 
-            val service = Intent(this,RubegNetworkService::class.java)
-            service.putStringArrayListExtra("ip",ip)
-            service.putExtra("port",getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port",9010))
+            val service = Intent(this, RubegNetworkService::class.java)
+            service.putExtra("command","start")
+            service.putStringArrayListExtra("ip", ip)
+            service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(service)
-            }
-            else
-            {
+            } else {
                 startService(service)
             }
-            val authorizationMessage = JSONObject()
-            authorizationMessage.put("\$c$","reg")
-            authorizationMessage.put("id","0D82F04B-5C16-405B-A75A-E820D62DF911")
-            authorizationMessage.put("password",getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei",""))
-            RubegNetworkService.protocol.request(authorizationMessage.toString()) { success: Boolean, response: ByteArray? ->
-                if(success && response !=null)
-                {
-                    Log.d("Authorization",String(response))
-                    val commonActivity = Intent(this, CommonActivity::class.java)
-                    startActivity(commonActivity)
+            thread {
+                sleep(2000)
+                val authorizationMessage = JSONObject()
+                authorizationMessage.put("\$c$", "reg")
+                authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
+                authorizationMessage.put(
+                    "password",
+                    getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", "")
+                )
+                RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
+                    if (success) {
+                        runOnUiThread {
+                            Toast.makeText(this, "Авторизация прошла успешно", Context.MODE_PRIVATE).show()
+                        }
+                    }
+                    else
+                    {
+                        runOnUiThread {
+                            stopService(service)
+                            Toast.makeText(this,"Приложение не смогло авторизироваться на сервере",Toast.LENGTH_LONG).show()
+                            val loginActivity = Intent(this, LoginActivity::class.java)
+                            loginActivity.putExtra("imei", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
+                            startActivity(loginActivity)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onMessageEvent(event: MessageEvent) {
+        when (event.command) {
+            "regok" -> {
+                Log.d(
+                    "Authorization",
+                    "\n " + " " + "\n routeServer ${event.routeServer} \n call ${event.call} \n status ${event.status} \n gbrStatus ${event.gbrStatus}"
+                )
+                val dbHelper = DataBase(this)
+                val db = dbHelper.writableDatabase
+
+                val cursorRoute = db.query("RouteServerList", null, null, null, null, null, null)
+                if (cursorRoute.count == 0) {
+                    val cv = ContentValues()
+                    for (i in 0 until event.routeServer.count()) {
+                        cv.put("ip", event.routeServer[i])
+                        Log.d("DataBase", "id = " + db.insert("RouteServerList", null, cv))
+                    }
+                }
+                cursorRoute.close()
+
+                val cursorStatus = db.query("StatusList", null, null, null, null, null, null)
+                if (cursorStatus.count == 0) {
+                    val cv = ContentValues()
+                    for (i in 0 until event.gbrStatus.count()) {
+                        cv.put("status", event.gbrStatus[i])
+                        Log.d("DataBase", "id = " + db.insert("StatusList", null, cv))
+                    }
+                }
+                cursorStatus.close()
+
+                SPGbrNavigation.init(this)
+                SPGbrNavigation.addPropertyString("call", event.call)
+                SPGbrNavigation.addPropertyString("routeserver", event.routeServer[0])
+
+                val intent = Intent(this@MainActivity, CommonActivity::class.java)
+                intent.putExtra("status", event.status)
+                startActivity(intent)
+            }
+            "disconnect" -> {
+                if(event.message == "lost"){
+                    //Dialog
+                    val service = Intent(this, RubegNetworkService::class.java)
+                    Toast.makeText(this,"Нет соединения с сервером",Toast.LENGTH_LONG).show()
+                    stopService(service)
+                    val loginActivity = Intent(this, LoginActivity::class.java)
+                    loginActivity.putExtra("imei", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
+                    startActivity(loginActivity)
+                }
+            }
+            "internet" -> {
+                if(event.message == "lost"){
+                    //Dialog
+                    val service = Intent(this, RubegNetworkService::class.java)
+                    Toast.makeText(this,"Нет соединения с интернетом",Toast.LENGTH_LONG).show()
+                    stopService(service)
+                    val loginActivity = Intent(this, LoginActivity::class.java)
+                    loginActivity.putExtra("imei", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
+                    startActivity(loginActivity)
                 }
             }
         }
@@ -124,7 +218,7 @@ class MainActivity : AppCompatActivity() {
         if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == permissionGranted &&
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.READ_PHONE_STATE) == permissionGranted
         ) {
-
+            register = true
             val myLocation = MyLocation()
             myLocation.initLocation(this)
             thread {
@@ -133,7 +227,9 @@ class MainActivity : AppCompatActivity() {
                 while (longitude == 0.0) {
                     try {
                         longitude = MyLocation.imHere!!.longitude
-                    } catch (e: Exception) {}
+
+                    } catch (e: Exception) {
+                    }
                 }
                 sleep(2000)
                 runOnUiThread {
@@ -201,8 +297,38 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+
+        isAlive = true
+        EventBus.getDefault().register(this)
     }
 
+    override fun onStop() {
+        super.onStop()
+
+        isAlive = false
+        EventBus.getDefault().unregister(this)
+    }
+    private var exit = false
     override fun onBackPressed() {
+        if (exit) {
+            exitProcess(0)
+        } else {
+            Toast.makeText(this, "Вы точно хотите выйти? Для того чтобы закрыть приложение нажмите еще раз", Toast.LENGTH_LONG).show()
+            exit = true
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        val ip: ArrayList<String> = ArrayList()
+        ip.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
+
+        val service = Intent(this, RubegNetworkService::class.java)
+        service.putExtra("command","stop")
+        service.putStringArrayListExtra("ip", ip)
+        service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
+
+        startService(service)
     }
 }

@@ -32,47 +32,35 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme"
             android:usesCleartextTraffic="true"
+            android:fullBackupContent="false"
             tools:ignore="GoogleAppIndexingWarning"
             tools:targetApi="n">
-        <activity android:name=".loginactivity.LoginActivity">
+        <activity android:name=".loginactivity.LoginActivity"
+                  android:keepScreenOn="true">
 
         </activity>
-        <activity android:name=".mainactivity.MainActivity">
+        <activity android:name=".mainactivity.MainActivity"
+                  android:keepScreenOn="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity
-                android:name=".loginactivity.OldLoginActivity"
-                android:screenOrientation="landscape">
 
-        </activity>
-        <activity android:name=".commonactivity.CommonActivity"/>
+        <activity android:name=".commonactivity.CommonActivity"
+                  android:keepScreenOn="true"/>
 
-        <service
-                android:name=".service.NetworkService"
-                android:enabled="true"
-                android:exported="false">
-        </service>
 
-        <service android:name=".service.RubegNetworkService"
+        <service android:name=".workservice.RubegNetworkService"
                  android:enabled="true"
-                 android:exported="true"/>
+                 android:exported="false"/>
 
-        <activity
-                android:name=".startactivity.StartActivity"
-                android:screenOrientation="landscape"/>
         <activity
                 android:name=".objectactivity.ObjectActivity"
-                android:screenOrientation="landscape"/>
-        <activity
-                android:name=".raw.MainMapActivity"
-                android:screenOrientation="landscape"/>
-        <activity
-                android:name=".raw.OldActivity"
-                android:screenOrientation="landscape"/>
+                android:keepScreenOn="true"
+                />
+
     </application>
 
 </manifest>

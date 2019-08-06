@@ -20,19 +20,20 @@
                 android:layout_width="80dp"
                 android:layout_height="80dp"
                 app:srcCompat="@drawable/ic_alarm"
-        />
+                android:contentDescription="@string/alarmDialog"/>
 
         <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_marginStart="20dp"
+                android:gravity="start"
         >
 
             <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Тревога на объекте"
+                    android:text="@string/alarmInObject"
                     android:textStyle="bold"
                     android:ellipsize="marquee"
                     android:focusable="true"
@@ -48,13 +49,9 @@
                     android:layout_marginTop="10dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Наименование объекта"
+                    android:text="@string/objectName"
                     android:ellipsize="marquee"
                     android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:marqueeRepeatLimit="marquee_forever"
-                    android:scrollHorizontally="true"
-                    android:singleLine="false"
                     android:textSize="20sp"
                     android:textColor="@color/textWhite"
             />
@@ -63,13 +60,8 @@
                     android:layout_marginTop="10dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Адрес объекта"
+                    android:text="@string/objectAddress"
                     android:ellipsize="marquee"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:marqueeRepeatLimit="marquee_forever"
-                    android:scrollHorizontally="true"
-                    android:singleLine="false"
                     android:textSize="20sp"
                     android:textColor="@color/textWhite"
             />
@@ -83,7 +75,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="70dp"
                 android:background="@color/colorPrimaryDark"
-                android:text="Принять"
+                android:text="@string/accept"
                 android:textStyle="bold"
                 android:textColor="@color/textWhite"
                 android:textSize="20sp"

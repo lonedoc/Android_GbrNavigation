@@ -1,5 +1,6 @@
 package kobramob.rubeg38.ru.gbrnavigation.objectactivity
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -23,7 +24,7 @@ class AdapterResponsibleList internal constructor(
     private val homeList: ArrayList<String>,
     private val workList: ArrayList<String>,
     private val context: Context?
-) : androidx.recyclerview.widget.RecyclerView.Adapter<AdapterResponsibleList.ViewHolder>() {
+) : RecyclerView.Adapter<AdapterResponsibleList.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, p1: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_responsible, parent, false)
@@ -34,26 +35,27 @@ class AdapterResponsibleList internal constructor(
         return fioList.size
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
         holder.textFIO.text = fioList[position]
         holder.textAddress.text = addressList[position]
         holder.textPosition.text = positionList[position]
 
-        if (phoneList[position] == "acknowledgement") {
+        if (phoneList[position] == "empty" || phoneList[position] == "") {
             holder.buttonPhone.visibility = View.GONE
             holder.additionalContainer.visibility = View.VISIBLE
         }
 
-        if (homeList[position] == "acknowledgement")
+        if (homeList[position] == "empty" || homeList[position] == "")
             holder.buttonHome.visibility = View.GONE
         else
-            holder.buttonHome.text = "Дом. " + homeList[position]
+            holder.buttonHome.text = "Дом. ${homeList[position]}"
 
-        if (workList[position] == "acknowledgement")
+        if (workList[position] == "empty" || workList[position] == "")
             holder.buttonWork.visibility = View.GONE
         else
-            holder.buttonWork.text = "Раб. " + workList[position]
+            holder.buttonWork.text = "Раб. ${workList[position]}"
 
         holder.buttonPhone.setOnClickListener {
             try {
@@ -97,14 +99,14 @@ class AdapterResponsibleList internal constructor(
             }*/
     }
 
-    class ViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var textFIO: TextView = itemView.findViewById(R.id.textFIO)
         var textAddress: TextView = itemView.findViewById(R.id.Address)
         var textPosition: TextView = itemView.findViewById(R.id.Position)
         var buttonPhone: Button = itemView.findViewById(R.id.phone_button)
         var buttonHome: Button = itemView.findViewById(R.id.home_button)
         var buttonWork: Button = itemView.findViewById(R.id.work_button)
-        var parentContainer: androidx.cardview.widget.CardView = itemView.findViewById(R.id.parent_container)
+        var parentContainer: CardView = itemView.findViewById(R.id.parent_container)
         var additionalContainer: LinearLayout = itemView.findViewById(R.id.additionalInformation)
     }
 }

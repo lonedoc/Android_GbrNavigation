@@ -18,18 +18,18 @@
 
         <com.google.android.material.tabs.TabItem
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:icon="@drawable/ic_object"/>
 
         <com.google.android.material.tabs.TabItem
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:icon="@drawable/ic_responsible"
         />
 
         <com.google.android.material.tabs.TabItem
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:icon="@drawable/ic_plan"/>
     </com.google.android.material.tabs.TabLayout>
 

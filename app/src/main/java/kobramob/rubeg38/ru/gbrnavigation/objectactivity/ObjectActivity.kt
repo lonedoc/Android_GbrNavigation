@@ -5,17 +5,15 @@ import android.os.Bundle
 import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
-import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
-import kobramob.rubeg38.ru.gbrnavigation.service.NetworkService
-import kobramob.rubeg38.ru.gbrnavigation.startactivity.StartActivity
-import kotlin.concurrent.thread
-import org.json.JSONObject
+import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
+import kobramob.rubeg38.ru.gbrnavigation.workservice.MessageEvent
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 
 class ObjectActivity : AppCompatActivity() {
 
@@ -24,12 +22,15 @@ class ObjectActivity : AppCompatActivity() {
     /*private val networkService = NetworkService()*/
 
     companion object {
-        var Alive = false
+        var isAlive = false
         const val BROADCAST_ACTION = "kobramob.ruber38.ru.gbrnavigation.objectactivity"
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_object)
+
+        if(!EventBus.getDefault().isRegistered(this))
+        EventBus.getDefault().register(this)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -53,7 +54,6 @@ class ObjectActivity : AppCompatActivity() {
                     }
 
                     R.id.navigator -> {
-                        NavigatorFragment.firstTime = true
                         openFragment(navigatorFragment)
                         supportActionBar!!.title = "Навигатор"
                     }
@@ -76,10 +76,98 @@ class ObjectActivity : AppCompatActivity() {
         bnv.menu.getItem(0).isChecked = true
     }
 
+    override fun onResume() {
+        super.onResume()
+        Log.d("ObjectActivity","onResume")
+        if(!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
+    }
     override fun onStart() {
         super.onStart()
-        Alive = true
-        /*receiver()*/
+        if(CommonActivity.alertSound.isPlaying){
+            CommonActivity.alertSound.stop()
+            CommonActivity.alertSound.reset()
+        }
+
+        isAlive = true
+        Log.d("ObjectActivity","onStart")
+        if(!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d("ObjectActivity","onStop")
+        isAlive = false
+        if(EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().unregister(this)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN,priority = 1,sticky = true)
+    fun onMessageEvent(event:MessageEvent){
+        when(event.command){
+            "notalarm"->{
+                PlanFragment.bitmapList.clear()
+                NavigatorFragment.arriveToObject = true
+                NavigatorFragment.alertCanceled = true
+                NavigatorFragment.proximityAlive = false
+                NavigatorFragment.road!!.mRouteHigh.clear()
+                Toast.makeText(this,"Тревога завершена/отменена",Toast.LENGTH_SHORT).show()
+                val commonActivity = Intent(this,CommonActivity::class.java)
+                startActivity(commonActivity)
+            }
+            "gbrstatus" -> {
+                if(event.message!="На тревоге")
+                {
+                    PlanFragment.bitmapList.clear()
+                    PlanFragment.countInQueue = 0
+                    NavigatorFragment.arriveToObject = true
+                    NavigatorFragment.alertCanceled = true
+                    NavigatorFragment.proximityAlive = false
+                    if(NavigatorFragment.road!=null)
+                    {
+                        if(NavigatorFragment.road!!.mRouteHigh.count()>1)
+                            NavigatorFragment.road!!.mRouteHigh.clear()
+                    }
+
+                    Toast.makeText(this, "Тревога отменена (смена статуса)", Toast.LENGTH_SHORT).show()
+                    val commonActivity = Intent(this, CommonActivity::class.java)
+                    commonActivity.putExtra("status", event.message)
+                    startActivity(commonActivity)
+                }
+            }
+            "disconnect" -> {
+                if(event.message == "lost"){
+                    //Dialog
+                    Toast.makeText(this,"Нет соединения с сервером, приложение переходит в автономный режим",Toast.LENGTH_LONG).show()
+                }
+            }
+            "internet" -> {
+                if(event.message == "lost"){
+                    //Dialog
+                    Toast.makeText(this,"Нет соединения с интернетом, приложение переходит в автономный режим",Toast.LENGTH_LONG).show()
+                }
+            }
+            "reconnectInternet"->{
+                if(event.message == "true"){
+                    Toast.makeText(this,"Интернет соединение восстановлено",Toast.LENGTH_LONG).show()
+                }
+                else
+                {
+                    Toast.makeText(this,"Интернет соединение не восстановлено",Toast.LENGTH_LONG).show()
+                }
+            }
+            "reconnectServer"->{
+                if(event.message == "true"){
+                    Toast.makeText(this,"Соединение с сервером восстановлено",Toast.LENGTH_LONG).show()
+                }
+                else
+                {
+                    Toast.makeText(this,"Соединение с сервером не восстановлено",Toast.LENGTH_LONG).show()
+                }
+            }
+
+        }
     }
 
 /*    var closeReceiver = false

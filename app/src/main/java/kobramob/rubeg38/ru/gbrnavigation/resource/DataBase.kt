@@ -8,6 +8,7 @@ internal class DataBase(context: Context) : SQLiteOpenHelper(context, "gbrDB", n
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("create table StatusList (" + "status text" + ")")
+        db.execSQL("create table RouteServerList (" + "ip text" + ")")
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {

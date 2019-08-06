@@ -1,4 +1,4 @@
-package kobramob.rubeg38.ru.gbrnavigation.service
+package kobramob.rubeg38.ru.gbrnavigation.workservice
 
 import android.annotation.SuppressLint
 import android.content.Context

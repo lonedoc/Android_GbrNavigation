@@ -4,25 +4,15 @@
                 android:layout_height="match_parent" xmlns:tools="http://schemas.android.com/tools"
                 tools:context=".objectactivity.PlanFragment" android:gravity="center"
 >
-
-   <!-- <com.github.chrisbanes.photoview.PhotoView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/plan"
-
-    />-->
-<!--    <TextView
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="На данный момент функция не доступна"
-            android:textSize="26sp"
-            android:textColor="@color/textDark"
-    />-->
-    <ImageView
-            android:id="@+id/testImage"
-            android:layout_height="match_parent"
+    <ProgressBar
+            android:id="@+id/plan_download"
             android:layout_width="match_parent"
+            android:layout_height="match_parent"
+    />
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/imageRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
     />
 </RelativeLayout>

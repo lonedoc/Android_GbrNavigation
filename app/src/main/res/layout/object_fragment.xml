@@ -20,7 +20,6 @@
                   android:layout_height="wrap_content"
                   android:layout_marginTop="10dp"
                   android:layout_marginStart="10dp"
-                  android:text="Рубеж НПО"
                   android:textSize="20sp"
                   android:textColor="@color/textDark"
                   android:textStyle="bold"
@@ -64,28 +63,26 @@
                   android:textColor="@color/textDark"
                   android:layout_marginTop="10dp"
                   android:layout_marginStart="10dp"
-                  android:text="Заказчик объекта: Тулин Владимир Николаевич"
         />
         <TextView
                 android:id="@+id/objectTIP"
                 android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textSize="20sp"
-                  android:textColor="@color/textDark"
-                  android:layout_marginTop="10dp"
-                  android:layout_marginStart="10dp"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textColor="@color/textDark"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="10dp"
                 android:layout_marginBottom="20dp"
-                  android:text="ИНН: 89546878958423"
         />
         <TextView
                 android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textSize="20sp"
-                  android:textColor="@color/textDark"
-                  android:layout_marginTop="10dp"
-                  android:layout_marginStart="10dp"
-                  android:text="Дополнительная информация по объекту:"
-                  android:textStyle="bold"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textColor="@color/textDark"
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="10dp"
+
+                android:textStyle="bold"
                 android:visibility="gone"
         />
         <TextView android:layout_width="wrap_content"
@@ -94,7 +91,6 @@
                   android:textColor="@color/textDark"
                   android:layout_marginTop="10dp"
                   android:layout_marginStart="10dp"
-                  android:text="Осторожно злая собака!"
                   android:visibility="gone"
         />
     </LinearLayout>

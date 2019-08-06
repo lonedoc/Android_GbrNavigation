@@ -4,45 +4,41 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
-import kobramob.rubeg38.ru.gbrnavigation.service.NetworkService
-import kotlin.concurrent.thread
-import kotlinx.android.synthetic.main.activity_main_map.*
-import kotlinx.android.synthetic.main.navigator_fragment.*
+import kobramob.rubeg38.ru.gbrnavigation.workservice.MyLocation
+import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
 import org.json.JSONObject
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.events.MapEventsReceiver
-import org.osmdroid.events.MapListener
-import org.osmdroid.events.ScrollEvent
-import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.Overlay
+import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.lang.Thread.sleep
+import java.util.*
+import kotlin.concurrent.thread
 
 class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
@@ -56,47 +52,29 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
     private lateinit var rotationGestureOverlay: RotationGestureOverlay
     private lateinit var scaleBarOverlay: ScaleBarOverlay
     private lateinit var locationOverlay: MyLocationNewOverlay
-    private var arrivedToObject: Boolean = false
     private var progressBarOpen: String = "close"
     private lateinit var cancelDialog: AlertDialog
     private var latitude: Double = 0.toDouble()
-//
-//    private val networkService = NetworkService()
 
     companion object {
-        var firstTime = true
+        var proximityAlive = false
+        var arriveToObject = false
+        var alertCanceled = false
+        var road: Road? = null
     }
     lateinit var jsonObject: JSONObject
 
-    private fun showProgressBar() {
-        if (progressBarOpen == "close") {
-            val dialog = AlertDialog.Builder(activity!!)
-            val dialogView = layoutInflater.inflate(R.layout.progress_bar_location, parent, false)
-            dialog.setView(dialogView)
-            dialog.setCancelable(false)
-            cancelDialog = dialog.create()
-            cancelDialog.show()
-            progressBarOpen = "open"
-        }
-    }
-
-    private fun closeProgressBar() {
-        if (progressBarOpen == "open") {
-            cancelDialog.cancel()
-            progressBarOpen = "close"
-        }
-    }
 
     override fun longPressHelper(p: GeoPoint?): Boolean {
         TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
     override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-        if (enableFollowMe) {
-            timer.cancel()
-            follow_me_fragment.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textWhite))
-            follow_me_fragment.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textDark))
-            enableFollowMe = false
+        if (locationOverlay.isFollowLocationEnabled) {
+            val followFab: FloatingActionButton = view!!.findViewById(R.id.navigator_followMe)
+            locationOverlay.disableFollowLocation()
+            followFab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.viewBackground))
+            followFab.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.colorPrimary))
         }
         return true
     }
@@ -106,100 +84,354 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
         println("onCreateView")
         val rootView = inflater.inflate(R.layout.navigator_fragment, container, false)
 
-        jsonObject = JSONObject(activity!!.intent.getStringExtra("info"))
-        lat = jsonObject.getDouble("lat")
-        lon = jsonObject.getDouble("lon")
-        initMapView(rootView)
+        mMapView = rootView.findViewById(R.id.navigator_mapview)
 
-        val bnv: BottomNavigationView = activity!!.findViewById(R.id.objectMenu)
-        bnv.menu.getItem(1).isChecked = true
+        initMapView()
 
-        mMapView.addMapListener(object : MapListener {
-            override fun onScroll(event: ScrollEvent): Boolean {
-                // TODO слушатель на карту
+        val followMe:FloatingActionButton = rootView.findViewById(R.id.navigator_followMe)
+        val myLocation:FloatingActionButton = rootView.findViewById(R.id.navigator_myLocation)
+        val yandex:FloatingActionButton = rootView.findViewById(R.id.navigator_yandex)
 
-                return true
-            }
-
-            override fun onZoom(event: ZoomEvent): Boolean {
-                // TODO слушатель на карту
-                if (enableFollowMe) {
-                    timer.cancel()
-                    follow_me_fragment.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textWhite))
-                    follow_me_fragment.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textDark))
-                    enableFollowMe = false
-                }
-                return true
-            }
-        })
-
-        val followMe: FloatingActionButton = rootView.findViewById(R.id.follow_me_fragment)
-        val myLocation: FloatingActionButton = rootView.findViewById(R.id.my_location_fragment)
-
-        followMe.setOnClickListener {
-            if (enableFollowMe) {
-
-                /*startActivityModel.stopFollowMe()*/
-
-                timer.cancel()
-                followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textWhite))
-                followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textDark))
-                enableFollowMe = false
-            } else {
-
-                /*startActivityModel.followMe(mMapView,locationOverlay)*/
-
-                try {
-                    oldLocation = locationOverlay.myLocation
-                    setCenter()
-                    mMapView.controller.setZoom(15.0)
-                    mMapView.mapOrientation = - locationOverlay.lastFix.bearing
-
-                    timer = Timer()
-                    timer.scheduleAtFixedRate(NavigatorTask(), 0, 1000)
-                    followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.colorAccent))
-                    followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textWhite))
-
-                    enableFollowMe = true
-                } catch (e: Exception) {}
-            }
-        }
 
         myLocation.setOnClickListener {
-            if (enableFollowMe) {
-                timer.cancel()
-                followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textWhite))
-                followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(activity!!, R.color.textDark))
-                enableFollowMe = false
-            }
 
             try {
-            } catch (e: Exception) { Toast.makeText(activity!!, "Место расположение не определено", Toast.LENGTH_SHORT).show() }
-            mMapView.controller.animateTo(locationOverlay.myLocation)
-            SharedPreferencesState.init(context!!)
-            SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
-            SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
-        }
-
-        val yandexApi: FloatingActionButton = rootView.findViewById(R.id.yandex_api)
-        yandexApi.setOnClickListener {
-            if (lat != 0.0 && lon != 0.0) {
-                try {
-                    val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=$lat&lon_to=$lon")
-                    val intent = Intent(Intent.ACTION_VIEW, uri)
-                    intent.setPackage("ru.yandex.yandexnavi")
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    Toast.makeText(activity, "На данном устройстве не установлен Яндекс.Навигатор", Toast.LENGTH_SHORT)
-                        .show()
+                if (locationOverlay.isFollowLocationEnabled) {
+                    locationOverlay.disableFollowLocation()
+                    followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.viewBackground))
+                    followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.colorPrimary))
                 }
-            } else {
-                Toast.makeText(activity!!, "Не были указаны координаты до конечного объекта", Toast.LENGTH_LONG).show()
+                mMapView.controller.animateTo(GeoPoint(MyLocation.imHere))
+
+                SharedPreferencesState.init(context!!)
+                SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
+                SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
+            } catch (e: java.lang.Exception) {
+                e.printStackTrace()
+                Toast.makeText(context, "Ваше месторасположение не определено", Toast.LENGTH_SHORT).show()
             }
         }
+
+        followMe.setOnClickListener {
+            if (locationOverlay.isFollowLocationEnabled) {
+                locationOverlay.disableFollowLocation()
+                followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.viewBackground))
+                followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.colorPrimary))
+            } else {
+                locationOverlay.enableFollowLocation()
+                followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.colorPrimary))
+                followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.viewBackground))
+            }
+        }
+
+        yandex.setOnClickListener {
+            try {
+                val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=${activity!!.intent.getDoubleExtra("lat", 0.0)}&lon_to=${ activity!!.intent.getDoubleExtra("lon", 0.0)}")
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                intent.setPackage("ru.yandex.yandexnavi")
+                startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(context, "На данном устройстве не установлен Яндекс.Навигатор", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+
+        if (!proximityAlive)
+            proximityCheck()
 
         return rootView
     }
+
+
+    private var enableWhileResume = false
+
+    private fun paveTheWay() {
+
+        Log.d("PaveTheWay","create")
+
+        val roadManager = OSRMRoadManager(context)
+        if (context!!.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).contains("routeserver")) {
+            roadManager.setService("http:" + activity!!.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("routeserver", null) + "/route/v1/driving/")
+            roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
+
+            val waypoints = ArrayList<GeoPoint>()
+            val startPoint = GeoPoint(
+                MyLocation.imHere!!.latitude,
+                MyLocation.imHere!!.longitude
+            )
+            val endPoint = GeoPoint(
+                activity!!.intent.getDoubleExtra("lat", 0.0),
+                activity!!.intent.getDoubleExtra("lon", 0.0)
+            )
+
+            Log.d("endPoint",endPoint.toString())
+            waypoints.add(startPoint)
+            waypoints.add(endPoint)
+
+            thread {
+                try {
+                    road = roadManager.getRoad(waypoints)
+                } catch (e: java.lang.Exception) {
+                    e.printStackTrace()
+                }
+                if (road!!.mStatus != Road.STATUS_OK) {
+                    activity!!.runOnUiThread {
+                        Toast.makeText(context, "Невозможно проложить путь до объекта", Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    if (road!!.mRouteHigh.size> 2) {
+                        activity!!.runOnUiThread {
+                            val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
+                            mMapView.overlays.add(roadOverlay)
+                            mMapView.invalidate()
+                            tracking(roadOverlay)
+                        }
+                    } else {
+                        if (distance(road!!)> 100) {
+                            return@thread
+                        } else {
+                            // stop Tracking
+                            arriveToObject = true
+                        }
+                    }
+                }
+            }
+        } else {
+            Toast.makeText(context, "Нет данных о сервере проложение пути", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun tracking(roadOverlay: Polyline) {
+        thread {
+            var startDistanceBetweenPoints = distance(road!!)
+            var newRoadOverlay = roadOverlay
+            try{
+                while (road!!.mRouteHigh.size> 2) {
+
+                    if (distance(road!!) > startDistanceBetweenPoints + 30) {
+                        // Перестроить путь
+                        road!!.mRouteHigh.clear()
+                        mMapView.overlays.remove(roadOverlay)
+                        val handler = Handler()
+                        handler.postDelayed(
+                            {
+                                paveTheWay()
+                            },
+                            500
+                        )
+                    } else {
+                        if (distance(road!!) <40) {
+                            // удалить точку
+
+                                road!!.mRouteHigh.removeAt(1)
+
+
+
+                            mMapView.overlays.remove(newRoadOverlay)
+
+                                newRoadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
+                                mMapView.overlays.add(newRoadOverlay)
+                                startDistanceBetweenPoints = distance(road!!)
+
+                            activity!!.runOnUiThread {
+                                mMapView.invalidate()
+                            }
+                            sleep(500)
+                        } else {
+                            // передвинуть 0 точку
+
+                                    road!!.mRouteHigh.removeAt(0)
+                                    road!!.mRouteHigh.add(
+                                        0,
+                                        GeoPoint(
+                                            MyLocation.imHere!!.latitude,
+                                            MyLocation.imHere!!.longitude
+                                        )
+                                    )
+
+                                    mMapView.overlays.remove(newRoadOverlay)
+
+
+                                    newRoadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
+                                    mMapView.overlays.add(newRoadOverlay)
+                            activity!!.runOnUiThread {
+                                    mMapView.invalidate()
+                            }
+                            sleep(500)
+                        }
+                    }
+                }
+            }catch (e:java.lang.Exception){
+                e.printStackTrace()
+            }
+
+        }
+    }
+
+    private fun proximityCheck() {
+        thread {
+            val location = Location("point A")
+            location.latitude = activity!!.intent.getDoubleExtra("lat", 0.0)
+            location.longitude = activity!!.intent.getDoubleExtra("lon", 0.0)
+
+            while (!arriveToObject) {
+                sleep(1000)
+                proximityAlive = true
+                if(alertCanceled){
+                    proximityAlive = false
+                    arriveToObject = true
+                }
+                Log.d("proximity",(MyLocation.imHere!!.distanceTo(location).toString()))
+                if (MyLocation.imHere!!.distanceTo(location) < 100) {
+                    proximityAlive = false
+                    arriveToObject = true
+
+                    when {
+                        !RubegNetworkService.connectInternet -> {
+                            Toast.makeText(
+                                context,
+                                "Нет соединения с интернетом, невозможно отправить запрос на прибытие",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        !RubegNetworkService.connectServer -> {
+                            Toast.makeText(
+                                context,
+                                "Нет соединения с сервером, невозможно отправить запрос на прибытие",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        else -> {
+                            Log.d("proximity", "На месте")
+                            activity!!.runOnUiThread {
+                                val arrivedDialog = AlertDialog.Builder(activity!!)
+                                arrivedDialog.setCancelable(false)
+                                arrivedDialog.setTitle("Прибытие")
+                                    .setMessage("Вы прибыли на место")
+                                    .setPositiveButton("Подтвердить") {
+                                            _, _ ->
+                                        thread {
+                                            val message = JSONObject()
+                                            message.put("\$c$", "gbrkobra")
+                                            message.put("command", "alarmpr")
+                                            message.put("number", activity!!.intent.getStringExtra("number"))
+                                            RubegNetworkService.protocol.send(message = message.toString()) {
+                                                    success: Boolean ->
+                                                if (success) {
+                                                    activity!!.runOnUiThread {
+                                                        Toast.makeText(activity, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                    }.show()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun initMapView() {
+        org.osmdroid.config.Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
+        mMapView.setTileSource(TileSourceFactory.MAPNIK)
+        mMapView.setHasTransientState(true)
+        mMapView.controller.setZoom(15.0)
+        mMapView.isTilesScaledToDpi = true
+        mMapView.isFlingEnabled = true
+        mMapView.controller.animateTo(GeoPoint(MyLocation.imHere!!.latitude, MyLocation.imHere!!.longitude))
+
+        mMapView.overlays.add(locationOverlay())
+        mMapView.overlays.add(initRotationGestureOverlay())
+        mMapView.overlays.add(initScaleBarOverlay())
+    }
+
+    private fun locationOverlay(): MyLocationNewOverlay {
+        val gpsMyLocationProvider = GpsMyLocationProvider(activity)
+        gpsMyLocationProvider.addLocationSource(MyLocation.imHere!!.provider)
+        locationOverlay = MyLocationNewOverlay(gpsMyLocationProvider, mMapView)
+        locationOverlay.setDirectionArrow(customIcon(R.drawable.ic_navigator_icon), customIcon(R.drawable.ic_navigator_active_icon))
+        locationOverlay.isDrawAccuracyEnabled = false
+        return locationOverlay
+    }
+
+    private fun customIcon(drawable: Int): Bitmap? {
+
+        val drawableBitmap = ContextCompat.getDrawable(activity!!, drawable)
+
+        val bitmap = Bitmap.createBitmap(
+            drawableBitmap!!.intrinsicWidth,
+            drawableBitmap.intrinsicHeight, Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        drawableBitmap.setBounds(0, 0, canvas.width, canvas.height)
+        drawableBitmap.draw(canvas)
+
+        return bitmap
+    }
+
+    private fun initRotationGestureOverlay(): RotationGestureOverlay {
+        rotationGestureOverlay = RotationGestureOverlay(mMapView)
+        rotationGestureOverlay.isEnabled = true
+        mMapView.setMultiTouchControls(true)
+        return rotationGestureOverlay
+    }
+
+    private fun initScaleBarOverlay(): ScaleBarOverlay {
+        scaleBarOverlay = ScaleBarOverlay(mMapView)
+        scaleBarOverlay.setCentred(true)
+        scaleBarOverlay.setScaleBarOffset(resources.displayMetrics.widthPixels / 2, 10)
+        return scaleBarOverlay
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        mMapView.onResume()
+
+        paveTheWay()
+
+        locationOverlay.enableMyLocation()
+        scaleBarOverlay.enableScaleBar()
+
+        if (enableWhileResume) {
+            locationOverlay.enableFollowLocation()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        println("onPause")
+        mMapView.onPause()
+
+        if (mMapView.overlays.count()> 3)
+            mMapView.overlays.removeAt(mMapView.overlays.count() - 1)
+
+        if (road!!.mRouteHigh.size> 1)
+            road!!.mRouteHigh.clear()
+
+        if (locationOverlay.isFollowLocationEnabled) {
+            locationOverlay.enableFollowLocation()
+            enableWhileResume = true
+        }
+
+        locationOverlay.disableMyLocation()
+        scaleBarOverlay.disableScaleBar()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        println("onStop")
+        try {
+            SharedPreferencesState.init(context!!)
+            SharedPreferencesState.addPropertyFloat("lat", MyLocation.imHere!!.latitude.toFloat())
+            SharedPreferencesState.addPropertyFloat("lon", MyLocation.imHere!!.longitude.toFloat())
+        } catch (e: Exception) {
+        }
+    }
+
     private inner class NavigatorTask : TimerTask() {
 
         override fun run() {
@@ -215,170 +447,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
         }
     }
 
-    private fun createRoad() {
-
-        try {
-            val roadManager = OSRMRoadManager(context)
-
-            roadManager.setService("http:" + activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("routeserver", "") + "/route/v1/driving/")
-            roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
-
-            val waypoints = ArrayList<GeoPoint>()
-
-            val startPoint = GeoPoint(
-                activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lat", 0f).toDouble(),
-                activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lon", 0f).toDouble()
-            )
-
-            val endPoint = GeoPoint(lat, lon)
-
-            waypoints.add(startPoint)
-
-            waypoints.add(endPoint)
-            val createRoad = Runnable {
-                lateinit var road: Road
-                try {
-                    road = roadManager.getRoad(waypoints)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-                if (road.mStatus != Road.STATUS_OK) {
-                    activity!!.runOnUiThread {
-                        Toast.makeText(activity!!, "Невозможно построить путь", Toast.LENGTH_LONG).show()
-                    }
-                } else {
-                    if (road.mRouteHigh.size> 2) {
-                        val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-                        activity!!.runOnUiThread {
-                            mMapView.overlays.add(0, roadOverlay)
-                            road.mRouteHigh.add(0, startPoint)
-                            // tracking
-                            tracking(road)
-                        }
-                    } else {
-                        if (distance(road)> 60)
-                            createRoad()
-                        else {
-                            tracking(road)
-                            // tracking
-                        }
-                    }
-                }
-            }
-            Thread(createRoad).start()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun tracking(road: Road) {
-        val updateTrackingThread = object : Thread() {
-            override fun run() {
-                super.run()
-                try {
-                    var oldDistance = distance(road)
-                    while (!arrivedToObject) {
-                        sleep(100)
-                        if (road.mRouteHigh.size> 2) {
-                            if (distance(road)> oldDistance + 40) {
-                                activity!!.runOnUiThread {
-                                    road.mRouteHigh.clear()
-                                    arrivedToObject = true
-                                    mMapView.overlays.removeAt(0)
-                                    val handler = Handler()
-                                    handler.postDelayed(
-                                        {
-                                            createRoad()
-                                        },
-                                        500
-                                    )
-                                }
-                            } else {
-                                activity!!.runOnUiThread {
-                                    if (distance(road) <40) {
-                                        road.mRouteHigh.removeAt(1)
-                                        if (mMapView.overlays.size> 0)
-                                            mMapView.overlays.removeAt(0)
-                                        val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-                                        mMapView.overlays.add(0, roadOverlay)
-                                        oldDistance = distance(road)
-                                        mMapView.invalidate()
-                                    } else {
-                                        try {
-                                            road.mRouteHigh.removeAt(0)
-                                            road.mRouteHigh.add(0, locationOverlay.myLocation)
-                                            if (mMapView.overlays.size> 0)
-                                                mMapView.overlays.removeAt(0)
-                                            val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-                                            mMapView.overlays.add(0, roadOverlay)
-                                            mMapView.invalidate()
-                                        } catch (e: Exception) {
-                                            e.printStackTrace()
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            if (road.mRouteHigh.size> 0) {
-                                if (distance(road) < 30.0) {
-
-                                    road.mRouteHigh.clear()
-                                    activity!!.runOnUiThread {
-                                        val alertDialog = AlertDialog.Builder(activity!!)
-                                        val view = layoutInflater.inflate(R.layout.arrived_dialog, parent, false)
-                                        alertDialog.setView(view)
-                                        alertDialog.setCancelable(false)
-                                        val dialog: AlertDialog = alertDialog.create()
-                                        dialog.show()
-                                        val arriveButton: LinearLayout = view!!.findViewById(R.id.arrived_button)
-                                        arriveButton.setOnClickListener {
-                                            val arriveThread = Runnable {
-                                              /*  arrivedToObject(jsonObject = jsonObject)*/
-                                                dialog.cancel()
-                                            }; Thread(arriveThread).start()
-                                        }
-                                        mMapView.overlays.removeAt(0)
-                                        arrivedToObject = true
-                                    }
-                                } else {
-                                    activity!!.runOnUiThread {
-                                        road.mRouteHigh.removeAt(0)
-                                        road.mRouteHigh.add(0, locationOverlay.myLocation)
-                                        mMapView.overlays.removeAt(0)
-                                        val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-                                        mMapView.overlays.add(0, roadOverlay)
-                                        mMapView.invalidate()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }; updateTrackingThread.start()
-    }
-/*
-    private fun arrivedToObject(jsonObject: JSONObject) {
-
-        val message = JSONObject()
-        message.put("\$c$", "gbrkobra")
-        message.put("command", "alarmpr")
-        message.put("number", jsonObject.getString("number"))
-        val sessionId = activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")
-        thread {
-            networkService.send(message = message.toString(), sessionID = sessionId) {
-                success: Boolean ->
-                    if (success) {
-                        activity!!.runOnUiThread {
-                            Toast.makeText(activity, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                }
-        }
-    }*/
-
     private fun distance(road: Road): Float {
         return try {
             val locationA = Location("point A")
@@ -390,74 +458,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
             locationA.distanceTo(locationB)
         } catch (e: Exception) {
             0f
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        println("onResume")
-        mMapView.onResume()
-        println(mMapView.overlays.size)
-        if (firstTime) {
-            if (mMapView.overlays.size == 0) {
-                addOverlays()
-            }
-            scaleBarOverlay.enableScaleBar()
-            locationOverlay.enableMyLocation()
-
-            showProgressBar()
-
-            val tread = Runnable {
-                latitude = 0.toDouble()
-                println("Thread start")
-
-                do {
-                    try {
-                        latitude = locationOverlay.lastFix.latitude
-                    } catch (e: Exception) {}
-                } while (latitude == 0.toDouble())
-
-                activity!!.runOnUiThread {
-                    if (latitude != 0.toDouble()) {
-                        try {
-                            closeProgressBar()
-                            mMapView.controller.animateTo(GeoPoint(locationOverlay.lastFix.latitude, locationOverlay.lastFix.longitude))
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                        try {
-                            if (lat != 0.0 && lon != 0.0) {
-                                createRoad()
-                            } else {
-                                Toast.makeText(activity!!, "Не были указаны координаты до конечного объекта", Toast.LENGTH_SHORT).show()
-                            }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-            }; Thread(tread).start()
-
-            firstTime = false
-        }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        println("onPause")
-        mMapView.onPause()
-        scaleBarOverlay.disableScaleBar()
-        // firstTime = true
-    }
-
-    override fun onStop() {
-        super.onStop()
-        println("onStop")
-        try {
-            SharedPreferencesState.init(context!!)
-            SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
-            SharedPreferencesState.addPropertyFloat("lon", locationOverlay.myLocation.longitude.toFloat())
-        } catch (e: Exception) {
         }
     }
 
@@ -548,220 +548,9 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
         }
     }
 
-    private fun initMapView(rootView: View) {
-        org.osmdroid.config.Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
-        mMapView = rootView.findViewById(R.id.navigator_view)
-        mMapView.setTileSource(TileSourceFactory.MAPNIK)
-        mMapView.setHasTransientState(true)
-        mMapView.controller.setZoom(15.0)
-        mMapView.isTilesScaledToDpi = true
-        mMapView.isFlingEnabled = true
-
-        try {
-            mMapView.controller.animateTo(
-                GeoPoint(
-                    context!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lat", 0f).toDouble(),
-                    context!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lon", 0f).toDouble()
-                )
-            )
-        } catch (e: Exception) {
-            Toast.makeText(context, "Ваше месторасположение не определено", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun addOverlays() {
-        addOverlays(initLocationOverlay())
-        addOverlays(initRotationGestureOverlay())
-        addOverlays(initScaleBarOverlay())
-    }
-
-    private fun initScaleBarOverlay(): ScaleBarOverlay {
-        scaleBarOverlay = ScaleBarOverlay(mMapView)
-        scaleBarOverlay.setCentred(true)
-        scaleBarOverlay.setScaleBarOffset(resources.displayMetrics.widthPixels / 2, 10)
-        return scaleBarOverlay
-    }
-
-    private fun initRotationGestureOverlay(): RotationGestureOverlay {
-        rotationGestureOverlay = RotationGestureOverlay(mMapView)
-        rotationGestureOverlay.isEnabled = true
-        mMapView.setMultiTouchControls(true)
-        return rotationGestureOverlay
-    }
-
-    private fun initLocationOverlay(): MyLocationNewOverlay {
-        val gpsMyLocationProvider = GpsMyLocationProvider(context)
-        gpsMyLocationProvider.locationUpdateMinDistance = 0f
-        gpsMyLocationProvider.locationUpdateMinTime = 0
-        locationOverlay = MyLocationNewOverlay(gpsMyLocationProvider, mMapView)
-        locationOverlay.setDirectionArrow(customIcon(R.drawable.navigator), customIcon(R.drawable.navigator))
-        locationOverlay.isDrawAccuracyEnabled = false
-        return locationOverlay
-    }
-
-    private fun addOverlays(overlay: Overlay) {
-        mMapView.overlays.add(overlay)
-    }
-
-    private fun customIcon(drawable: Int): Bitmap? {
-        return BitmapFactory.decodeResource(
-            resources,
-            drawable
-        )
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         println("onDestroy")
     }
+
 }
-
-/*    private fun createRoad() {
-
-        val roadManager = OSRMRoadManager(context)
-
-        roadManager.setService("http:" + activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("routeserver", "") + "/route/v1/driving/")
-        roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
-
-        val waypoints = ArrayList<GeoPoint>()
-
-        val startPoint: GeoPoint = GeoPoint(
-            activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lat", 0f).toDouble(),
-            activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getFloat("lon", 0f).toDouble()
-        )
-        val endPoint: GeoPoint = GeoPoint(lat, lon)
-        waypoints.add(
-            startPoint
-        )
-        waypoints.add(endPoint)
-
-        val createRoad = Runnable {
-            val road = roadManager.getRoad(waypoints)
-            if (road.mRouteHigh.size != 2) {
-                val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-                activity!!.runOnUiThread {
-                    mMapView.overlays.add(0, roadOverlay)
-                    road.mRouteHigh.add(0, startPoint)
-                    arrivedToObject = false
-                    tracking(road)
-                }
-            } else {
-                try {
-                    if (distance(road)> 50)
-                        createRoad()
-                    else {
-                        tracking(road)
-                        addOverlays()
-                    }
-                } catch (e: Exception) { tracking(road) }
-            }
-        }
-        Thread(createRoad).start()
-    }
-
-    private fun tracking(road: Road) {
-        val updateTrackingThread = object : Thread() {
-            override fun run() {
-                super.run()
-                try {
-                    var oldDistance = distance(road)
-                    while (!arrivedToObject) {
-                        sleep(100)
-                        if (road.mRouteHigh.size> 2) {
-                            if (distance(road)> oldDistance + 40) {
-                                activity!!.runOnUiThread {
-                                    road.mRouteHigh.clear()
-                                    arrivedToObject = true
-                                    mMapView.overlays.removeAt(0)
-                                    val handler = Handler()
-                                    handler.postDelayed(
-                                        {
-                                            createRoad()
-                                        },
-                                        500
-                                    )
-                                }
-                            } else {
-                                activity!!.runOnUiThread {
-                                    if (distance(road) <40) {
-                                        road.mRouteHigh.removeAt(1)
-                                        if(mMapView.overlays.size>0)
-                                        mMapView.overlays.removeAt(0)
-                                        val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-                                        mMapView.overlays.add(0, roadOverlay)
-                                        oldDistance = distance(road)
-                                        mMapView.invalidate()
-                                    } else {
-                                        try{
-                                            road.mRouteHigh.removeAt(0)
-                                            road.mRouteHigh.add(0, locationOverlay.myLocation)
-                                            if(mMapView.overlays.size>0)
-                                            mMapView.overlays.removeAt(0)
-                                            val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-                                            mMapView.overlays.add(0, roadOverlay)
-                                            mMapView.invalidate()
-                                        }catch (e:Exception){
-                                            e.printStackTrace()
-                                        }
-
-                                    }
-                                }
-                            }
-                        } else {
-                            if (road.mRouteHigh.size> 0) {
-                                if (distance(road) < 30.0) {
-
-                                    road.mRouteHigh.clear()
-                                    activity!!.runOnUiThread {
-                                        val alertDialog = AlertDialog.Builder(activity!!)
-                                        val view = layoutInflater.inflate(R.layout.arrived_dialog, null)
-                                        alertDialog.setView(view)
-                                        val dialog: AlertDialog = alertDialog.create()
-                                        dialog.show()
-                                        val arrive_button: Button = view!!.findViewById(R.id.arrived_button)
-                                        arrive_button.setOnClickListener {
-                                            val arriveThread = Runnable {
-                                                arrivedToObject(jsonArray)
-                                                dialog.cancel()
-                                            }; Thread(arriveThread).start()
-                                        }
-                                        mMapView.overlays.removeAt(0)
-                                        arrivedToObject = true
-                                    }
-                                } else {
-                                    activity!!.runOnUiThread {
-                                        road.mRouteHigh.removeAt(0)
-                                        road.mRouteHigh.add(0, locationOverlay.myLocation)
-                                        mMapView.overlays.removeAt(0)
-                                        val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-                                        mMapView.overlays.add(0, roadOverlay)
-                                        mMapView.invalidate()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }; updateTrackingThread.start()
-    }
-
-    private fun arrivedToObject(jsonArray: JSONArray) {
-        val arrivedToObject = Runnable {
-            request.arrivedToObject(
-                PollingServer.socket,
-                PollingServer.countSender,
-                jsonObject.getString("number"),
-                0,
-                activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""),
-                activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("ip", ""),
-                activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getInt("port", 0),
-                activity!!.getSharedPreferences("state", Context.MODE_PRIVATE).getString("tid", "")
-            )
-        }; Thread(arrivedToObject).start()
-        PollingServer.countSender++
-    }
-
-    */

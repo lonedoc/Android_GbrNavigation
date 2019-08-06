@@ -6,7 +6,7 @@ import org.osmdroid.util.MapTileIndex
 
 class TileSource {
 
-    val GoogleSat: OnlineTileSourceBase = object : XYTileSource(
+    val googleSat: OnlineTileSourceBase = object : XYTileSource(
         "Google-Sat",
         0,
         19,
@@ -19,7 +19,7 @@ class TileSource {
         }
     }
 
-    val GoogleHybrid: OnlineTileSourceBase = object : XYTileSource(
+    val googleHybrid: OnlineTileSourceBase = object : XYTileSource(
         "Google-Hybrid",
         0,
         19,
@@ -32,7 +32,7 @@ class TileSource {
         }
     }
 
-    val GoogleRoads: OnlineTileSourceBase = object : XYTileSource(
+    val googleRoads: OnlineTileSourceBase = object : XYTileSource(
         "Google-Roads",
         0,
         19,
@@ -45,7 +45,7 @@ class TileSource {
         }
     }
 
-    val YandexMaps: OnlineTileSourceBase = object : XYTileSource(
+    val yandexMaps: OnlineTileSourceBase = object : XYTileSource(
         "Yandex.Maps",
         0,
         19,
