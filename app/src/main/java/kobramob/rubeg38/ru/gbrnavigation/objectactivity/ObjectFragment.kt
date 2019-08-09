@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kobramob.rubeg38.ru.gbrnavigation.R
+import kobramob.rubeg38.ru.gbrnavigation.commonactivity.AlarmObjectInfo
 
 class ObjectFragment : androidx.fragment.app.Fragment() {
     @SuppressLint("SetTextI18n")
@@ -23,43 +24,44 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
         val objectCustomer: TextView = rootView.findViewById(R.id.objectCustomer)
         val objectTIP: TextView = rootView.findViewById(R.id.objectTIP)
 
-        if (activity!!.intent.getStringExtra("name") != "") {
-            objectName.text = activity!!.intent.getStringExtra("name")
+        val alarmObjectInfo = activity!!.intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
+
+        if (alarmObjectInfo.name != "") {
+            objectName.text = alarmObjectInfo.name
         } else {
             objectName.visibility = View.GONE
         }
 
-        if (activity!!.intent.getStringExtra("address") != "") {
-            objectAddress.text = activity!!.intent.getStringExtra("address")
+        if (alarmObjectInfo.address != "") {
+            objectAddress.text = alarmObjectInfo.address
         } else {
             objectAddress.visibility = View.GONE
         }
 
-        if (activity!!.intent.getStringExtra("zakaz") != "") {
-            objectCustomer.text = "Заказчик: ${activity!!.intent.getStringExtra("zakaz")}"
+        if (alarmObjectInfo.zakaz != "") {
+            objectCustomer.text = "Заказчик: ${alarmObjectInfo.zakaz}"
         } else {
             objectCustomer.visibility = View.GONE
         }
 
-        if (activity!!.intent.getIntExtra("inn", 0) != 0) {
-            objectTIP.text = "ИНН: ${activity!!.intent.getIntExtra("inn",0)}"
+        if (alarmObjectInfo.inn != 0L) {
+            objectTIP.text = "ИНН: ${alarmObjectInfo.inn}"
         } else {
             objectTIP.visibility = View.GONE
         }
 
-        if (activity!!.intent.getStringExtra("areaName") != "") {
-            objectAlarm.text = activity!!.intent.getStringExtra("areaName")
+        if (alarmObjectInfo.areaName != "") {
+            objectAlarm.text = alarmObjectInfo.areaName
         } else {
             objectAlarm.visibility = View.GONE
         }
 
-        if (activity!!.intent.getStringExtra("areaAlarmTime") != "") {
-            objectAlarmTime.text = "Время тревоги ${activity!!.intent.getStringExtra("areaAlarmTime")}"
+        if (alarmObjectInfo.areaAlarmTime != "") {
+            objectAlarmTime.text = "Время тревоги ${alarmObjectInfo.areaAlarmTime}"
         } else {
             objectAlarm.visibility = View.GONE
         }
 
         return rootView
     }
-
 }

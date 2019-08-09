@@ -5,26 +5,17 @@
                 xmlns:app="http://schemas.android.com/apk/res-auto"
                 tools:context=".objectactivity.NavigatorFragment">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:clickable="true"
-            app:srcCompat="@drawable/ic_direction_walk"
-            android:id="@+id/navigator_followMe"
-            android:layout_marginEnd="15dp"
-            android:layout_marginTop="15dp"
-            android:focusable="true"
-            app:backgroundTint="@color/textWhite"
-            app:rippleColor="@color/colorAccent" android:layout_alignEnd="@+id/navigator_mapview"
-            android:layout_below="@+id/navigator_myLocation"
-    />
+
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:clickable="true" app:srcCompat="@drawable/ic_gps_fixed"
-            android:id="@+id/navigator_myLocation" android:layout_alignParentEnd="true"
-            android:layout_marginEnd="15dp" android:layout_marginTop="15dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            app:srcCompat="@drawable/ic_gps_fixed"
+            android:id="@+id/navigator_myLocation"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="16dp"
             android:focusable="true"
             app:backgroundTint="@color/textWhite"
             app:rippleColor="@color/colorAccent"
@@ -32,16 +23,46 @@
     />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:clickable="true" app:srcCompat="@drawable/ic_yandex"
-            android:id="@+id/navigator_yandex" android:layout_alignParentEnd="true"
-            android:layout_marginEnd="15dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            app:srcCompat="@drawable/ic_direction_walk"
+            android:id="@+id/navigator_followMe"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="16dp"
+            android:focusable="true"
+            app:backgroundTint="@color/textWhite"
+            app:rippleColor="@color/colorAccent" android:layout_alignEnd="@+id/navigator_mapview"
+            android:layout_below="@+id/navigator_myLocation"
+    />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            app:srcCompat="@drawable/ic_yandex"
+            android:id="@+id/navigator_yandex"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="16dp"
             android:focusable="true"
             app:backgroundTint="@color/textWhite"
             app:rippleColor="@color/colorAccent"
             android:layout_alignParentBottom="true"
-            android:layout_marginBottom="15dp"
+
+    />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/navigator_arrived"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            app:rippleColor="@color/colorAccent"
+            app:srcCompat="@drawable/ic_arrivedtoobject"
+            app:backgroundTint="@color/viewBackground"
+            android:visibility="gone"
     />
 
     <org.osmdroid.views.MapView

@@ -12,8 +12,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 
-
-class AdapterPlanList(private val bitmapList: ArrayList<Bitmap>,private val context:Context) : RecyclerView.Adapter<AdapterPlanList.ViewHolder>() {
+class AdapterPlanList(private val bitmapList: ArrayList<Bitmap>, private val context: Context) : RecyclerView.Adapter<AdapterPlanList.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(kobramob.rubeg38.ru.gbrnavigation.R.layout.recyclerview_image, parent, false)
         return ViewHolder(view)
@@ -24,10 +23,10 @@ class AdapterPlanList(private val bitmapList: ArrayList<Bitmap>,private val cont
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        //holder.imageView.setImage(ImageSource.bitmap(bitmapList[position]))
+        // holder.imageView.setImage(ImageSource.bitmap(bitmapList[position]))
         holder.imageView.setImageBitmap(bitmapList[position])
         holder.parentLayout.setOnClickListener {
-            val fragment:Fragment = ImageFragment(bitmap = bitmapList[position])
+            val fragment: Fragment = ImageFragment(bitmap = bitmapList[position])
             openFragment(fragment)
         }
     }
@@ -41,6 +40,6 @@ class AdapterPlanList(private val bitmapList: ArrayList<Bitmap>,private val cont
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val imageView: ImageView = itemView.findViewById(kobramob.rubeg38.ru.gbrnavigation.R.id.imagePlan)
-        val parentLayout:LinearLayout = itemView.findViewById(kobramob.rubeg38.ru.gbrnavigation.R.id.image_parent)
+        val parentLayout: LinearLayout = itemView.findViewById(kobramob.rubeg38.ru.gbrnavigation.R.id.image_parent)
     }
 }

@@ -11,10 +11,10 @@ import com.davemorrissey.labs.subscaleview.ImageSource
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import kobramob.rubeg38.ru.gbrnavigation.R
 
-class ImageFragment(val bitmap: Bitmap): Fragment() {
+class ImageFragment(val bitmap: Bitmap) : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val rootView = inflater.inflate(R.layout.image_fragment,container,false)
-        val imageView:SubsamplingScaleImageView = rootView.findViewById(R.id.fragment_image)
+        val rootView = inflater.inflate(R.layout.image_fragment, container, false)
+        val imageView: SubsamplingScaleImageView = rootView.findViewById(R.id.fragment_image)
         imageView.setImage(ImageSource.bitmap(bitmap))
         val button: Button = rootView.findViewById(R.id.close_fragment)
         button.setOnClickListener {

@@ -16,117 +16,130 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.extensions.jsonBody
+import com.google.gson.Gson
+import java.lang.Thread.sleep
+import java.text.SimpleDateFormat
+import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.rubegnetworkprotocol.RubegProtocol
 import kobramob.rubeg38.ru.rubegnetworkprotocol.RubegProtocolDelegate
+import kotlin.collections.ArrayList
+import kotlin.concurrent.thread
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
-import org.json.JSONArray
 import org.json.JSONObject
-import java.lang.Thread.sleep
-import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.concurrent.thread
 
 class RubegNetworkService : Service(), RubegProtocolDelegate {
     override var sessionId: String? = null
 
-    private var connectionLost:Boolean = false
-
+    private var connectionLost: Boolean = false
 
     override fun connectionLost() {
         Log.d("ConnectionLost", "connectionLost")
-        if(!connectionLost)
-        {
-            connectionLost = true
+        if(!isServiceStarted){
+            startService()
+        }
+        if (!protocol.connected) {
             sessionId = null
-            protocol.start()
-         when{
-             !isConnected(this)->{
-                 connectInternet = false
-                 EventBus.getDefault().post(MessageEvent(
-                     command = "internet",
-                     message = "lost"
-                 ))
-                 while(!isConnected(this))
-                 {
+            when {
+                !isConnected(this) -> {
+                    connectInternet = false
+                    if(!connectionLost)
+                    {
+                        EventBus.getDefault().post(
+                            MessageEvent(
+                                command = "internet",
+                                message = "lost"
+                            )
+                        )
+                        connectionLost = true
+                    }
 
-                 }
-                 EventBus.getDefault().post(MessageEvent
-                     (
-                     "internet",
-                     "connected"
-                 )
-                 )
-                 val authorizationMessage = JSONObject()
-                 authorizationMessage.put("\$c$", "reg")
-                 authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
-                 authorizationMessage.put(
-                     "password",
-                     getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", "")
-                 )
-                 RubegNetworkService.protocol.request(authorizationMessage.toString()) { success: Boolean,data:ByteArray? ->
-                     if (success && data!=null) {
-                         this.sessionId = JSONObject(String(data)).getString("tid")
+                    while (!isConnected(this)) {
+                    }
+                    EventBus.getDefault().post(
+                        MessageEvent
+                        (
+                            "internet",
+                            "connected"
+                        )
+                    )
+                    val authorizationMessage = JSONObject()
+                    authorizationMessage.put("\$c$", "reg")
+                    authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
+                    authorizationMessage.put(
+                        "password",
+                        getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", "")
+                    )
+                    RubegNetworkService.protocol.request(authorizationMessage.toString()) { success: Boolean, data: ByteArray? ->
+                        if (success && data != null) {
+                            this.sessionId = JSONObject(String(data)).getString("tid")
 
-                         EventBus.getDefault().post(MessageEvent(
-                             "reconnectInternet",
-                             "true"
-                         ))
-                         connectInternet = true
-                         connectionLost = false
-                     }
-                     else
-                     {
-                         EventBus.getDefault().post(MessageEvent(
-                             "reconnectInternet",
-                             "false"
-                         ))
-                         connectionLost = false
-                     }
-                 }
-             }
-             else->{
-                 connectServer = false
-                 EventBus.getDefault().post(MessageEvent(
-                     command = "disconnect",
-                     message = "lost"
-                 ))
-                 val authorizationMessage = JSONObject()
-                 authorizationMessage.put("\$c$", "reg")
-                 authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
-                 authorizationMessage.put(
-                     "password",
-                     getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", "")
-                 )
+                            EventBus.getDefault().post(
+                                MessageEvent(
+                                    "reconnectInternet",
+                                    "true"
+                                )
+                            )
+                            coordinateLoop()
+                            connectInternet = true
+                            connectionLost = false
+                        } else {
+                            EventBus.getDefault().post(
+                                MessageEvent(
+                                    "reconnectInternet",
+                                    "false"
+                                )
+                            )
+                        }
+                    }
+                }
+                else -> {
+                    connectServer = false
+                    if(!connectionLost){
+                        EventBus.getDefault().post(
+                            MessageEvent(
+                                command = "disconnect",
+                                message = "lost"
+                            )
+                        )
+                        connectionLost = true
+                    }
+                    val authorizationMessage = JSONObject()
+                    authorizationMessage.put("\$c$", "reg")
+                    authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
+                    authorizationMessage.put(
+                        "password",
+                        getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", "")
+                    )
 
-                 RubegNetworkService.protocol.request(authorizationMessage.toString()) { success: Boolean,data:ByteArray? ->
-                     if (success && data!=null) {
-                         this.sessionId = JSONObject(String(data)).getString("tid")
+                    RubegNetworkService.protocol.request(authorizationMessage.toString()) { success: Boolean, data: ByteArray? ->
+                        if (success && data != null) {
+                            this.sessionId = JSONObject(String(data)).getString("tid")
 
-                         EventBus.getDefault().post(MessageEvent(
-                             "reconnectServer",
-                             "true"
-                         ))
-                         connectServer = true
-                         connectionLost = false
-                     }
-                     else
-                     {
-                         EventBus.getDefault().post(MessageEvent(
-                             "reconnectServer",
-                             "false"
-                         ))
-                         connectionLost = false
-                     }
-                 }
-             }
-             }
+                            EventBus.getDefault().post(
+                                MessageEvent(
+                                    "reconnectServer",
+                                    "true"
+                                )
+                            )
+                            connectServer = true
+                            coordinateLoop()
+                        } else {
+                            EventBus.getDefault().post(
+                                MessageEvent(
+                                    "reconnectServer",
+                                    "false"
+                                )
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -156,30 +169,29 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
             JSONObject(message).has("command") -> {
                 when (JSONObject(message).getString("command")) {
                     "regok" -> {
-                            this.sessionId = JSONObject(message).getString("tid")
+                        this.sessionId = JSONObject(message).getString("tid")
 
-                            val routeServer: ArrayList<String> = ArrayList()
-                            for (i in 0 until JSONObject(message).getJSONArray("routeserver").length())
-                                routeServer.add(JSONObject(message).getJSONArray("routeserver").getString(i))
+                        val routeServer: ArrayList<String> = ArrayList()
+                        for (i in 0 until JSONObject(message).getJSONArray("routeserver").length())
+                            routeServer.add(JSONObject(message).getJSONArray("routeserver").getString(i))
 
-                            val call: String = JSONObject(message).getString("call")
+                        val call: String = JSONObject(message).getString("call")
 
-                            val status: String = JSONObject(message).getString("status")
+                        val status: String = JSONObject(message).getString("status")
 
-                            val gbrStatus: ArrayList<String> = ArrayList()
-                            for (i in 0 until JSONObject(message).getJSONArray("gpsstatus").length())
-                                gbrStatus.add(JSONObject(message).getJSONArray("gpsstatus").getString(i))
+                        val gbrStatus: ArrayList<String> = ArrayList()
+                        for (i in 0 until JSONObject(message).getJSONArray("gpsstatus").length())
+                            gbrStatus.add(JSONObject(message).getJSONArray("gpsstatus").getString(i))
 
-                            EventBus.getDefault().post(
-                                MessageEvent(
-                                    command = JSONObject(message).getString("command"),
-                                    routeServer = routeServer,
-                                    call = call,
-                                    status = status,
-                                    gbrStatus = gbrStatus
-                                )
+                        EventBus.getDefault().post(
+                            MessageEvent(
+                                command = JSONObject(message).getString("command"),
+                                routeServer = routeServer,
+                                call = call,
+                                status = status,
+                                gbrStatus = gbrStatus
                             )
-
+                        )
                     }
                     "gbrstatus" -> {
                         EventBus.getDefault().postSticky(
@@ -190,95 +202,28 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                         )
                     }
                     "alarm" -> {
-
-                        val alarmObject = JSONObject(message)
-                        var command = ""
-                        var name = ""
-                        var number = ""
-                        var lon = 0.0
-                        var lat = 0.0
-                        var inn = 0
-                        var zakaz = ""
-                        var address = ""
-                        var areaName = ""
-                        var areaAlarmTime = ""
-                        try {
-                            command = alarmObject.getString("command")
-                        } catch (e: Exception) {
-                        }
-
-                        try {
-                            name = alarmObject.getString("name")
-                        } catch (e: java.lang.Exception) {}
-
-                        try {
-                            number = alarmObject.getString("number")
-                        } catch (e: java.lang.Exception) {}
-
-                        try {
-                            lon = alarmObject.getDouble("lon")
-                        } catch (e: java.lang.Exception) {}
-
-                        try {
-                            lat = alarmObject.getDouble("lat")
-                        } catch (e: java.lang.Exception) {}
-
-                        try {
-                            inn = alarmObject.getInt("inn")
-                        } catch (e: java.lang.Exception) {}
-
-                        try {
-                            zakaz = alarmObject.getString("zakaz")
-                        } catch (e: java.lang.Exception) {}
-
-                        try {
-                            address = alarmObject.getString("address")
-                        } catch (e: java.lang.Exception) {}
-
-                        try {
-                            areaName = alarmObject.getJSONObject("area").getString("name")
-                        } catch (e: java.lang.Exception) {
-                            e.printStackTrace()
-                        }
-
-                        try {
-                            areaAlarmTime = alarmObject.getJSONObject("area").getString("alarmtime")
-                        } catch (e: java.lang.Exception) {
-                            e.printStackTrace()
-                        }
-
-                        val otvl: ArrayList<String> = ArrayList()
-                        for (i in 0 until JSONArray(alarmObject.getString("otvl")).length()) {
-                            otvl.add(alarmObject.getJSONArray("otvl").getString(i))
-                        }
-
-                        val plan: ArrayList<String> = ArrayList()
-                        for (i in 0 until JSONArray(alarmObject.getString("plan")).length()) {
-                            plan.add(alarmObject.getJSONArray("plan").getString(i))
-                        }
-
-                        for(i in 0 until JSONArray(alarmObject.getString("photo")).length()){
-                            plan.add(alarmObject.getJSONArray("plan").getString(i))
-                        }
+                        val alarmGson = Gson()
+                        val alarm = alarmGson.fromJson(message,AlarmGson::class.java)
 
                         EventBus.getDefault().postSticky(
-                            MessageEvent(
-                                command = command,
-                                name = name,
-                                number = number,
-                                lon = lon,
-                                lat = lat,
-                                inn = inn,
-                                zakaz = zakaz,
-                                address = address,
-                                areaName = areaName,
-                                areaAlarmTime = areaAlarmTime,
-                                otvl = otvl,
-                                plan = plan
+                            AlarmEvent(
+                                command = alarm.command,
+                                name = alarm.name,
+                                number = alarm.number,
+                                lon = alarm.lon.toDouble(),
+                                lat = alarm.lat.toDouble(),
+                                inn = alarm.inn.toLong(),
+                                zakaz = alarm.zakaz,
+                                address = alarm.address,
+                                area = alarm.area,
+                                otvl = alarm.otvl,
+                                plan = alarm.plan,
+                                photo = alarm.photo
                             )
                         )
+
                     }
-                    "notalarm"->{
+                    "notalarm" -> {
                         EventBus.getDefault().postSticky(
                             MessageEvent(
                                 command = "notalarm",
@@ -346,11 +291,12 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
 
     companion object {
         lateinit var protocol: RubegProtocol
-        var connectServer:Boolean = true
-        var connectInternet:Boolean = true
+        var connectServer: Boolean = true
+        var connectInternet: Boolean = true
+        var serviceWork = false
+        var isServiceStarted = false
     }
 
-    private var serviceWork = false
 
 
     override fun onCreate() {
@@ -385,22 +331,28 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
             PendingIntent.getActivity(this, 0, notificationIntent, 0)
         }
 
-        val builder: Notification.Builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(
+        val builder: NotificationCompat.Builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) NotificationCompat.Builder(
             this,
             notificationChannelId
-        ) else Notification.Builder(this)
+        ) else NotificationCompat.Builder(this)
+
+/*.setStyle(NotificationCompat.MessagingStyle("You")
+                .addMessage("Privet",System.currentTimeMillis(),"Mama")
+                .addMessage("Poka",System.currentTimeMillis(),"Otec")
+            )*/
 
         return builder
             .setContentTitle("Service")
             .setContentText("Service notifications")
             .setContentIntent(pendingIntent)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(Notification.PRIORITY_HIGH) // for under android 26 compatibility
+            .addAction(R.drawable.ic_arrivedtoobject,"Прибытие",pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH   ) // for under android 26 compatibility
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
             .build()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
 
         if (intent != null) {
             serviceWork = true
@@ -413,19 +365,16 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                 "stop" -> stopService()
             }
         } else {
-
         }
-
 
         return START_STICKY
     }
 
-
     private var wakeLock: PowerManager.WakeLock? = null
-    private var isServiceStarted = false
+
     private fun startService() {
         if (isServiceStarted) return
-        Log.d("Service","Starting the foreground service task")
+        Log.d("Service", "Starting the foreground service task")
         isServiceStarted = true
 
         // we need this lock so our service gets not affected by Doze Mode
@@ -438,7 +387,6 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
 
         protocol.delegate = this
         protocol.start()
-        coordinateLoop()
 
         // we're starting a loop in a coroutine
         GlobalScope.launch(Dispatchers.IO) {
@@ -448,6 +396,12 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                 }
                 delay(1 * 60 * 1000)
             }
+        }
+        thread{
+            while(!protocol.connected){
+
+            }
+            coordinateLoop()
         }
     }
 
@@ -472,7 +426,6 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                     val (bytes, error) = result
                     if (bytes != null) {
                     } else {
-
                     }
                 }
         } catch (e: Exception) {
@@ -490,42 +443,53 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
             stopSelf()
             Log.d("Service", "Destroy")
             serviceWork = false
+            sessionId = null
             protocol.stop()
         } catch (e: Exception) {
-            Log.d("Service","Service stopped without being started: ${e.message}")
+            Log.d("Service", "Service stopped without being started: ${e.message}")
         }
         isServiceStarted = false
     }
 
-    private fun coordinateLoop(){
-        thread{
+    override fun onDestroy() {
+        super.onDestroy()
+        isServiceStarted = false
+    }
 
-            while(serviceWork){
-                Log.d("Connection", protocol.connected.toString())
-                if(MyLocation.imHere!!.speed>=0 && sessionId!=null){
+    private fun coordinateLoop() {
+        thread {
+            var oldSpeed = 0
+            while (protocol.connected) {
+                while(sessionId==null){
+
+                }
+                var coordinateSend = false
+                if (MyLocation.imHere!!.speed > 0 && sessionId != null || MyLocation.imHere!!.speed>=oldSpeed && sessionId!=null) {
+                    oldSpeed++
                     val coordinateMessage = JSONObject()
                     coordinateMessage.put("\$c$", "gbrkobra")
                     coordinateMessage.put("command", "location")
-                    coordinateMessage.put("id", getSharedPreferences("gbrStorage",Context.MODE_PRIVATE).getString("imei",""))
+                    coordinateMessage.put("id", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
                     coordinateMessage.put("lon", MyLocation.imHere?.longitude)
                     coordinateMessage.put("lat", MyLocation.imHere?.latitude)
                     coordinateMessage.put("speed", MyLocation.imHere?.speed)
-                    protocol.send(coordinateMessage.toString()){
-                        if(it)
-                        {
-                            Log.d("Coordinate","send")
-                        }
-                        else{
-                            protocol.stop()
-                            connectionLost()
+                    protocol.send(coordinateMessage.toString()) {
+                        coordinateSend = if (it) {
+                            Log.d("Coordinate", "send")
+                            true
+                        } else {
+                            true
                         }
                     }
+                    while(!coordinateSend){
+
+                    }
                 }
-                sleep(9000)
+
+                sleep(8000)
             }
         }
     }
-
 
     override fun onBind(p0: Intent?): IBinder? {
         return null

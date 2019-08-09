@@ -9,6 +9,7 @@ import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
@@ -34,9 +35,11 @@ import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import kobramob.rubeg38.ru.gbrnavigation.resource.DataBase
 import kobramob.rubeg38.ru.gbrnavigation.resource.SPGbrNavigation
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
+import kobramob.rubeg38.ru.gbrnavigation.workservice.AlarmEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.MessageEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.MyLocation
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
+import kotlin.concurrent.thread
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -48,7 +51,6 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import kotlin.concurrent.thread
 
 class CommonActivity : AppCompatActivity() {
 
@@ -60,13 +62,16 @@ class CommonActivity : AppCompatActivity() {
     private lateinit var locationOverlay: MyLocationNewOverlay
     private lateinit var scaleBarOverlay: ScaleBarOverlay
 
-    companion object{
+    private var alarmObjectInfo:AlarmObjectInfo = AlarmObjectInfo()
+
+    companion object {
+
         var isAlive = false
-        lateinit var alertSound:MediaPlayer
-        private val alarmObject = JSONObject()
-        private var planList:ArrayList<String> = ArrayList()
-        private var otvl:ArrayList<String> = ArrayList()
+        lateinit var alertSound: MediaPlayer
+        private var planList: ArrayList<String> = ArrayList()
+        private var otvl: ArrayList<String> = ArrayList()
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_common)
@@ -84,10 +89,13 @@ class CommonActivity : AppCompatActivity() {
             alertSound.stop()
             alertSound.reset()
         }
-        if(alarmObject.has("name")){
+
+        alarmObjectInfo.print()
+
+        if (alarmObjectInfo.name != "") {
 
             val alertDialog = AlertDialog.Builder(this@CommonActivity)
-            val view = layoutInflater.inflate(R.layout.dialog_alarm,null,false)
+            val view = layoutInflater.inflate(R.layout.dialog_alarm, null, false)
             alertDialog.setView(view)
 
             val dialog = alertDialog.create()
@@ -99,20 +107,11 @@ class CommonActivity : AppCompatActivity() {
             val dialogObjectAddress: TextView = view.findViewById(dialog_objectAddress)
 
 
-            val name = alarmObject.getString("name")
-            val address = alarmObject.getString("address")
-            val number = alarmObject.getString("number")
-            val inn = alarmObject.getString("inn")
-            val lon = alarmObject.getDouble("lon")
-            val lat = alarmObject.getDouble("lat")
-            val zakaz = alarmObject.getString("zakaz")
-            val areaName = alarmObject.getString("areaName")
-            val areaAlarmTime = alarmObject.getString("areaAlarmTime")
 
-            dialogObjectName.text = name
-            dialogObjectAddress.text = address
-            /*alertSound.start()*/
+            dialogObjectName.text = alarmObjectInfo.name
+            dialogObjectAddress.text = alarmObjectInfo.address
             alertSound.start()
+
             acceptAlertButton.setOnClickListener {
 
                 if (alertSound.isPlaying) {
@@ -132,86 +131,42 @@ class CommonActivity : AppCompatActivity() {
                     alertSound.reset()
                 }
 
-                alarmObject.remove("name")
-                alarmObject.remove("number")
-                alarmObject.remove("lon")
-                alarmObject.remove("lat")
-                alarmObject.remove("inn")
-                alarmObject.remove("zakaz")
-                alarmObject.remove("address")
-                alarmObject.remove("areaName")
-                alarmObject.remove("areaAlarmTime")
-
-                when{
-                    !RubegNetworkService.connectInternet->{
-                        Toast.makeText(this,"Нет соединения с интернетом, невозможно отправить подтверждение тревоги",Toast.LENGTH_LONG).show()
+                when {
+                    !RubegNetworkService.connectInternet -> {
+                        Toast.makeText(this, "Нет соединения с интернетом, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
                         val objectActivity = Intent(this, ObjectActivity::class.java)
-                        objectActivity.putExtra("name", name)
-                            .putExtra("number", number)
-                            .putExtra("lon", lon)
-                            .putExtra("lat", lat)
-                            .putExtra("inn", inn)
-                            .putExtra("zakaz", zakaz)
-                            .putExtra("address", address)
-                            .putExtra("areaName", areaName)
-                            .putExtra("areaAlarmTime", areaAlarmTime)
-                            .putStringArrayListExtra("otvl", otvl)
-                            .putStringArrayListExtra("plan", planList)
+                        objectActivity.putExtra("objectInfo", alarmObjectInfo)
                         startActivity(objectActivity)
-                        planList.clear()
-                        otvl.clear()
+                        alarmObjectInfo.clear()
                     }
-                    !RubegNetworkService.connectServer->{
-                        Toast.makeText(this,"Нет соединения с сервером, невозможно отправить подтверждение тревоги",Toast.LENGTH_LONG).show()
+                    !RubegNetworkService.connectServer -> {
+                        Toast.makeText(this, "Нет соединения с сервером, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
                         val objectActivity = Intent(this, ObjectActivity::class.java)
-                        objectActivity.putExtra("name", name)
-                            .putExtra("number", number)
-                            .putExtra("lon", lon)
-                            .putExtra("lat", lat)
-                            .putExtra("inn", inn)
-                            .putExtra("zakaz", zakaz)
-                            .putExtra("address", address)
-                            .putExtra("areaName", areaName)
-                            .putExtra("areaAlarmTime", areaAlarmTime)
-                            .putStringArrayListExtra("otvl", otvl)
-                            .putStringArrayListExtra("plan", planList)
+                        objectActivity.putExtra("objectInfo", alarmObjectInfo)
                         startActivity(objectActivity)
-                        planList.clear()
-                        otvl.clear()
+                        alarmObjectInfo.clear()
                     }
-                    else->{
+                    else -> {
                         thread {
                             val message = JSONObject()
                             message.put("\$c$", "gbrkobra")
                             message.put("command", "alarmp")
-                            message.put("number", number)
+                            message.put("number", alarmObjectInfo.number)
 
                             RubegNetworkService.protocol.request(message.toString()) {
-                                    success: Boolean,data:ByteArray? ->
-                                if (success && data!=null) {
-                                    runOnUiThread {
-                                        Toast.makeText(this,"Тревога подтверждена",Toast.LENGTH_SHORT).show()
+                                success: Boolean, data: ByteArray? ->
+                                    if (success && data != null) {
+                                        runOnUiThread {
+                                            Toast.makeText(this, "Тревога подтверждена", Toast.LENGTH_SHORT).show()
+                                        }
+
+                                        Log.d("AlarmGson", "accept")
                                     }
-
-                                    Log.d("Alarm", "accept")
                                 }
-                            }
-                                val objectActivity = Intent(this, ObjectActivity::class.java)
-                                objectActivity.putExtra("name", name)
-                                    .putExtra("number", number)
-                                    .putExtra("lon", lon)
-                                    .putExtra("lat", lat)
-                                    .putExtra("inn", inn)
-                                    .putExtra("zakaz", zakaz)
-                                    .putExtra("address", address)
-                                    .putExtra("areaName", areaName)
-                                    .putExtra("areaAlarmTime", areaAlarmTime)
-                                    .putStringArrayListExtra("otvl", otvl)
-                                    .putStringArrayListExtra("plan", planList)
-                                startActivity(objectActivity)
-
-                                planList.clear()
-                                otvl.clear()
+                            val objectActivity = Intent(this, ObjectActivity::class.java)
+                            objectActivity.putExtra("objectInfo", alarmObjectInfo)
+                            startActivity(objectActivity)
+                            alarmObjectInfo.clear()
                         }
                     }
                 }
@@ -230,8 +185,6 @@ class CommonActivity : AppCompatActivity() {
         fillFabMenu()
 
         initMapView()
-
-        Configuration.SCREENLAYOUT_SIZE_XLARGE
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -248,8 +201,15 @@ class CommonActivity : AppCompatActivity() {
                     .setCancelable(false)
                     .setPositiveButton("Да") { _, _ ->
 
-                        val stopService = Intent(this, RubegNetworkService::class.java)
-                        stopService(stopService)
+                        val ip: ArrayList<String> = ArrayList()
+                        ip.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
+
+                        val service = Intent(this, RubegNetworkService::class.java)
+                        service.putExtra("command", "stop")
+                        service.putStringArrayListExtra("ip", ip)
+                        service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
+
+                        startService(service)
 
                         val loginActivity = Intent(this, LoginActivity::class.java)
                         loginActivity.putExtra("imei", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
@@ -301,136 +261,93 @@ class CommonActivity : AppCompatActivity() {
         }
     }
 
+    @Subscribe(sticky = true,threadMode = ThreadMode.MAIN, priority = 0)
+    fun onStickyAlertEvent(event: AlarmEvent) {
+        when {
+            event.command.isNotEmpty() -> {
 
-    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN,priority = 0)
-    fun onStickyMessageEvent(event: MessageEvent) {
-        when{
-            event.alarm.isNotEmpty()->{
-                    Log.d("CommonActivityEvent", event.areaName)
-                    Log.d("CommonActivityEvent", event.areaAlarmTime)
+                val planAndPhoto:ArrayList<String> = ArrayList()
+                planAndPhoto.addAll(event.plan)
+                planAndPhoto.addAll(event.photo)
 
-                alarmObject.put("name",event.name)
-                alarmObject.put("number",event.number)
-                alarmObject.put("lon",event.lon)
-                alarmObject.put("lat",event.lat)
-                alarmObject.put("inn",event.inn)
-                alarmObject.put("zakaz",event.zakaz)
-                alarmObject.put("address",event.address)
-                alarmObject.put("areaName",event.areaName)
-                alarmObject.put("areaAlarmTime",event.areaAlarmTime)
-                planList = event.plan
-                otvl = event.otvl
+                alarmObjectInfo = AlarmObjectInfo(event.name,event.number,event.lon,event.lat,event.inn,event.zakaz,event.address,event.area.name,event.area.alarmtime,event.plan,event.otvl)
 
+                alertSound.start()
 
+                val alertDialog = AlertDialog.Builder(this@CommonActivity)
+                val view = layoutInflater.inflate(R.layout.dialog_alarm, null, false)
+                alertDialog.setView(view)
 
-                    alertSound.start()
+                val dialog = alertDialog.create()
+                dialog.setCancelable(false)
+                dialog.show()
 
-                    val alertDialog = AlertDialog.Builder(this@CommonActivity)
-                    val view = layoutInflater.inflate(R.layout.dialog_alarm,null,false)
-                    alertDialog.setView(view)
+                val acceptAlertButton: Button = view!!.findViewById(AcceptAlert)
+                val dialogObjectName: TextView = view.findViewById(dialog_objectName)
+                val dialogObjectAddress: TextView = view.findViewById(dialog_objectAddress)
 
-                    val dialog = alertDialog.create()
-                    dialog.setCancelable(false)
-                    dialog.show()
+                dialogObjectName.text = event.name
+                dialogObjectAddress.text = event.address
+                acceptAlertButton.setOnClickListener {
 
-                    val acceptAlertButton: Button = view!!.findViewById(AcceptAlert)
-                    val dialogObjectName: TextView = view.findViewById(dialog_objectName)
-                    val dialogObjectAddress: TextView = view.findViewById(dialog_objectAddress)
+                    alertSound.stop()
 
-                    dialogObjectName.text = event.name
-                    dialogObjectAddress.text = event.address
-                    acceptAlertButton.setOnClickListener {
-
+                    if (alertSound.isPlaying) {
                         alertSound.stop()
+                        alertSound.reset()
+                    }
 
-                        if (alertSound.isPlaying) {
-                            alertSound.stop()
-                            alertSound.reset()
+                    when {
+                        !RubegNetworkService.connectInternet -> {
+                            Toast.makeText(this, "Нет соединения с интернетом, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
+                            val objectActivity = Intent(this, ObjectActivity::class.java)
+                            objectActivity.putExtra("objectInfo", alarmObjectInfo)
+                            startActivity(objectActivity)
+                            alarmObjectInfo.clear()
                         }
+                        !RubegNetworkService.connectServer -> {
+                            Toast.makeText(this, "Нет соединения с сервером, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
+                            val objectActivity = Intent(this, ObjectActivity::class.java)
+                            objectActivity.putExtra("objectInfo", alarmObjectInfo)
+                            startActivity(objectActivity)
+                            alarmObjectInfo.clear()
+                        }
+                        else -> {
+                            thread {
+                                val message = JSONObject()
+                                message.put("\$c$", "gbrkobra")
+                                message.put("command", "alarmp")
+                                message.put("number", alarmObjectInfo.number)
 
-                        alarmObject.remove("name")
-                        alarmObject.remove("number")
-                        alarmObject.remove("lon")
-                        alarmObject.remove("lat")
-                        alarmObject.remove("inn")
-                        alarmObject.remove("zakaz")
-                        alarmObject.remove("address")
-                        alarmObject.remove("areaName")
-                        alarmObject.remove("areaAlarmTime")
-                        planList.clear()
-                        otvl.clear()
-
-
-                        when{
-                            !RubegNetworkService.connectInternet->{
-                                Toast.makeText(this,"Нет соединения с интернетом, невозможно отправить подтверждение тревоги",Toast.LENGTH_LONG).show()
-                                val objectActivity = Intent(this, ObjectActivity::class.java)
-                                objectActivity.putExtra("name", event.name)
-                                    .putExtra("number", event.number)
-                                    .putExtra("lon", event.lon)
-                                    .putExtra("lat", event.lat)
-                                    .putExtra("inn", event.inn)
-                                    .putExtra("zakaz", event.zakaz)
-                                    .putExtra("address", event.address)
-                                    .putExtra("areaName", event.areaName)
-                                    .putExtra("areaAlarmTime", event.areaAlarmTime)
-                                    .putStringArrayListExtra("otvl", event.otvl)
-                                    .putStringArrayListExtra("plan", event.plan)
-                                startActivity(objectActivity)
-                            }
-                            !RubegNetworkService.connectServer->{
-                                Toast.makeText(this,"Нет соединения с сервером, невозможно отправить подтверждение тревоги",Toast.LENGTH_LONG).show()
-                                val objectActivity = Intent(this, ObjectActivity::class.java)
-                                objectActivity.putExtra("name", event.name)
-                                    .putExtra("number", event.number)
-                                    .putExtra("lon", event.lon)
-                                    .putExtra("lat", event.lat)
-                                    .putExtra("inn", event.inn)
-                                    .putExtra("zakaz", event.zakaz)
-                                    .putExtra("address", event.address)
-                                    .putExtra("areaName", event.areaName)
-                                    .putExtra("areaAlarmTime", event.areaAlarmTime)
-                                    .putStringArrayListExtra("otvl", event.otvl)
-                                    .putStringArrayListExtra("plan", event.plan)
-                                startActivity(objectActivity)
-                            }
-                            else->{
-                                thread {
-                                    val message = JSONObject()
-                                    message.put("\$c$", "gbrkobra")
-                                    message.put("command", "alarmp")
-                                    message.put("number", event.number)
-
-                                    RubegNetworkService.protocol.request(message.toString()) {
-                                            success: Boolean,data:ByteArray? ->
-                                        if (success && data!=null) {
+                                RubegNetworkService.protocol.request(message.toString()) {
+                                    success: Boolean, data: ByteArray? ->
+                                        if (success && data != null) {
                                             runOnUiThread {
-                                                val objectActivity = Intent(this, ObjectActivity::class.java)
-                                                objectActivity.putExtra("name", event.name)
-                                                    .putExtra("number", event.number)
-                                                    .putExtra("lon", event.lon)
-                                                    .putExtra("lat", event.lat)
-                                                    .putExtra("inn", event.inn)
-                                                    .putExtra("zakaz", event.zakaz)
-                                                    .putExtra("address", event.address)
-                                                    .putExtra("areaName", event.areaName)
-                                                    .putExtra("areaAlarmTime", event.areaAlarmTime)
-                                                    .putStringArrayListExtra("otvl", event.otvl)
-                                                    .putStringArrayListExtra("plan", event.plan)
-                                                startActivity(objectActivity)
-                                                Toast.makeText(this,"Тревога подтверждена",Toast.LENGTH_SHORT).show()
+
+                                                Toast.makeText(this, "Тревога подтверждена", Toast.LENGTH_SHORT).show()
                                             }
-                                            Log.d("Alarm", "accept")
+                                            Log.d("AlarmGson", "accept")
                                         }
                                     }
-                                }
+                                val objectActivity = Intent(this, ObjectActivity::class.java)
+                                objectActivity.putExtra("objectInfo", alarmObjectInfo)
+                                startActivity(objectActivity)
+                                alarmObjectInfo.clear()
                             }
                         }
-                        dialog.cancel()
                     }
+                    dialog.cancel()
+                }
             }
-            event.command.isNotEmpty()->{
-                when(event.command){
+
+        }
+    }
+
+    @Subscribe(sticky =true,threadMode = ThreadMode.MAIN,priority = 0)
+    fun onStickyMessageEvent(event:MessageEvent){
+        when{
+            event.command.isNotEmpty() -> {
+                when (event.command) {
                     "gbrstatus" -> {
                         runOnUiThread {
                             SPGbrNavigation.init(this)
@@ -440,45 +357,88 @@ class CommonActivity : AppCompatActivity() {
                         }
                     }
                     "disconnect" -> {
-                        if(event.message == "lost"){
-                            //Dialog
-                            Toast.makeText(this,"Нет соединения с сервером, приложение переходит в автономный режим",Toast.LENGTH_LONG).show()
+                        if (event.message == "lost") {
+                            // Dialog
+                            Toast.makeText(this, "Нет соединения с сервером, приложение переходит в автономный режим", Toast.LENGTH_LONG).show()
                         }
                     }
                     "internet" -> {
-                        if(event.message == "lost"){
-                            //Dialog
-                            Toast.makeText(this,"Нет соединения с интернетом, приложение переходит в автономный режим",Toast.LENGTH_LONG).show()
+                        if (event.message == "lost") {
+                            // Dialog
+                            Toast.makeText(this, "Нет соединения с интернетом, приложение переходит в автономный режим", Toast.LENGTH_LONG).show()
                         }
                     }
-                    "reconnectInternet"->{
-                        if(event.message == "true"){
-                            Toast.makeText(this,"Интернет соединение восстановлено",Toast.LENGTH_LONG).show()
-                        }
-                        else
-                        {
-                            Toast.makeText(this,"Интернет соединение не восстановлено",Toast.LENGTH_LONG).show()
+                    "reconnectInternet" -> {
+                        if (event.message == "true") {
+                            Toast.makeText(this, "Интернет соединение восстановлено", Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(this, "Интернет соединение не восстановлено", Toast.LENGTH_LONG).show()
                         }
                     }
-                    "reconnectServer"->{
-                        if(event.message == "true"){
-                            Toast.makeText(this,"Соединение с сервером восстановлено",Toast.LENGTH_LONG).show()
-                        }
-                        else
-                        {
-                            Toast.makeText(this,"Соединение с сервером не восстановлено",Toast.LENGTH_LONG).show()
+                    "reconnectServer" -> {
+                        if (event.message == "true") {
+                            Toast.makeText(this, "Соединение с сервером восстановлено", Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(this, "Соединение с сервером не восстановлено", Toast.LENGTH_LONG).show()
                         }
                     }
                 }
             }
         }
-
     }
 
     override fun onStart() {
         super.onStart()
 
         isAlive = true
+
+        if(!RubegNetworkService.isServiceStarted){
+            val ip: ArrayList<String> = ArrayList()
+            ip.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
+
+            val service = Intent(this, RubegNetworkService::class.java)
+            service.putExtra("command", "start")
+            service.putStringArrayListExtra("ip", ip)
+            service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
+
+            startService(service)
+            thread {
+                Thread.sleep(500)
+                val authorizationMessage = JSONObject()
+                authorizationMessage.put("\$c$", "reg")
+                authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
+                authorizationMessage.put(
+                    "password",
+                    getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", "")
+                )
+                RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
+                    if (success) {
+                        runOnUiThread {
+                            Toast.makeText(this, "Восстановление связи прошло успешно", Context.MODE_PRIVATE).show()
+                        }
+                    } else {
+                        runOnUiThread {
+                            val ipList: ArrayList<String> = ArrayList()
+                            ipList.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
+                            service.putExtra("command", "stop")
+                            service.putStringArrayListExtra("ip", ipList)
+                            service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                startForegroundService(service)
+                            } else {
+                                startService(service)
+                            }
+
+                            Toast.makeText(this, "Приложение не смогло восстановить соединение", Toast.LENGTH_LONG).show()
+                            val loginActivity = Intent(this, LoginActivity::class.java)
+                            loginActivity.putExtra("imei", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
+                            startActivity(loginActivity)
+                        }
+                    }
+                }
+            }
+        }
+
         EventBus.getDefault().register(this)
         locationOverlay.enableMyLocation()
         scaleBarOverlay.enableScaleBar()
@@ -487,12 +447,10 @@ class CommonActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         mMapView.onResume()
-        if(!locationOverlay.isMyLocationEnabled && !scaleBarOverlay.isEnabled)
-        {
+        if (!locationOverlay.isMyLocationEnabled && !scaleBarOverlay.isEnabled) {
             locationOverlay.enableMyLocation()
             scaleBarOverlay.enableScaleBar()
         }
-
     }
 
     override fun onPause() {
@@ -623,19 +581,6 @@ class CommonActivity : AppCompatActivity() {
 
         statusList.sort()
 
-        val metrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(metrics)
-        val heightPixels = metrics.heightPixels
-        val widthPixels = metrics.widthPixels
-        val densityDpi = metrics.densityDpi
-        val xdpi = metrics.xdpi
-        val ydpi = metrics.ydpi
-        Log.i("CommonActivity", "widthPixels  = $widthPixels")
-        Log.i("CommonActivity", "heightPixels = $heightPixels")
-        Log.i("CommonActivity", "densityDpi   = $densityDpi")
-        Log.i("CommonActivity", "xdpi         = $xdpi")
-        Log.i("CommonActivity", "ydpi         = $ydpi")
-
         val fabMenu: FloatingActionMenu = findViewById(common_fab_menu)
         for (i in 0 until statusList.count()) {
             val actionButton = com.github.clans.fab.FloatingActionButton(this)
@@ -643,14 +588,14 @@ class CommonActivity : AppCompatActivity() {
             actionButton.colorNormal = ContextCompat.getColor(this, color.colorPrimary)
             actionButton.setOnClickListener {
                 if (fabMenu.isOpened) {
-                    when{
-                        !RubegNetworkService.connectInternet->{
-                            Toast.makeText(this,"Нет соединения с интернетом, приложение переходит в автономный режим",Toast.LENGTH_LONG).show()
+                    when {
+                        !RubegNetworkService.connectInternet -> {
+                            Toast.makeText(this, "Нет соединения с интернетом, приложение переходит в автономный режим", Toast.LENGTH_LONG).show()
                         }
-                        !RubegNetworkService.connectServer->{
-                            Toast.makeText(this,"Нет соединения с сервером, приложение переходит в автономный режим",Toast.LENGTH_LONG).show()
+                        !RubegNetworkService.connectServer -> {
+                            Toast.makeText(this, "Нет соединения с сервером, приложение переходит в автономный режим", Toast.LENGTH_LONG).show()
                         }
-                        else->{
+                        else -> {
                             thread {
                                 val statusChangeMessage = JSONObject()
                                 statusChangeMessage.put("\$c$", "gbrkobra")
@@ -658,20 +603,20 @@ class CommonActivity : AppCompatActivity() {
                                 statusChangeMessage.put("newstatus", actionButton.labelText)
 
                                 RubegNetworkService.protocol.request(statusChangeMessage.toString()) {
-                                        access: Boolean, data: ByteArray? ->
-                                    if (access && data != null) {
-                                        runOnUiThread {
-                                            SPGbrNavigation.init(this)
-                                            SPGbrNavigation.addPropertyString("status", JSONObject(String(data)).getString("status"))
-                                            val title: String = getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("call", "") + " ( " + JSONObject(String(data)).getString("status") + " ) "
-                                            supportActionBar?.title = title
-                                        }
-                                    } else {
-                                        runOnUiThread {
-                                            Toast.makeText(this, "Сообщение не дошло", Toast.LENGTH_SHORT).show()
+                                    access: Boolean, data: ByteArray? ->
+                                        if (access && data != null) {
+                                            runOnUiThread {
+                                                SPGbrNavigation.init(this)
+                                                SPGbrNavigation.addPropertyString("status", JSONObject(String(data)).getString("status"))
+                                                val title: String = getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("call", "") + " ( " + JSONObject(String(data)).getString("status") + " ) "
+                                                supportActionBar?.title = title
+                                            }
+                                        } else {
+                                            runOnUiThread {
+                                                Toast.makeText(this, "Сообщение не дошло", Toast.LENGTH_SHORT).show()
+                                            }
                                         }
                                     }
-                                }
                             }
                         }
                     }
@@ -706,3 +651,16 @@ class CommonActivity : AppCompatActivity() {
         }
     }
 }
+
+/*val metrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(metrics)
+        val heightPixels = metrics.heightPixels
+        val widthPixels = metrics.widthPixels
+        val densityDpi = metrics.densityDpi
+        val xdpi = metrics.xdpi
+        val ydpi = metrics.ydpi
+        Log.i("CommonActivity", "widthPixels  = $widthPixels")
+        Log.i("CommonActivity", "heightPixels = $heightPixels")
+        Log.i("CommonActivity", "densityDpi   = $densityDpi")
+        Log.i("CommonActivity", "xdpi         = $xdpi")
+        Log.i("CommonActivity", "ydpi         = $ydpi")*/

@@ -15,14 +15,10 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import java.lang.Exception
 import kobramob.rubeg38.ru.gbrnavigation.R
+import kobramob.rubeg38.ru.gbrnavigation.workservice.OtvlList
 
 class AdapterResponsibleList internal constructor(
-    private val fioList: ArrayList<String>,
-    private val addressList: ArrayList<String>,
-    private val positionList: ArrayList<String>,
-    private val phoneList: ArrayList<String>,
-    private val homeList: ArrayList<String>,
-    private val workList: ArrayList<String>,
+    private val otvlList: ArrayList<OtvlList>,
     private val context: Context?
 ) : RecyclerView.Adapter<AdapterResponsibleList.ViewHolder>() {
 
@@ -32,34 +28,34 @@ class AdapterResponsibleList internal constructor(
     }
 
     override fun getItemCount(): Int {
-        return fioList.size
+        return otvlList.size
     }
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
-        holder.textFIO.text = fioList[position]
-        holder.textAddress.text = addressList[position]
-        holder.textPosition.text = positionList[position]
+        holder.textFIO.text = otvlList[position].name
+        holder.textAddress.text = otvlList[position].address
+        holder.textPosition.text = otvlList[position].position
 
-        if (phoneList[position] == "empty" || phoneList[position] == "") {
+        if (otvlList[position].phone == "empty" || otvlList[position].phone == "") {
             holder.buttonPhone.visibility = View.GONE
             holder.additionalContainer.visibility = View.VISIBLE
         }
 
-        if (homeList[position] == "empty" || homeList[position] == "")
+        if (otvlList[position].phoneh == "empty" || otvlList[position].phoneh == "")
             holder.buttonHome.visibility = View.GONE
         else
-            holder.buttonHome.text = "Дом. ${homeList[position]}"
+            holder.buttonHome.text = "Дом. ${otvlList[position].phoneh}"
 
-        if (workList[position] == "empty" || workList[position] == "")
+        if (otvlList[position].phonew == "empty" || otvlList[position].phonew == "")
             holder.buttonWork.visibility = View.GONE
         else
-            holder.buttonWork.text = "Раб. ${workList[position]}"
+            holder.buttonWork.text = "Раб. ${otvlList[position].phonew}"
 
         holder.buttonPhone.setOnClickListener {
             try {
-                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phoneList[position]))
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + otvlList[position].phone))
                 context!!.startActivity(intent)
             } catch (e: Exception) {
                 Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
@@ -67,7 +63,7 @@ class AdapterResponsibleList internal constructor(
         }
         holder.buttonHome.setOnClickListener {
             try {
-                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + homeList[position]))
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + otvlList[position].phoneh))
                 context!!.startActivity(intent)
             } catch (e: Exception) {
                 Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
@@ -75,7 +71,7 @@ class AdapterResponsibleList internal constructor(
         }
         holder.buttonWork.setOnClickListener {
             try {
-                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + workList[position]))
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + otvlList[position].phonew))
                 context!!.startActivity(intent)
             } catch (e: Exception) {
                 Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
@@ -88,15 +84,6 @@ class AdapterResponsibleList internal constructor(
             else
                 holder.additionalContainer.visibility = View.VISIBLE
         }
-/*        holder.parentContainer.setOnClickListener {
-                try{
-                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phoneList[position]))
-                    context!!.startActivity(intent)
-                }catch (e:Exception)
-                {
-                    Toast.makeText(context,"Ваше устройство не поддерживает функцию звонка или не установлена сим-карта",Toast.LENGTH_SHORT).show()
-                }
-            }*/
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
