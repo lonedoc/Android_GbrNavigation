@@ -12,6 +12,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.provider.Settings.Secure
 import android.util.Log
+import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.github.kittinunf.fuel.Fuel
@@ -22,6 +23,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
+import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
+import kobramob.rubeg38.ru.gbrnavigation.mainactivity.MainActivity
+import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import kobramob.rubeg38.ru.rubegnetworkprotocol.RubegProtocol
 import kobramob.rubeg38.ru.rubegnetworkprotocol.RubegProtocolDelegate
 import kotlin.collections.ArrayList
@@ -39,11 +43,11 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
     private var connectionLost: Boolean = false
 
     override fun connectionLost() {
-        Log.d("ConnectionLost", "connectionLost")
-        if(!isServiceStarted){
-            startService()
-        }
-        if (!protocol.connected) {
+        Log.d("ConnectionLost", "Yes")
+            if(!isServiceStarted){
+                Log.d("ConnectionLost","StartService")
+                startService()
+            }
             sessionId = null
             when {
                 !isConnected(this) -> {
@@ -89,12 +93,13 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                             connectInternet = true
                             connectionLost = false
                         } else {
-                            EventBus.getDefault().post(
+                            Log.d("Reconnected","false")
+                            /*EventBus.getDefault().post(
                                 MessageEvent(
                                     "reconnectInternet",
                                     "false"
                                 )
-                            )
+                            )*/
                         }
                     }
                 }
@@ -130,17 +135,17 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                             connectServer = true
                             coordinateLoop()
                         } else {
-                            EventBus.getDefault().post(
+                            Log.d("Reconnected","false")
+                            /*EventBus.getDefault().post(
                                 MessageEvent(
                                     "reconnectServer",
                                     "false"
                                 )
-                            )
+                            )*/
                         }
                     }
                 }
             }
-        }
     }
 
     private fun getNetworkInfo(context: Context): NetworkInfo? {
@@ -183,15 +188,17 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                         for (i in 0 until JSONObject(message).getJSONArray("gpsstatus").length())
                             gbrStatus.add(JSONObject(message).getJSONArray("gpsstatus").getString(i))
 
-                        EventBus.getDefault().post(
-                            MessageEvent(
-                                command = JSONObject(message).getString("command"),
-                                routeServer = routeServer,
-                                call = call,
-                                status = status,
-                                gbrStatus = gbrStatus
+                        if(MainActivity.isAlive || LoginActivity.isAlive){
+                            EventBus.getDefault().post(
+                                RegistrationEvent(
+                                    command = JSONObject(message).getString("command"),
+                                    routeServer = routeServer,
+                                    call = call,
+                                    status = status,
+                                    gbrStatus = gbrStatus
+                                )
                             )
-                        )
+                        }
                     }
                     "gbrstatus" -> {
                         EventBus.getDefault().postSticky(
@@ -202,6 +209,14 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                         )
                     }
                     "alarm" -> {
+
+                        if(!CommonActivity.isAlive && !ObjectActivity.isAlive){
+                            val ptk = Intent(this, CommonActivity::class.java)
+                            ptk.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(ptk)
+                        }
+
+
                         val alarmGson = Gson()
                         val alarm = alarmGson.fromJson(message,AlarmGson::class.java)
 
@@ -356,15 +371,23 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
 
         if (intent != null) {
             serviceWork = true
-            protocol = RubegProtocol(
-                intent.getStringArrayListExtra("ip")!!,
-                intent.getIntExtra("port", 9010)
-            )
             when (intent.getStringExtra("command")) {
-                "start" -> startService()
-                "stop" -> stopService()
+                "start" -> {
+                    protocol = RubegProtocol(
+                        intent.getStringArrayListExtra("ip")!!,
+                        intent.getIntExtra("port", 9010)
+                    )
+
+                    startService()
+                    protocol.delegate = this
+                    protocol.start()
+                }
+                "stop" -> {
+                    stopService()
+                    isServiceStarted = false
+                    serviceWork = false
+                }
             }
-        } else {
         }
 
         return START_STICKY
@@ -377,6 +400,7 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
         Log.d("Service", "Starting the foreground service task")
         isServiceStarted = true
 
+        serviceWork = true
         // we need this lock so our service gets not affected by Doze Mode
         wakeLock =
             (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
@@ -442,17 +466,11 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
             stopForeground(true)
             stopSelf()
             Log.d("Service", "Destroy")
-            serviceWork = false
             sessionId = null
             protocol.stop()
         } catch (e: Exception) {
             Log.d("Service", "Service stopped without being started: ${e.message}")
         }
-        isServiceStarted = false
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
         isServiceStarted = false
     }
 

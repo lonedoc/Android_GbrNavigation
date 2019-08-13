@@ -56,7 +56,7 @@ class AlarmObjectInfo():Serializable{
         this.otvlList.clear()
     }
     fun print(){
-        Log.d("AlarmObjectInfo"," \n \n Name = ${name} \n Number = ${number} \n Lon = ${lon} \n Lat = ${lat} \n Zakaz = ${zakaz} \n address = ${address} \n areaName = ${areaName} \n areaAlarmTime = ${areaAlarmTime} " +
-                "\n ${planAndPhotoList} \n ${otvlList}")
+        Log.d("AlarmObjectInfo"," \n \n Name = $name \n Number = $number \n Lon = $lon \n Lat = $lat \n Zakaz = $zakaz \n address = $address \n areaName = $areaName \n " +
+                "areaAlarmTime = $areaAlarmTime \n $planAndPhotoList \n $otvlList")
     }
 }

@@ -51,6 +51,7 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import kotlin.system.exitProcess
 
 class CommonActivity : AppCompatActivity() {
 
@@ -208,7 +209,6 @@ class CommonActivity : AppCompatActivity() {
                         service.putExtra("command", "stop")
                         service.putStringArrayListExtra("ip", ip)
                         service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
-
                         startService(service)
 
                         val loginActivity = Intent(this, LoginActivity::class.java)
@@ -421,8 +421,6 @@ class CommonActivity : AppCompatActivity() {
                             val ipList: ArrayList<String> = ArrayList()
                             ipList.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
                             service.putExtra("command", "stop")
-                            service.putStringArrayListExtra("ip", ipList)
-                            service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                 startForegroundService(service)
                             } else {
@@ -648,6 +646,16 @@ class CommonActivity : AppCompatActivity() {
             }
 
             fabMenu.addMenuButton(actionButton)
+        }
+    }
+
+    private var exit = false
+    override fun onBackPressed() {
+        if (exit) {
+            exitProcess(0)
+        } else {
+            Toast.makeText(this, "Вы точно хотите выйти? Для того чтобы закрыть приложение нажмите еще раз", Toast.LENGTH_LONG).show()
+            exit = true
         }
     }
 }

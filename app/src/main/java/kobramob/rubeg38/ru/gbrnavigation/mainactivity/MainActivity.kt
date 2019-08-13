@@ -27,6 +27,7 @@ import kobramob.rubeg38.ru.gbrnavigation.resource.DataBase
 import kobramob.rubeg38.ru.gbrnavigation.resource.SPGbrNavigation
 import kobramob.rubeg38.ru.gbrnavigation.workservice.MessageEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.MyLocation
+import kobramob.rubeg38.ru.gbrnavigation.workservice.RegistrationEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
@@ -159,63 +160,6 @@ class MainActivity : AppCompatActivity() {
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(event: MessageEvent) {
         when (event.command) {
-            "regok" -> {
-                Log.d(
-                    "Authorization",
-                    "\n " + " " + "\n routeServer ${event.routeServer} \n call ${event.call} \n status ${event.status} \n gbrStatus ${event.gbrStatus}"
-                )
-                val dbHelper = DataBase(this)
-                val db = dbHelper.writableDatabase
-
-                val cursorRoute = db.query("RouteServerList", null, null, null, null, null, null)
-                if (cursorRoute.count == 0) {
-                    val cv = ContentValues()
-                    for (i in 0 until event.routeServer.count()) {
-                        cv.put("ip", event.routeServer[i])
-                        Log.d("DataBase", "id = " + db.insert("RouteServerList", null, cv))
-                    }
-                }
-                cursorRoute.close()
-
-                val cursorStatus = db.query("StatusList", null, null, null, null, null, null)
-                if (cursorStatus.count == 0) {
-                    val cv = ContentValues()
-                    for (i in 0 until event.gbrStatus.count()) {
-                        cv.put("status", event.gbrStatus[i])
-                        Log.d("DataBase", "id = " + db.insert("StatusList", null, cv))
-                    }
-                }
-                cursorStatus.close()
-
-                SPGbrNavigation.init(this)
-                if(event.call!="")
-                    SPGbrNavigation.addPropertyString("call", event.call)
-                else
-                {
-                    SPGbrNavigation.addPropertyString("call", "")
-                    Toast.makeText(this,"Группа не была поставлена на дежурство в дежурном операторе",Toast.LENGTH_SHORT).show()
-                }
-                if(event.status!=""){
-                    SPGbrNavigation.addPropertyString("status",event.status)
-                }
-                else
-                {
-                    SPGbrNavigation.addPropertyString("status", "")
-                }
-
-                if(event.routeServer.count()>0)
-                    SPGbrNavigation.addPropertyString("routeserver", event.routeServer[0])
-                else
-                    SPGbrNavigation.addPropertyString("routeserver", "91.189.160.38:5000")
-
-                if(EventBus.getDefault().isRegistered(this))
-                    EventBus.getDefault().unregister(this)
-
-                val intent = Intent(this@MainActivity, CommonActivity::class.java)
-                intent.putExtra("status", event.status)
-                startActivity(intent)
-
-            }
             "disconnect" -> {
                 if (event.message == "lost") {
                     // Dialog
@@ -239,6 +183,64 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onRegistrationEvent(event:RegistrationEvent){
+            Log.d(
+                "Authorization",
+                "\n " + " " + "\n routeServer ${event.routeServer} \n call ${event.call} \n status ${event.status} \n gbrStatus ${event.gbrStatus}"
+            )
+            val dbHelper = DataBase(this)
+            val db = dbHelper.writableDatabase
+
+            val cursorRoute = db.query("RouteServerList", null, null, null, null, null, null)
+            if (cursorRoute.count == 0) {
+                val cv = ContentValues()
+                for (i in 0 until event.routeServer.count()) {
+                    cv.put("ip", event.routeServer[i])
+                    Log.d("DataBase", "id = " + db.insert("RouteServerList", null, cv))
+                }
+            }
+            cursorRoute.close()
+
+            val cursorStatus = db.query("StatusList", null, null, null, null, null, null)
+            if (cursorStatus.count == 0) {
+                val cv = ContentValues()
+                for (i in 0 until event.gbrStatus.count()) {
+                    cv.put("status", event.gbrStatus[i])
+                    Log.d("DataBase", "id = " + db.insert("StatusList", null, cv))
+                }
+            }
+            cursorStatus.close()
+
+            SPGbrNavigation.init(this)
+            if(event.call!="")
+                SPGbrNavigation.addPropertyString("call", event.call)
+            else
+            {
+                SPGbrNavigation.addPropertyString("call", "")
+                Toast.makeText(this,"Группа не была поставлена на дежурство в дежурном операторе",Toast.LENGTH_SHORT).show()
+            }
+            if(event.status!=""){
+                SPGbrNavigation.addPropertyString("status",event.status)
+            }
+            else
+            {
+                SPGbrNavigation.addPropertyString("status", "")
+            }
+
+            if(event.routeServer.count()>0)
+                SPGbrNavigation.addPropertyString("routeserver", event.routeServer[0])
+            else
+                SPGbrNavigation.addPropertyString("routeserver", "91.189.160.38:5000")
+
+            if(EventBus.getDefault().isRegistered(this))
+                EventBus.getDefault().unregister(this)
+
+            val intent = Intent(this@MainActivity, CommonActivity::class.java)
+            intent.putExtra("status", event.status)
+            startActivity(intent)
     }
 
     @SuppressLint("HardwareIds")
@@ -350,14 +352,12 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
 
-        val ip: ArrayList<String> = ArrayList()
-        ip.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
-
         val service = Intent(this, RubegNetworkService::class.java)
         service.putExtra("command", "stop")
-        service.putStringArrayListExtra("ip", ip)
-        service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
-
-        startService(service)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(service)
+        } else {
+            startService(service)
+        }
     }
 }

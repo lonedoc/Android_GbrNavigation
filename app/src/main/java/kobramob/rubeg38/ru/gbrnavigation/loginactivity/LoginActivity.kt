@@ -17,6 +17,7 @@ import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.gbrnavigation.resource.DataBase
 import kobramob.rubeg38.ru.gbrnavigation.resource.SPGbrNavigation
 import kobramob.rubeg38.ru.gbrnavigation.workservice.MessageEvent
+import kobramob.rubeg38.ru.gbrnavigation.workservice.RegistrationEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
@@ -111,10 +112,11 @@ class LoginActivity : AppCompatActivity() {
                                 } else {
                                     runOnUiThread {
                                         service.putExtra("command", "stop")
-                                        service.putStringArrayListExtra("ip", ip)
-                                        service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
-
-                                        startService(service)
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                            startForegroundService(service)
+                                        } else {
+                                            startService(service)
+                                        }
                                         Toast.makeText(this, "Приложение не смогло зарегистрироваться на сервере", Toast.LENGTH_LONG).show()
                                     }
                                 }
@@ -126,7 +128,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onMessageEvent(event: MessageEvent) {
+    fun onMessageEvent(event: RegistrationEvent) {
         when (event.command) {
             "regok" -> {
                 Log.d("Registration", "\n " + " " + "\n routeServer ${event.routeServer} \n call ${event.call} \n status ${event.status} \n gbrStatus ${event.gbrStatus}")

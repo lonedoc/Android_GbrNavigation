@@ -2,8 +2,7 @@ package kobramob.rubeg38.ru.gbrnavigation.workservice
 
 import java.io.Serializable
 
-class DataClass {
-}
+class DataClass
 data class AlarmGson(
     val command:String,
     val name:String,

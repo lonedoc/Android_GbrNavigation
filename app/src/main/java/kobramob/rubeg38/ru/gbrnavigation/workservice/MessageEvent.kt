@@ -16,6 +16,14 @@ data class AlarmEvent(
     val plan:ArrayList<String> = ArrayList(),
     val photo:ArrayList<String> = ArrayList()
 )
+
+data class RegistrationEvent(
+    val command:String,
+    val routeServer: ArrayList<String>,
+    val call:String,
+    val status:String,
+    val gbrStatus: ArrayList<String>
+)
 class MessageEvent() {
 
     lateinit var command: String
@@ -49,43 +57,5 @@ class MessageEvent() {
     constructor(command: String, message: ByteArray) : this() {
         this.command = command
         this.byteArray = message
-    }
-
-    constructor(
-        command: String,
-        name: String,
-        number: String,
-        lon: Double,
-        lat: Double,
-        inn: Int,
-        zakaz: String,
-        address: String,
-        areaName: String,
-        areaAlarmTime: String,
-        otvl: ArrayList<OtvlList>,
-        plan: ArrayList<String>,
-        photo:ArrayList<String>
-    ) : this() {
-        this.alarm = command
-        this.name = name
-        this.number = number
-        this.lon = lon
-        this.lat = lat
-        this.inn = inn
-        this.zakaz = zakaz
-        this.address = address
-        this.areaName = areaName
-        this.areaAlarmTime = areaAlarmTime
-        this.otvl = otvl
-        this.plan = plan
-        this.photo = photo
-    }
-
-    constructor(command: String, routeServer: ArrayList<String>, call: String, status: String, gbrStatus: ArrayList<String>) : this() {
-        this.command = command
-        this.routeServer = routeServer
-        this.call = call
-        this.status = status
-        this.gbrStatus = gbrStatus
     }
 }
