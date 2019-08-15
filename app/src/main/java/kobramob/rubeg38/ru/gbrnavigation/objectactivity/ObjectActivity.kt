@@ -20,11 +20,11 @@ import kobramob.rubeg38.ru.gbrnavigation.objectactivity.NavigatorFragment.Compan
 import kobramob.rubeg38.ru.gbrnavigation.workservice.MessageEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.MyLocation
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
+import kotlin.concurrent.thread
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
-import kotlin.concurrent.thread
 
 class ObjectActivity : AppCompatActivity() {
 
@@ -96,7 +96,7 @@ class ObjectActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
-        if(!RubegNetworkService.isServiceStarted){
+        if (!RubegNetworkService.isServiceStarted) {
             val ip: ArrayList<String> = ArrayList()
             ip.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
 
@@ -114,6 +114,10 @@ class ObjectActivity : AppCompatActivity() {
                 authorizationMessage.put(
                     "password",
                     getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", "")
+                )
+                authorizationMessage.put(
+                    "token",
+                    getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken", "")
                 )
                 RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
                     if (success) {
@@ -169,84 +173,82 @@ class ObjectActivity : AppCompatActivity() {
                 if (NavigatorFragment.alertCanceled) {
                     NavigatorFragment.proximityAlive = false
                     NavigatorFragment.arriveToObject = true
+                    PlanFragment.countInQueue = 0
                 }
                 Log.d("proximity", (MyLocation.imHere!!.distanceTo(location).toString()))
-                if(MyLocation.imHere!!.distanceTo(location)>500){
-                    if(NavigatorFragment.arrived!=null){
+                if (MyLocation.imHere!!.distanceTo(location)> 500) {
+                    if (NavigatorFragment.arrived != null) {
                         runOnUiThread {
                             NavigatorFragment.arrived!!.visibility = View.GONE
                         }
                     }
-                }
-                else
-                {
-                    if(NavigatorFragment.arrived!=null && !NavigatorFragment.arriveToObject){
+                } else {
+                    if (NavigatorFragment.arrived != null && !NavigatorFragment.arriveToObject) {
                         runOnUiThread {
                             NavigatorFragment.arrived!!.visibility = View.VISIBLE
                         }
-
                     }
                 }
                 if (MyLocation.imHere!!.distanceTo(location) < 200 && !NavigatorFragment.arriveToObject) {
                     runOnUiThread {
-                    if(NavigatorFragment.arrived!=null){
-                        NavigatorFragment.arrived!!.visibility = View.GONE
-                    }
-                    NavigatorFragment.proximityAlive = false
-                    NavigatorFragment.arriveToObject = true
-
-                    when {
-                        !RubegNetworkService.connectInternet -> {
-
-                            Toast.makeText(
-                                this,
-                                "Нет соединения с интернетом, невозможно отправить запрос на прибытие",
-                                Toast.LENGTH_LONG
-                            ).show()
+                        if (NavigatorFragment.arrived != null) {
+                            NavigatorFragment.arrived!!.visibility = View.GONE
                         }
-                        !RubegNetworkService.connectServer -> {
-                            Toast.makeText(
-                                this,
-                                "Нет соединения с сервером, невозможно отправить запрос на прибытие",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                        else -> {
+                        NavigatorFragment.proximityAlive = false
+                        NavigatorFragment.arriveToObject = true
+
+
+                        when {
+                            !RubegNetworkService.connectInternet -> {
+
+                                Toast.makeText(
+                                    this,
+                                    "Нет соединения с интернетом, невозможно отправить запрос на прибытие",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                            !RubegNetworkService.connectServer -> {
+                                Toast.makeText(
+                                    this,
+                                    "Нет соединения с сервером, невозможно отправить запрос на прибытие",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                            else -> {
                                 val arrivedDialog = AlertDialog.Builder(this)
                                 arrivedDialog.setCancelable(false)
                                 arrivedDialog.setTitle("Прибытие")
                                     .setMessage("Вы прибыли на место")
                                     .setPositiveButton("Подтвердить") {
-                                            _, _ ->
-                                        thread {
-                                            val message = JSONObject()
-                                            message.put("\$c$", "gbrkobra")
-                                            message.put("command", "alarmpr")
-                                            message.put("number", alarmObjectInfo.number)
-                                            RubegNetworkService.protocol.send(message = message.toString()) {
+                                        _, _ ->
+                                            thread {
+                                                val message = JSONObject()
+                                                message.put("\$c$", "gbrkobra")
+                                                message.put("command", "alarmpr")
+                                                message.put("number", alarmObjectInfo.number)
+                                                RubegNetworkService.protocol.send(message = message.toString()) {
                                                     success: Boolean ->
-                                                if (success) {
-                                                    runOnUiThread {
-                                                        if(NavigatorFragment.road!!.mRouteHigh.count()>1)
-                                                        {
-                                                            if(mMapView!=null){
-                                                                NavigatorFragment.road!!.mRouteHigh.clear()
-                                                                mMapView!!.overlays.removeAt(mMapView!!.overlays.count()-1)
-                                                                mMapView!!.invalidate()
+                                                        if (success) {
+                                                            runOnUiThread {
+                                                                if (NavigatorFragment.road!!.mRouteHigh.count()> 1) {
+                                                                    if (mMapView != null) {
+                                                                        NavigatorFragment.road!!.mRouteHigh.clear()
+                                                                        mMapView!!.overlays.removeAt(mMapView!!.overlays.count() - 1)
+                                                                        mMapView!!.invalidate()
+                                                                    }
+                                                                }
+                                                                Toast.makeText(this, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
                                                             }
                                                         }
-                                                        Toast.makeText(this, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
                                                     }
-                                                }
                                             }
-                                        }
-                                    }.show()
+                                        }.show()
+                            }
                         }
                     }
                 }
-                }
             }
-            if(NavigatorFragment.arrived!=null){
+            if (NavigatorFragment.arrived != null) {
                 runOnUiThread {
                     NavigatorFragment.arrived!!.visibility = View.GONE
                 }
@@ -261,9 +263,6 @@ class ObjectActivity : AppCompatActivity() {
 
         if (EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().unregister(this)
-
-
-
     }
 
     override fun onDestroy() {
@@ -290,6 +289,7 @@ class ObjectActivity : AppCompatActivity() {
                 NavigatorFragment.road!!.mRouteHigh.clear()
                 Toast.makeText(this, "Тревога завершена/отменена", Toast.LENGTH_SHORT).show()
                 EventBus.getDefault().removeAllStickyEvents()
+                PlanFragment.countInQueue = 0
                 val commonActivity = Intent(this, CommonActivity::class.java)
                 startActivity(commonActivity)
             }
@@ -307,6 +307,7 @@ class ObjectActivity : AppCompatActivity() {
 
                     Toast.makeText(this, "Тревога отменена (смена статуса)", Toast.LENGTH_SHORT).show()
                     EventBus.getDefault().removeAllStickyEvents()
+                    PlanFragment.countInQueue = 0
                     val commonActivity = Intent(this, CommonActivity::class.java)
                     commonActivity.putExtra("status", event.message)
                     startActivity(commonActivity)

@@ -11,7 +11,6 @@ import android.graphics.Canvas
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -40,6 +39,7 @@ import kobramob.rubeg38.ru.gbrnavigation.workservice.MessageEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.MyLocation
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
 import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -51,7 +51,6 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import kotlin.system.exitProcess
 
 class CommonActivity : AppCompatActivity() {
 
@@ -63,7 +62,7 @@ class CommonActivity : AppCompatActivity() {
     private lateinit var locationOverlay: MyLocationNewOverlay
     private lateinit var scaleBarOverlay: ScaleBarOverlay
 
-    private var alarmObjectInfo:AlarmObjectInfo = AlarmObjectInfo()
+    private var alarmObjectInfo: AlarmObjectInfo = AlarmObjectInfo()
 
     companion object {
 
@@ -106,8 +105,6 @@ class CommonActivity : AppCompatActivity() {
             val acceptAlertButton: Button = view!!.findViewById(AcceptAlert)
             val dialogObjectName: TextView = view.findViewById(dialog_objectName)
             val dialogObjectAddress: TextView = view.findViewById(dialog_objectAddress)
-
-
 
             dialogObjectName.text = alarmObjectInfo.name
             dialogObjectAddress.text = alarmObjectInfo.address
@@ -261,16 +258,16 @@ class CommonActivity : AppCompatActivity() {
         }
     }
 
-    @Subscribe(sticky = true,threadMode = ThreadMode.MAIN, priority = 0)
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN, priority = 0)
     fun onStickyAlertEvent(event: AlarmEvent) {
         when {
             event.command.isNotEmpty() -> {
 
-                val planAndPhoto:ArrayList<String> = ArrayList()
+                val planAndPhoto: ArrayList<String> = ArrayList()
                 planAndPhoto.addAll(event.plan)
                 planAndPhoto.addAll(event.photo)
 
-                alarmObjectInfo = AlarmObjectInfo(event.name,event.number,event.lon,event.lat,event.inn,event.zakaz,event.address,event.area.name,event.area.alarmtime,event.plan,event.otvl)
+                alarmObjectInfo = AlarmObjectInfo(event.name, event.number, event.lon, event.lat, event.inn, event.zakaz, event.address, event.area.name, event.area.alarmtime, event.plan, event.otvl)
 
                 alertSound.start()
 
@@ -339,13 +336,12 @@ class CommonActivity : AppCompatActivity() {
                     dialog.cancel()
                 }
             }
-
         }
     }
 
-    @Subscribe(sticky =true,threadMode = ThreadMode.MAIN,priority = 0)
-    fun onStickyMessageEvent(event:MessageEvent){
-        when{
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN, priority = 0)
+    fun onStickyMessageEvent(event: MessageEvent) {
+        when {
             event.command.isNotEmpty() -> {
                 when (event.command) {
                     "gbrstatus" -> {
@@ -392,7 +388,7 @@ class CommonActivity : AppCompatActivity() {
 
         isAlive = true
 
-        if(!RubegNetworkService.isServiceStarted){
+        if (!RubegNetworkService.isServiceStarted) {
             val ip: ArrayList<String> = ArrayList()
             ip.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
 
@@ -404,12 +400,17 @@ class CommonActivity : AppCompatActivity() {
             startService(service)
             thread {
                 Thread.sleep(500)
+
                 val authorizationMessage = JSONObject()
                 authorizationMessage.put("\$c$", "reg")
                 authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
                 authorizationMessage.put(
                     "password",
                     getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", "")
+                )
+                authorizationMessage.put(
+                    "token",
+                    getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken", "")
                 )
                 RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
                     if (success) {

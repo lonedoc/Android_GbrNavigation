@@ -19,6 +19,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
+import com.google.firebase.iid.FirebaseInstanceId
 import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
@@ -121,6 +122,17 @@ class MainActivity : AppCompatActivity() {
             }
             thread {
                 sleep(2000)
+
+                val token = if (getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken", "") == "") {
+                    var token = ""
+                    FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
+                        token = it.token
+                    }
+                    token
+                } else {
+                    getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken", "")
+                }
+
                 val authorizationMessage = JSONObject()
                 authorizationMessage.put("\$c$", "reg")
                 authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
@@ -128,6 +140,11 @@ class MainActivity : AppCompatActivity() {
                     "password",
                     getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", "")
                 )
+                authorizationMessage.put(
+                    "token",
+                    token
+                )
+
                 RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
                     if (success) {
                         runOnUiThread {
@@ -186,61 +203,58 @@ class MainActivity : AppCompatActivity() {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onRegistrationEvent(event:RegistrationEvent){
-            Log.d(
-                "Authorization",
-                "\n " + " " + "\n routeServer ${event.routeServer} \n call ${event.call} \n status ${event.status} \n gbrStatus ${event.gbrStatus}"
-            )
-            val dbHelper = DataBase(this)
-            val db = dbHelper.writableDatabase
+    fun onRegistrationEvent(event: RegistrationEvent) {
+        Log.d(
+            "Authorization",
+            "\n " + " " + "\n routeServer ${event.routeServer} \n call ${event.call} \n status ${event.status} \n gbrStatus ${event.gbrStatus}"
+        )
+        val dbHelper = DataBase(this)
+        val db = dbHelper.writableDatabase
 
-            val cursorRoute = db.query("RouteServerList", null, null, null, null, null, null)
-            if (cursorRoute.count == 0) {
-                val cv = ContentValues()
-                for (i in 0 until event.routeServer.count()) {
-                    cv.put("ip", event.routeServer[i])
-                    Log.d("DataBase", "id = " + db.insert("RouteServerList", null, cv))
-                }
+        val cursorRoute = db.query("RouteServerList", null, null, null, null, null, null)
+        if (cursorRoute.count == 0) {
+            val cv = ContentValues()
+            for (i in 0 until event.routeServer.count()) {
+                cv.put("ip", event.routeServer[i])
+                Log.d("DataBase", "id = " + db.insert("RouteServerList", null, cv))
             }
-            cursorRoute.close()
+        }
+        cursorRoute.close()
 
-            val cursorStatus = db.query("StatusList", null, null, null, null, null, null)
-            if (cursorStatus.count == 0) {
-                val cv = ContentValues()
-                for (i in 0 until event.gbrStatus.count()) {
-                    cv.put("status", event.gbrStatus[i])
-                    Log.d("DataBase", "id = " + db.insert("StatusList", null, cv))
-                }
+        val cursorStatus = db.query("StatusList", null, null, null, null, null, null)
+        if (cursorStatus.count == 0) {
+            val cv = ContentValues()
+            for (i in 0 until event.gbrStatus.count()) {
+                cv.put("status", event.gbrStatus[i])
+                Log.d("DataBase", "id = " + db.insert("StatusList", null, cv))
             }
-            cursorStatus.close()
+        }
+        cursorStatus.close()
 
-            SPGbrNavigation.init(this)
-            if(event.call!="")
-                SPGbrNavigation.addPropertyString("call", event.call)
-            else
-            {
-                SPGbrNavigation.addPropertyString("call", "")
-                Toast.makeText(this,"Группа не была поставлена на дежурство в дежурном операторе",Toast.LENGTH_SHORT).show()
-            }
-            if(event.status!=""){
-                SPGbrNavigation.addPropertyString("status",event.status)
-            }
-            else
-            {
-                SPGbrNavigation.addPropertyString("status", "")
-            }
+        SPGbrNavigation.init(this)
+        if (event.call != "")
+            SPGbrNavigation.addPropertyString("call", event.call)
+        else {
+            SPGbrNavigation.addPropertyString("call", "")
+            Toast.makeText(this, "Группа не была поставлена на дежурство в дежурном операторе", Toast.LENGTH_SHORT).show()
+        }
+        if (event.status != "") {
+            SPGbrNavigation.addPropertyString("status", event.status)
+        } else {
+            SPGbrNavigation.addPropertyString("status", "")
+        }
 
-            if(event.routeServer.count()>0)
-                SPGbrNavigation.addPropertyString("routeserver", event.routeServer[0])
-            else
-                SPGbrNavigation.addPropertyString("routeserver", "91.189.160.38:5000")
+        if (event.routeServer.count()> 0)
+            SPGbrNavigation.addPropertyString("routeserver", event.routeServer[0])
+        else
+            SPGbrNavigation.addPropertyString("routeserver", "91.189.160.38:5000")
 
-            if(EventBus.getDefault().isRegistered(this))
-                EventBus.getDefault().unregister(this)
+        if (EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().unregister(this)
 
-            val intent = Intent(this@MainActivity, CommonActivity::class.java)
-            intent.putExtra("status", event.status)
-            startActivity(intent)
+        val intent = Intent(this@MainActivity, CommonActivity::class.java)
+        intent.putExtra("status", event.status)
+        startActivity(intent)
     }
 
     @SuppressLint("HardwareIds")
@@ -328,16 +342,16 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
 
         isAlive = true
-        if(!EventBus.getDefault().isRegistered(this))
-        EventBus.getDefault().register(this)
+        if (!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
     }
 
     override fun onStop() {
         super.onStop()
 
         isAlive = false
-        if(EventBus.getDefault().isRegistered(this))
-        EventBus.getDefault().unregister(this)
+        if (EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().unregister(this)
     }
     private var exit = false
     override fun onBackPressed() {

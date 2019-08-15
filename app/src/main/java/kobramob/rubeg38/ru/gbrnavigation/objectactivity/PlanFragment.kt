@@ -39,8 +39,9 @@ class PlanFragment : androidx.fragment.app.Fragment() {
     @Subscribe(threadMode = ThreadMode.MAIN, priority = 2)
     fun onMessageEvent(event: MessageEvent) {
         if (event.byteArray.count()> 0 && event.command == "getfile") {
-            Log.d("PlanFragment",(event.byteArray.count()>0).toString())
             val image: Bitmap = BitmapFactory.decodeByteArray(event.byteArray, 0, event.byteArray.count())
+
+            if(!bitmapList.contains(image))
             bitmapList.add(image)
         }
     }
@@ -51,8 +52,8 @@ class PlanFragment : androidx.fragment.app.Fragment() {
         val progressBar: ProgressBar = rootView!!.findViewById(R.id.plan_download)
         progressBar.visibility = View.VISIBLE
 
-        if(!EventBus.getDefault().isRegistered(this))
-        EventBus.getDefault().register(this)
+        if (!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
 
         val alarmObjectInfo = activity!!.intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
@@ -74,7 +75,6 @@ class PlanFragment : androidx.fragment.app.Fragment() {
                 }
                 else -> {
 
-
                     for (i in countInQueue until alarmObjectInfo.planAndPhotoList.count()) {
                         val downloadImage = JSONObject()
                         downloadImage.put("\$c$", "getfile")
@@ -93,12 +93,10 @@ class PlanFragment : androidx.fragment.app.Fragment() {
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     }
-
                                 }
                             }
                             countInQueue++
-                            while(waitDownload){
-
+                            while (waitDownload) {
                             }
                             waitDownload = true
                         }
@@ -144,9 +142,7 @@ class PlanFragment : androidx.fragment.app.Fragment() {
             EventBus.getDefault().unregister(this)
         }
     }
-
 }
-
 
 /*        val imageView = rootView.findViewById(R.id.testImage) as ImageView
         val image: Bitmap = BitmapFactory.decodeByteArray(NetworkService.byteMessageBroker[0], 0, NetworkService.byteMessageBroker[0].count())

@@ -50,7 +50,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
     private var lat: Double = 0.0
     private var lon: Double = 0.0
 
-
     private lateinit var rotationGestureOverlay: RotationGestureOverlay
     private lateinit var scaleBarOverlay: ScaleBarOverlay
     private lateinit var locationOverlay: MyLocationNewOverlay
@@ -58,14 +57,13 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
     private lateinit var cancelDialog: AlertDialog
     private var latitude: Double = 0.toDouble()
 
-
     companion object {
         var mMapView: MapView? = null
         var proximityAlive = false
         var arriveToObject = false
         var alertCanceled = false
         var road: Road? = null
-        var arrived:FloatingActionButton? = null
+        var arrived: FloatingActionButton? = null
     }
     lateinit var jsonObject: JSONObject
 
@@ -165,22 +163,21 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                     message.put("command", "alarmpr")
                     message.put("number", alarmObjectInfo.number)
                     RubegNetworkService.protocol.send(message = message.toString()) {
-                            success: Boolean ->
-                        if (success) {
-                            activity!!.runOnUiThread {
-                                arrived!!.visibility = View.GONE
-                                if(road!!.mRouteHigh.count()>1)
-                                {
-                                    road!!.mRouteHigh.clear()
-                                    mMapView!!.overlays.removeAt(mMapView!!.overlays.count()-1)
-                                    mMapView!!.invalidate()
+                        success: Boolean ->
+                            if (success) {
+                                activity!!.runOnUiThread {
+                                    arrived!!.visibility = View.GONE
+                                    if (road!!.mRouteHigh.count()> 1) {
+                                        road!!.mRouteHigh.clear()
+                                        mMapView!!.overlays.removeAt(mMapView!!.overlays.count() - 1)
+                                        mMapView!!.invalidate()
+                                    }
+                                    proximityAlive = false
+                                    arriveToObject = true
+                                    Toast.makeText(context, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
                                 }
-                                proximityAlive = false
-                                arriveToObject = true
-                                Toast.makeText(context, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
                             }
                         }
-                    }
                 }
             }
         }
@@ -223,11 +220,10 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                 }
                 if (road!!.mStatus != Road.STATUS_OK) {
                     activity!!.runOnUiThread {
-                        if(countTry<3){
+                        if (countTry <3) {
                             paveTheWay()
                             countTry++
-                        }
-                        else{
+                        } else {
                             Toast.makeText(context, "Невозможно проложить путь до объекта", Toast.LENGTH_LONG).show()
                         }
                     }
@@ -321,7 +317,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
     private fun initMapView() {
         org.osmdroid.config.Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
-        if(mMapView!=null){
+        if (mMapView != null) {
             mMapView!!.setTileSource(TileSourceFactory.MAPNIK)
             mMapView!!.setHasTransientState(true)
             mMapView!!.controller.setZoom(15.0)
@@ -333,22 +329,20 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
             mMapView!!.overlays.add(initRotationGestureOverlay())
             mMapView!!.overlays.add(initScaleBarOverlay())
 
-
             val alarmObjectInfo = activity!!.intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
             val marker = Marker(mMapView)
-            marker.textLabelBackgroundColor =  R.color.viewBackground
+            marker.textLabelBackgroundColor = R.color.viewBackground
             marker.title = alarmObjectInfo.name
             marker.textLabelFontSize = 20
             marker.textLabelForegroundColor = R.color.colorPrimaryDark
             marker.icon = ContextCompat.getDrawable(activity!!, R.drawable.ic_arrivedtoobject)
-            marker.position =  GeoPoint(
+            marker.position = GeoPoint(
                 alarmObjectInfo.lat!!,
                 alarmObjectInfo.lon!!
             )
             mMapView!!.overlays.add(marker)
         }
-
     }
 
     private fun locationOverlay(): MyLocationNewOverlay {
@@ -394,8 +388,8 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
         mMapView!!.onResume()
 
-        if(!arriveToObject)
-        paveTheWay()
+        if (!arriveToObject)
+            paveTheWay()
 
         locationOverlay.enableMyLocation()
         scaleBarOverlay.enableScaleBar()

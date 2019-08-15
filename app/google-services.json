@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "726763836068",
+    "firebase_url": "https://gbrnavigation.firebaseio.com",
+    "project_id": "gbrnavigation",
+    "storage_bucket": "gbrnavigation.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:726763836068:android:ae6ad46f4c97d2bf",
+        "android_client_info": {
+          "package_name": "kobramob.rubeg38.ru.gbrnavigation"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "726763836068-utl0f17nikhg84758peorkglv2pts5bq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kobramob.rubeg38.ru.gbrnavigation",
+            "certificate_hash": "384734f11f50523fe2d36083d860608474f2ed61"
+          }
+        },
+        {
+          "client_id": "726763836068-hlv3g0p4ooqe73e0mesttq86n9t608o4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBmx90HJVtQ3_4AxEMU4Nm7851Npt08CA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "726763836068-hlv3g0p4ooqe73e0mesttq86n9t608o4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

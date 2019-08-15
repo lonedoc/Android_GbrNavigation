@@ -10,13 +10,13 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.iid.FirebaseInstanceId
 import com.redmadrobot.inputmask.MaskedTextChangedListener
 import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.gbrnavigation.resource.DataBase
 import kobramob.rubeg38.ru.gbrnavigation.resource.SPGbrNavigation
-import kobramob.rubeg38.ru.gbrnavigation.workservice.MessageEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RegistrationEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
 import kotlin.concurrent.thread
@@ -90,12 +90,23 @@ class LoginActivity : AppCompatActivity() {
                     } else {
                         startService(service)
                     }
-
-                    val registrationMessage = JSONObject()
-                    registrationMessage.put("\$c$", "reg")
-                    registrationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
-                    registrationMessage.put("password", intent.getStringExtra("imei"))
                     thread {
+                        var token = ""
+
+                        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
+                            token = it.token
+                        }
+                        while (token == "") {
+                        }
+
+                        Log.d("FCMToken", token)
+
+                        val registrationMessage = JSONObject()
+                        registrationMessage.put("\$c$", "reg")
+                        registrationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
+                        registrationMessage.put("password", intent.getStringExtra("imei"))
+                        registrationMessage.put("token", token)
+
                         sleep(1000)
                         RubegNetworkService.protocol.send(registrationMessage.toString()) {
                             access: Boolean ->
@@ -106,6 +117,7 @@ class LoginActivity : AppCompatActivity() {
                                         SPGbrNavigation.addPropertyString("ip", ipText.text.toString())
                                         SPGbrNavigation.addPropertyInt("port", portText.text.toString().toInt())
                                         SPGbrNavigation.addPropertyString("imei", intent.getStringExtra("imei")!!)
+                                        SPGbrNavigation.addPropertyString("fcmtoken", token)
 
                                         Toast.makeText(this, "Регистрация прошла успешно", Toast.LENGTH_SHORT).show()
                                     }
@@ -156,15 +168,14 @@ class LoginActivity : AppCompatActivity() {
                 cursorStatus.close()
 
                 SPGbrNavigation.init(this)
-                if(event.call!="")
-                SPGbrNavigation.addPropertyString("call", event.call)
-                else
-                {
+                if (event.call != "")
+                    SPGbrNavigation.addPropertyString("call", event.call)
+                else {
                     SPGbrNavigation.addPropertyString("call", "")
-                    Toast.makeText(this,"Группа не была поставлена на дежурство в дежурном операторе",Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Группа не была поставлена на дежурство в дежурном операторе", Toast.LENGTH_SHORT).show()
                 }
-                if(event.routeServer.count()>0)
-                SPGbrNavigation.addPropertyString("routeserver", event.routeServer[0])
+                if (event.routeServer.count()> 0)
+                    SPGbrNavigation.addPropertyString("routeserver", event.routeServer[0])
                 else
                     SPGbrNavigation.addPropertyString("routeserver", "91.189.160.38:5000")
 

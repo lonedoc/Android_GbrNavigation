@@ -1,27 +1,25 @@
 package kobramob.rubeg38.ru.gbrnavigation.workservice
 
-
-
 data class AlarmEvent(
-    val command:String,
-    val name:String,
-    val number:String,
-    val lon:Double,
-    val lat:Double,
-    val inn:Long,
-    val zakaz:String,
-    val address:String,
-    val area:AreaInfo,
-    val otvl:ArrayList<OtvlList> = ArrayList(),
-    val plan:ArrayList<String> = ArrayList(),
-    val photo:ArrayList<String> = ArrayList()
+    val command: String,
+    val name: String,
+    val number: String,
+    val lon: Double,
+    val lat: Double,
+    val inn: Long,
+    val zakaz: String,
+    val address: String,
+    val area: AreaInfo,
+    val otvl: ArrayList<OtvlList> = ArrayList(),
+    val plan: ArrayList<String> = ArrayList(),
+    val photo: ArrayList<String> = ArrayList()
 )
 
 data class RegistrationEvent(
-    val command:String,
+    val command: String,
     val routeServer: ArrayList<String>,
-    val call:String,
-    val status:String,
+    val call: String,
+    val status: String,
     val gbrStatus: ArrayList<String>
 )
 class MessageEvent() {
@@ -48,7 +46,7 @@ class MessageEvent() {
     lateinit var areaAlarmTime: String
     var otvl: ArrayList<OtvlList> = ArrayList()
     var plan: ArrayList<String> = ArrayList()
-    var photo:ArrayList<String> = ArrayList()
+    var photo: ArrayList<String> = ArrayList()
 
     constructor(command: String, message: String) : this() {
         this.command = command
