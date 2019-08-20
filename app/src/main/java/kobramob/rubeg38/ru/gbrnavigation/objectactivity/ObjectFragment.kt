@@ -26,19 +26,19 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
 
         val alarmObjectInfo = activity!!.intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
-        if (alarmObjectInfo.name != "") {
+        if (alarmObjectInfo.name != " ") {
             objectName.text = alarmObjectInfo.name
         } else {
             objectName.visibility = View.GONE
         }
 
-        if (alarmObjectInfo.address != "") {
+        if (alarmObjectInfo.address != " ") {
             objectAddress.text = alarmObjectInfo.address
         } else {
             objectAddress.visibility = View.GONE
         }
 
-        if (alarmObjectInfo.zakaz != "") {
+        if (alarmObjectInfo.zakaz != " ") {
             objectCustomer.text = "Заказчик: ${alarmObjectInfo.zakaz}"
         } else {
             objectCustomer.visibility = View.GONE

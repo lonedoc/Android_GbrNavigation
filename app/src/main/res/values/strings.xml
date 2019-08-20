@@ -36,5 +36,6 @@
     <string name="planandphoto">planAndPhoto</string>
     <string name="fragmentimage">fragmentImage</string>
     <string name="exit">Закрыть</string>
+    <string name="comment">Введите комметарий (необязательно)</string>
 
 </resources>

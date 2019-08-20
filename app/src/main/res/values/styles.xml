@@ -37,4 +37,15 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="MyButtonStyle" parent="ThemeOverlay.AppCompat.Dark">
+        //Enable
+        <item name="android:colorAccent">@color/colorAccent</item>
+        //disable
+        <item name="android:colorButtonNormal">@color/colorPrimary</item>
+        //Pressed
+        <item name="android:colorControlHighlight">@color/colorPrimaryDark</item>
+
+        <item name="android:buttonStyle">@style/Widget.AppCompat.Button.Colored</item>
+    </style>
+
 </resources>

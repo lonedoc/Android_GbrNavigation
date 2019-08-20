@@ -7,15 +7,25 @@ data class AlarmGson(
     val command: String,
     val name: String,
     val number: String,
-    val lon: String,
-    val lat: String,
-    val inn: String,
-    val zakaz: String,
+    var lon: String=" ",
+    var lat: String=" ",
+    var inn: String=" ",
+    var zakaz: String? = null,
     val address: String,
     val area: AreaInfo,
     val otvl: ArrayList<OtvlList> = ArrayList(),
     val plan: ArrayList<String> = ArrayList(),
     val photo: ArrayList<String> = ArrayList()
+)
+
+data class StatusGson(
+    val command: String,
+    val number: String,
+    val call: String,
+    val status: String,
+    val color: String,
+    val member: ArrayList<String> = ArrayList(),
+    val gpsstatus: ArrayList<String> = ArrayList()
 )
 
 data class RegistrationGson(
@@ -24,7 +34,9 @@ data class RegistrationGson(
     val call: String,
     val status: String,
     val gpsstatus: ArrayList<String> = ArrayList(),
-    val routeserver: ArrayList<String> = ArrayList()
+    val routeserver: ArrayList<String> = ArrayList(),
+    val reports: ArrayList<String> = ArrayList(),
+    val namegbr:String
 )
 
 data class AreaInfo(val name: String, val alarmtime: String)

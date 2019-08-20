@@ -34,10 +34,7 @@ import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import kobramob.rubeg38.ru.gbrnavigation.resource.DataBase
 import kobramob.rubeg38.ru.gbrnavigation.resource.SPGbrNavigation
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
-import kobramob.rubeg38.ru.gbrnavigation.workservice.AlarmEvent
-import kobramob.rubeg38.ru.gbrnavigation.workservice.MessageEvent
-import kobramob.rubeg38.ru.gbrnavigation.workservice.MyLocation
-import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
+import kobramob.rubeg38.ru.gbrnavigation.workservice.*
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 import org.greenrobot.eventbus.EventBus
@@ -76,7 +73,7 @@ class CommonActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_common)
 
-        alertSound = MediaPlayer.create(this@CommonActivity, raw.trevoga)
+        alertSound = MediaPlayer.create(this@CommonActivity, raw.alarm_sound)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -92,7 +89,7 @@ class CommonActivity : AppCompatActivity() {
 
         alarmObjectInfo.print()
 
-        if (alarmObjectInfo.name != "") {
+        if (alarmObjectInfo.isNotEmpty()) {
 
             val alertDialog = AlertDialog.Builder(this@CommonActivity)
             val view = layoutInflater.inflate(R.layout.dialog_alarm, null, false)
@@ -158,7 +155,13 @@ class CommonActivity : AppCompatActivity() {
                                             Toast.makeText(this, "Тревога подтверждена", Toast.LENGTH_SHORT).show()
                                         }
 
-                                        Log.d("AlarmGson", "accept")
+                                    }
+                                    else
+                                    {
+                                        runOnUiThread {
+                                            Toast.makeText(this,"Тревога не подтверждена", Toast.LENGTH_SHORT).show()
+                                        }
+
                                     }
                                 }
                             val objectActivity = Intent(this, ObjectActivity::class.java)
@@ -199,13 +202,8 @@ class CommonActivity : AppCompatActivity() {
                     .setCancelable(false)
                     .setPositiveButton("Да") { _, _ ->
 
-                        val ip: ArrayList<String> = ArrayList()
-                        ip.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
-
                         val service = Intent(this, RubegNetworkService::class.java)
                         service.putExtra("command", "stop")
-                        service.putStringArrayListExtra("ip", ip)
-                        service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
                         startService(service)
 
                         val loginActivity = Intent(this, LoginActivity::class.java)
@@ -267,7 +265,7 @@ class CommonActivity : AppCompatActivity() {
                 planAndPhoto.addAll(event.plan)
                 planAndPhoto.addAll(event.photo)
 
-                alarmObjectInfo = AlarmObjectInfo(event.name, event.number, event.lon, event.lat, event.inn, event.zakaz, event.address, event.area.name, event.area.alarmtime, event.plan, event.otvl)
+                alarmObjectInfo = AlarmObjectInfo(event.name, event.number, event.lon, event.lat, event.inn, event.zakaz, event.address, event.area.name, event.area.alarmtime, event.plan, event.otvl,DataStore.reports)
 
                 alertSound.start()
 
@@ -323,7 +321,11 @@ class CommonActivity : AppCompatActivity() {
 
                                                 Toast.makeText(this, "Тревога подтверждена", Toast.LENGTH_SHORT).show()
                                             }
-                                            Log.d("AlarmGson", "accept")
+                                        } else {
+                                            runOnUiThread {
+                                                Toast.makeText(this, "Тревога не подтверждена", Toast.LENGTH_SHORT).show()
+                                            }
+
                                         }
                                     }
                                 val objectActivity = Intent(this, ObjectActivity::class.java)
@@ -350,12 +352,6 @@ class CommonActivity : AppCompatActivity() {
                             SPGbrNavigation.addPropertyString("status", event.message)
                             val title: String = getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("call", "") + " ( " + event.message + " ) "
                             supportActionBar?.title = title
-                        }
-                    }
-                    "disconnect" -> {
-                        if (event.message == "lost") {
-                            // Dialog
-                            Toast.makeText(this, "Нет соединения с сервером, приложение переходит в автономный режим", Toast.LENGTH_LONG).show()
                         }
                     }
                     "internet" -> {

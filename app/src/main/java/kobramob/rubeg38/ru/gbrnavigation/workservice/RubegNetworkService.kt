@@ -2,20 +2,25 @@ package kobramob.rubeg38.ru.gbrnavigation.workservice
 
 import android.annotation.SuppressLint
 import android.app.*
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
+import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.provider.Settings.Secure
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.extensions.jsonBody
+import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
@@ -51,24 +56,27 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
             !isConnected(this) -> {
                 connectInternet = false
                 if (!connectionLost) {
-                    EventBus.getDefault().post(
-                        MessageEvent(
-                            command = "internet",
-                            message = "lost"
-                        )
-                    )
+                    val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
+                        .addData("command", "disconnectInternet")
+                        .build()
+                    createNotification(remoteMessage)
+                    sleep(1000)
+                    val remoteMessage1 = RemoteMessage.Builder("Status")
+                        .addData("command", "disconnectServer")
+                        .build()
+                    createNotification(remoteMessage1)
                     connectionLost = true
                 }
 
                 while (!isConnected(this)) {
                 }
-                EventBus.getDefault().post(
-                    MessageEvent
-                    (
-                        "internet",
-                        "connected"
-                    )
-                )
+
+                val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
+                    .addData("command", "reconnectInternet")
+                    .build()
+                createNotification(remoteMessage)
+
+                sleep(1000)
                 val authorizationMessage = JSONObject()
                 authorizationMessage.put("\$c$", "reg")
                 authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
@@ -86,12 +94,12 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                         val registration = regGson.fromJson(String(data), RegistrationGson::class.java)
                         this.sessionId = registration.tid
 
-                        EventBus.getDefault().post(
-                            MessageEvent(
-                                "reconnectInternet",
-                                "true"
-                            )
-                        )
+                        sleep(1000)
+                        val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
+                            .addData("command", "reconnectServer")
+                            .build()
+                        createNotification(remoteMessage)
+
                         coordinateLoop()
                         connectInternet = true
                         connectionLost = false
@@ -109,12 +117,16 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
             else -> {
                 connectServer = false
                 if (!connectionLost) {
-                    EventBus.getDefault().post(
+                    val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
+                        .addData("command", "disconnectServer")
+                        .build()
+                    createNotification(remoteMessage)
+                    /*EventBus.getDefault().post(
                         MessageEvent(
                             command = "disconnect",
                             message = "lost"
                         )
-                    )
+                    )*/
                     connectionLost = true
                 }
                 val authorizationMessage = JSONObject()
@@ -135,12 +147,17 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                         val registration = regGson.fromJson(String(data), RegistrationGson::class.java)
                         this.sessionId = registration.tid
 
-                        EventBus.getDefault().post(
+                        val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
+                            .addData("command", "reconnectServer")
+                            .build()
+                        createNotification(remoteMessage)
+
+                        /*EventBus.getDefault().post(
                             MessageEvent(
                                 "reconnectServer",
                                 "true"
                             )
-                        )
+                        )*/
                         connectServer = true
                         coordinateLoop()
                     } else {
@@ -170,25 +187,32 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
     override fun messageReceived(message: ByteArray) {
         Log.d("ByteMessage", Arrays.toString(message))
         EventBus.getDefault().post(
-            MessageEvent(
+            ImageEvent(
                 command = "getfile",
-                message = message
+                byteArray = message
             )
         )
     }
 
     override fun messageReceived(message: String) {
         Log.d("StringMessage", message)
+        try{
         when {
             JSONObject(message).has("command") -> {
                 when (JSONObject(message).getString("command")) {
                     "regok" -> {
 
+                        val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
+                            .addData("command", "connectServer")
+                            .build()
+                        createNotification(remoteMessage)
+
                         val regGson = Gson()
                         val registration = regGson.fromJson(message, RegistrationGson::class.java)
 
                         this.sessionId = registration.tid
-
+                        DataStore.reports = registration.reports
+                        DataStore.namegbr = registration.namegbr
                         if (MainActivity.isAlive || LoginActivity.isAlive) {
                             EventBus.getDefault().post(
                                 RegistrationEvent(
@@ -202,24 +226,52 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                         }
                     }
                     "gbrstatus" -> {
+
+                        val statusGson = Gson()
+                        val status = statusGson.fromJson(message, StatusGson::class.java)
+
+                        val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
+                            .addData("command", status.command)
+                            .addData("status", status.status)
+                            .build()
+                        createNotification(remoteMessage)
+
                         EventBus.getDefault().postSticky(
                             MessageEvent(
-                                command = JSONObject(message).getString("command"),
-                                message = JSONObject(message).getString("status")
+                                command = status.command,
+                                message = status.status
                             )
                         )
                     }
                     "alarm" -> {
 
+                        val alarmGson = Gson()
+                        val alarm = alarmGson.fromJson(message, AlarmGson::class.java)
+
                         if (!CommonActivity.isAlive && !ObjectActivity.isAlive) {
+                            val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
+                                .addData("command", alarm.command)
+                                .addData("name", alarm.name)
+                                .build()
+                            createNotification(remoteMessage)
+
                             val ptk = Intent(this, CommonActivity::class.java)
                             ptk.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             startActivity(ptk)
                         }
 
-                        val alarmGson = Gson()
-                        val alarm = alarmGson.fromJson(message, AlarmGson::class.java)
+                        if(alarm.inn=="")
+                            alarm.inn = "0"
 
+                        if(alarm.lon == "")
+                            alarm.lon = "0.0"
+
+                        if(alarm.lat  == "")
+                            alarm.lat = "0.0"
+
+                        if(alarm.zakaz == null){
+                            alarm.zakaz = " "
+                        }
                         EventBus.getDefault().postSticky(
                             AlarmEvent(
                                 command = alarm.command,
@@ -228,7 +280,7 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                                 lon = alarm.lon.toDouble(),
                                 lat = alarm.lat.toDouble(),
                                 inn = alarm.inn.toLong(),
-                                zakaz = alarm.zakaz,
+                                zakaz = alarm.zakaz!!,
                                 address = alarm.address,
                                 area = alarm.area,
                                 otvl = alarm.otvl,
@@ -261,46 +313,13 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                 }
             }
             else -> {
-                Log.d("StringMessage", JSONObject(message).getString("\$c$"))
+                Log.d("StringMessage", "UnknownMessage")
             }
         }
-    }
 
-    private fun startForeground() {
-        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelID = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createNotificationChannel()
-        } else {
-            "101"
+        }catch (e:java.lang.Exception){
+            e.printStackTrace()
         }
-        val notificationBuilder = NotificationCompat.Builder(this, channelID)
-        val notification =
-            notificationBuilder.setOngoing(true)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setSubText("Кобра ГБР")
-                .setContentTitle("Сервис фоновой работы приложения")
-                .setPriority(NotificationCompat.PRIORITY_MIN)
-                .setCategory(Notification.CATEGORY_SERVICE)
-                .build()
-        startForeground(channelID.toInt(), notification)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(): String {
-        val channelID = "101"
-        val channelName = "MyBackgroundService"
-        val chan = NotificationChannel(
-            channelID,
-            channelName,
-            NotificationManager.IMPORTANCE_HIGH
-        )
-
-        chan.lightColor = Color.GRAY
-        chan.importance = NotificationManager.IMPORTANCE_NONE
-        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
-        val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        service.createNotificationChannel(chan)
-        return channelID
     }
 
     companion object {
@@ -315,6 +334,172 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
         super.onCreate()
         val notification = createNotification()
         startForeground(1, notification)
+    }
+
+    private fun createNotification(remoteMessage: RemoteMessage) {
+        val builder: NotificationCompat.Builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) NotificationCompat.Builder(
+            this,
+            channelID()
+        ) else NotificationCompat.Builder(this)
+
+        val pendingIntent = when {
+            LoginActivity.isAlive -> {
+                val i = Intent(this, LoginActivity::class.java)
+                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT)
+            }
+            CommonActivity.isAlive -> {
+                val i = Intent(this, CommonActivity::class.java)
+                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT)
+            }
+            ObjectActivity.isAlive || ObjectActivity.saveAlarm != null -> {
+                val i = Intent(this, ObjectActivity::class.java)
+                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                i.putExtra("objectInfo", ObjectActivity.saveAlarm)
+                PendingIntent.getActivity(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT)
+            }
+            else -> {
+                null
+            }
+        }
+        when (remoteMessage.data["command"]) {
+            "gbrstatus" -> {
+                val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                builder.setContentTitle("Смена статуса")
+                    .setContentIntent(pendingIntent)
+                    .setContentText("Смена статуса на: ${remoteMessage.data["status"]}")
+                    .setSound(statusSound)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
+                    .setAutoCancel(true)
+                    .setSmallIcon(R.drawable.ic_unknown_status).color = ContextCompat.getColor(this, R.color.colorPrimary)
+                val notification = builder.build()
+                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.notify(6, notification)
+            }
+            "alarm"->{
+                val soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ applicationContext.packageName + "/" + R.raw.alarm_sound)
+                builder.setContentTitle("Тревога")
+                    .setContentIntent(pendingIntent)
+                    .setContentText("Тревога на : ${remoteMessage.data["name"]}")
+                    .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
+                    .setAutoCancel(true)
+                    .setSound(soundUri)
+                    .setSmallIcon(R.drawable.ic_alarm).color = ContextCompat.getColor(this, R.color.colorPrimary)
+                val notification = builder.build()
+                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.notify(7, notification)
+            }
+            "disconnectServer" -> {
+                val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                builder.setContentTitle("Соединение с сервером")
+                    .setContentText("Соединение с сервером потеряно")
+                    .setContentIntent(pendingIntent)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
+                    .setAutoCancel(true)
+                    .setSound(alarmSound)
+                    .setSmallIcon(R.drawable.ic_disconnect).color = ContextCompat.getColor(this, R.color.colorPrimary)
+                builder.build().flags = Notification.FLAG_AUTO_CANCEL
+                val notification = builder.build()
+
+                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.notify(2, notification)
+            }
+            "reconnectServer" -> {
+                val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                builder.setContentTitle("Соединение с сервером")
+                    .setContentIntent(pendingIntent)
+                    .setContentText("Соединение с сервером восстановлено")
+                    .setSound(statusSound)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
+                    .setAutoCancel(true)
+                    .setSmallIcon(R.drawable.ic_connect).color = ContextCompat.getColor(this, R.color.colorPrimary)
+                val notification = builder.build()
+                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.notify(2, notification)
+            }
+            "connectServer" -> {
+                val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                builder.setContentTitle("Соединение с сервером")
+                    .setContentIntent(pendingIntent)
+                    .setContentText("Соединение с сервером установлено")
+                    .setSound(statusSound)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
+                    .setAutoCancel(true)
+                    .setSmallIcon(R.drawable.ic_connect).color = ContextCompat.getColor(this, R.color.colorPrimary)
+                val notification = builder.build()
+                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.notify(2, notification)
+            }
+            "disconnectInternet" -> {
+                Log.d("disconnectInternet", "Yes")
+                val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                builder.setContentTitle("Интернет")
+                    .setContentIntent(pendingIntent)
+                    .setContentText("Проблемы с сетью интернет")
+                    .setSound(statusSound)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
+                    .setAutoCancel(true)
+                    .setSmallIcon(R.drawable.ic_disconnect).color = ContextCompat.getColor(this, R.color.colorPrimary)
+                val notification = builder.build()
+                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.notify(3, notification)
+            }
+            "reconnectInternet" -> {
+                val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                builder.setContentTitle("Интернет")
+                    .setContentIntent(pendingIntent)
+                    .setContentText("Работа сети интернет восстановлена")
+                    .setSound(statusSound)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
+                    .setAutoCancel(true)
+                    .setSmallIcon(R.drawable.ic_connect).color = ContextCompat.getColor(this, R.color.colorPrimary)
+                val notification = builder.build()
+                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.notify(3, notification)
+            }
+        }
+    }
+    private fun channelID(): String {
+        val notificationChannelId = "Notifications channel"
+
+        val soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ applicationContext.packageName + "/" + R.raw.alarm_sound)
+        val audioAttributes = AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+            .build()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val channel = NotificationChannel(
+                notificationChannelId,
+                "Notifications channel",
+                NotificationManager.IMPORTANCE_HIGH
+            ).let {
+                it.description = "Notifications channel"
+                it.enableLights(true)
+                it.lightColor = Color.RED
+                it.enableVibration(true)
+                it.vibrationPattern = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
+                it.setSound(soundUri,audioAttributes)
+                it
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+        return notificationChannelId
     }
 
     private fun createNotification(): Notification {
@@ -357,8 +542,8 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
             .setContentTitle("Service")
             .setContentText("Service notifications")
             .setContentIntent(pendingIntent)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .addAction(R.drawable.ic_arrivedtoobject, "Прибытие", pendingIntent)
+            .setSmallIcon(R.drawable.ic_service)
+            .setColor(ContextCompat.getColor(this, R.color.colorPrimary))
             .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .build()
@@ -468,6 +653,8 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
             Log.d("Service", "Service stopped without being started: ${e.message}")
         }
         isServiceStarted = false
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancelAll()
     }
 
     private fun coordinateLoop() {

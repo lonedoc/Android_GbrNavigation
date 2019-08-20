@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,15 +20,19 @@ class ResponsibleFragment : androidx.fragment.app.Fragment() {
 
         val alarmObjectInfo = activity!!.intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
-        responsibleList.layoutManager = LinearLayoutManager(activity)
-        responsibleList.adapter = AdapterResponsibleList(alarmObjectInfo.otvlList, context)
+        if (alarmObjectInfo.otvlList.count()> 0) {
+            responsibleList.layoutManager = LinearLayoutManager(activity)
+            responsibleList.adapter = AdapterResponsibleList(alarmObjectInfo.otvlList, context)
 
-        responsibleList.addItemDecoration(
-            DividerItemDecoration(
-                responsibleList.context,
-                DividerItemDecoration.VERTICAL
+            responsibleList.addItemDecoration(
+                DividerItemDecoration(
+                    responsibleList.context,
+                    DividerItemDecoration.VERTICAL
+                )
             )
-        )
+        } else {
+            Toast.makeText(activity!!, "Список ответственных пуст", Toast.LENGTH_SHORT).show()
+        }
 
         return rootView
     }

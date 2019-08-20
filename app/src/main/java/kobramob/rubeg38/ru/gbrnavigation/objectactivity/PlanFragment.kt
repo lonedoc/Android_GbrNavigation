@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.AlarmObjectInfo
+import kobramob.rubeg38.ru.gbrnavigation.workservice.ImageEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.MessageEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
 import kotlin.concurrent.thread
@@ -21,6 +22,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
+import java.lang.Exception
 
 class PlanFragment : androidx.fragment.app.Fragment() {
 
@@ -37,18 +39,29 @@ class PlanFragment : androidx.fragment.app.Fragment() {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, priority = 2)
-    fun onMessageEvent(event: MessageEvent) {
-        if (event.byteArray.count()> 0 && event.command == "getfile") {
-            val image: Bitmap = BitmapFactory.decodeByteArray(event.byteArray, 0, event.byteArray.count())
+    fun onMessageEvent(event: ImageEvent) {
+        try{
+            if (event.byteArray.count()> 0 && event.command == "getfile") {
+                val image: Bitmap = BitmapFactory.decodeByteArray(event.byteArray, 0, event.byteArray.count())
 
-            if(!bitmapList.contains(image))
-            bitmapList.add(image)
+                if (!bitmapList.contains(image))
+                    bitmapList.add(image)
+            }
+        }catch (e:Exception){
+            e.printStackTrace()
+            bitmapList.clear()
+            countInQueue = 0
+            download()
         }
     }
 
-    var waitDownload = true
+    private var waitDownload = true
     override fun onResume() {
         super.onResume()
+        download()
+    }
+
+    private fun download(){
         val progressBar: ProgressBar = rootView!!.findViewById(R.id.plan_download)
         progressBar.visibility = View.VISIBLE
 
@@ -57,91 +70,99 @@ class PlanFragment : androidx.fragment.app.Fragment() {
 
         val alarmObjectInfo = activity!!.intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
-        if (alarmObjectInfo.planAndPhotoList.count() != 0 && bitmapList.count() == 0 && countInQueue != alarmObjectInfo.planAndPhotoList.count()) {
-            when {
-                !RubegNetworkService.connectInternet -> {
-                    Toast.makeText(
-                        context,
-                        "Нет соединения с интернетом, невозможно скачать изображения",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-                !RubegNetworkService.connectServer -> {
-                    Toast.makeText(
-                        context,
-                        "Нет соединения с сервером, невозможно скачать изображения",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-                else -> {
+        if (alarmObjectInfo.planAndPhotoList.count()> 0) {
+            if (alarmObjectInfo.planAndPhotoList.count() != 0 && bitmapList.count() == 0 && countInQueue != alarmObjectInfo.planAndPhotoList.count()) {
+                when {
+                    !RubegNetworkService.connectInternet -> {
+                        Toast.makeText(
+                            context,
+                            "Нет соединения с интернетом, невозможно скачать изображения",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    !RubegNetworkService.connectServer -> {
+                        Toast.makeText(
+                            context,
+                            "Нет соединения с сервером, невозможно скачать изображения",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    else -> {
 
-                    for (i in countInQueue until alarmObjectInfo.planAndPhotoList.count()) {
-                        val downloadImage = JSONObject()
-                        downloadImage.put("\$c$", "getfile")
-                        downloadImage.put("nameinserv", alarmObjectInfo.planAndPhotoList[i])
-                        downloadImage.put("name", alarmObjectInfo.planAndPhotoList[i])
-                        thread {
-                            RubegNetworkService.protocol.send(downloadImage.toString()) { success: Boolean ->
-                                if (success) {
-                                    waitDownload = false
-                                    Log.d("getfile", "waitserver")
-                                } else {
-                                    activity!!.runOnUiThread {
-                                        Toast.makeText(
-                                            activity!!,
-                                            "Не удалось загрузить изображение ${alarmObjectInfo.planAndPhotoList[i]}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                        for (i in countInQueue until alarmObjectInfo.planAndPhotoList.count()) {
+                            val downloadImage = JSONObject()
+                            downloadImage.put("\$c$", "getfile")
+                            downloadImage.put("nameinserv", alarmObjectInfo.planAndPhotoList[i])
+                            downloadImage.put("name", alarmObjectInfo.planAndPhotoList[i])
+                            thread {
+                                RubegNetworkService.protocol.send(downloadImage.toString()) { success: Boolean ->
+                                    if (success) {
+                                        waitDownload = false
+                                        Log.d("getfile", "waitserver")
+                                    } else {
+                                        activity!!.runOnUiThread {
+                                            Toast.makeText(
+                                                activity!!,
+                                                "Не удалось загрузить изображение ${alarmObjectInfo.planAndPhotoList[i]}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
                                     }
                                 }
+                                countInQueue++
+                                while (waitDownload) {
+                                }
+                                waitDownload = true
                             }
-                            countInQueue++
-                            while (waitDownload) {
+                        }
+                        thread {
+                            while (bitmapList.count() != alarmObjectInfo.planAndPhotoList.count()) {
                             }
-                            waitDownload = true
-                        }
-                    }
-                    thread {
-                        while (bitmapList.count() != alarmObjectInfo.planAndPhotoList.count()) {
-                        }
-                        activity!!.runOnUiThread {
+                            activity!!.runOnUiThread {
 
-                            val planList: RecyclerView = rootView!!.findViewById(R.id.imageRecyclerView)
-                            progressBar.visibility = View.GONE
-                            planList.visibility = View.VISIBLE
-                            planList.layoutManager = LinearLayoutManager(activity)
-                            planList.adapter = AdapterPlanList(bitmapList, context!!)
+                                val planList: RecyclerView = rootView!!.findViewById(R.id.imageRecyclerView)
+                                progressBar.visibility = View.GONE
+                                planList.visibility = View.VISIBLE
+                                planList.layoutManager = LinearLayoutManager(activity)
+                                planList.adapter = AdapterPlanList(bitmapList, context!!)
 
-                            planList.addItemDecoration(
-                                DividerItemDecoration(
-                                    planList.context,
-                                    DividerItemDecoration.VERTICAL
+                                planList.addItemDecoration(
+                                    DividerItemDecoration(
+                                        planList.context,
+                                        DividerItemDecoration.VERTICAL
+                                    )
                                 )
-                            )
-                            EventBus.getDefault().unregister(this)
+                                EventBus.getDefault().unregister(this)
+                            }
                         }
                     }
                 }
+            } else {
+
+                activity!!.runOnUiThread {
+
+                    val planList: RecyclerView = rootView!!.findViewById(R.id.imageRecyclerView)
+                    progressBar.visibility = View.GONE
+                    planList.visibility = View.VISIBLE
+                    planList.layoutManager = LinearLayoutManager(activity)
+                    planList.adapter = AdapterPlanList(bitmapList, context!!)
+
+                    planList.addItemDecoration(
+                        DividerItemDecoration(
+                            planList.context,
+                            DividerItemDecoration.VERTICAL
+                        )
+                    )
+                }
+                EventBus.getDefault().unregister(this)
             }
         } else {
-            activity!!.runOnUiThread {
-
-                val planList: RecyclerView = rootView!!.findViewById(R.id.imageRecyclerView)
-                progressBar.visibility = View.GONE
-                planList.visibility = View.VISIBLE
-                planList.layoutManager = LinearLayoutManager(activity)
-                planList.adapter = AdapterPlanList(bitmapList, context!!)
-
-                planList.addItemDecoration(
-                    DividerItemDecoration(
-                        planList.context,
-                        DividerItemDecoration.VERTICAL
-                    )
-                )
-            }
+            progressBar.visibility = View.GONE
+            Toast.makeText(activity, "Список план-схем и изображений пуст", Toast.LENGTH_SHORT).show()
             EventBus.getDefault().unregister(this)
         }
     }
+
 }
 
 /*        val imageView = rootView.findViewById(R.id.testImage) as ImageView

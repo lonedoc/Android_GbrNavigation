@@ -1,6 +1,7 @@
 package kobramob.rubeg38.ru.gbrnavigation.mainactivity
 
 import android.annotation.SuppressLint
+import android.app.NotificationManager
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -48,6 +49,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        if (!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
+
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancelAll()
 
         val imageView: ImageView = findViewById(R.id.main_icon)
         val progressBar: ProgressBar = findViewById(R.id.main_progressBar)
@@ -145,11 +152,14 @@ class MainActivity : AppCompatActivity() {
                     token
                 )
 
+                Log.d("Authorization", authorizationMessage.toString())
                 RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
                     if (success) {
                         runOnUiThread {
                             Toast.makeText(this, "Авторизация прошла успешно", Context.MODE_PRIVATE).show()
                         }
+                        RubegNetworkService.connectServer = true
+                        RubegNetworkService.connectInternet = true
                     } else {
                         runOnUiThread {
                             val ipList: ArrayList<String> = ArrayList()

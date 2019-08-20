@@ -7,7 +7,7 @@ data class AlarmEvent(
     val lon: Double,
     val lat: Double,
     val inn: Long,
-    val zakaz: String,
+    var zakaz: String = "",
     val address: String,
     val area: AreaInfo,
     val otvl: ArrayList<OtvlList> = ArrayList(),
@@ -22,6 +22,30 @@ data class RegistrationEvent(
     val status: String,
     val gbrStatus: ArrayList<String>
 )
+
+data class ImageEvent(
+    val command:String,
+    val byteArray:ByteArray
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ImageEvent
+
+        if (command != other.command) return false
+        if (!byteArray.contentEquals(other.byteArray)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = command.hashCode()
+        result = 31 * result + byteArray.contentHashCode()
+        return result
+    }
+}
+
 class MessageEvent() {
 
     lateinit var command: String

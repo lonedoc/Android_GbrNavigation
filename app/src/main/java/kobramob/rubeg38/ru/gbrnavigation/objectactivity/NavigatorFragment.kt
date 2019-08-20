@@ -1,6 +1,9 @@
 package kobramob.rubeg38.ru.gbrnavigation.objectactivity
 
+import android.annotation.SuppressLint
+import android.app.job.JobParameters
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
@@ -14,7 +17,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -23,6 +26,7 @@ import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.AlarmObjectInfo
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
+import kobramob.rubeg38.ru.gbrnavigation.workservice.DataStore
 import kobramob.rubeg38.ru.gbrnavigation.workservice.MyLocation
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
 import kotlin.concurrent.thread
@@ -81,6 +85,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
         return true
     }
 
+    @SuppressLint("InflateParams")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         println("onCreateView")
@@ -127,13 +132,19 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                 followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.viewBackground))
             }
         }
-
+        
         yandex.setOnClickListener {
             try {
-                val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=${alarmObjectInfo.lat}&lon_to=${ alarmObjectInfo.lon}")
-                val intent = Intent(Intent.ACTION_VIEW, uri)
-                intent.setPackage("ru.yandex.yandexnavi")
-                startActivity(intent)
+                if(alarmObjectInfo.lat!=0.0 && alarmObjectInfo.lon!=0.0){
+                    val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=${alarmObjectInfo.lat}&lon_to=${ alarmObjectInfo.lon}")
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    intent.setPackage("ru.yandex.yandexnavi")
+                    startActivity(intent)
+                }
+               else
+                {
+                    Toast.makeText(activity!!,"Не заданы координаты для объекта",Toast.LENGTH_SHORT).show()
+                }
             } catch (e: Exception) {
                 Toast.makeText(context, "На данном устройстве не установлен Яндекс.Навигатор", Toast.LENGTH_SHORT)
                     .show()
@@ -175,6 +186,69 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                                     proximityAlive = false
                                     arriveToObject = true
                                     Toast.makeText(context, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
+                                    val alertDialog = AlertDialog.Builder(context!!)
+                                    val view = layoutInflater.inflate(R.layout.dialog_reports, null, false)
+                                    val report_spinner: Spinner = view.findViewById(R.id.reports_spinner)
+                                    val report_text: EditText = view.findViewById(R.id.report_EditText)
+                                    report_spinner.prompt = "Список рапортов"
+                                    report_spinner.adapter = ArrayAdapter(
+                                        activity!!,
+                                        R.layout.report_spinner_item,
+                                        DataStore.reports
+                                    )
+                                    var selectedReport = ""
+                                    report_spinner.onItemSelectedListener = object:AdapterView.OnItemSelectedListener{
+                                        override fun onNothingSelected(p0: AdapterView<*>?) {
+                                        }
+
+                                        override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                                            if(report_spinner.selectedItem !=null){
+                                                selectedReport = DataStore.reports[p2]
+                                                Log.d("selected report",selectedReport)
+                                            }
+                                        }
+                                    }
+
+                                    alertDialog.setView(view)
+                                    alertDialog.setTitle("Отправка рапорта")
+                                    alertDialog.setPositiveButton("Отправить"){ _: DialogInterface, _: Int ->
+                                        val reportsMessage = JSONObject()
+                                        reportsMessage.put("\$c$", "reports")
+                                        reportsMessage.put("report",selectedReport)
+                                        reportsMessage.put("comment","${report_text.text}")
+                                        reportsMessage.put("namegbr",DataStore.namegbr)
+                                        reportsMessage.put("name",alarmObjectInfo.name)
+                                        reportsMessage.put("number",alarmObjectInfo.number)
+                                        Log.d("Report","$reportsMessage")
+
+                                        RubegNetworkService.protocol.request("$reportsMessage"){
+                                            success:Boolean,data:ByteArray?->
+                                            if(success){
+                                                activity!!.runOnUiThread {
+                                                    Toast.makeText(activity!!,"Рапорт доставлен",Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                            else
+                                            {
+                                                activity!!.runOnUiThread {
+                                                    Toast.makeText(activity!!,"Рапорт не доставлен",Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        }
+                                    }
+
+
+                                    val dialog = alertDialog.create()
+                                    dialog.setCancelable(false)
+                                    dialog.show()
+
+
+                                }
+                            }
+                        else
+                            {
+                                activity!!.runOnUiThread {
+                                    Toast.makeText(context,"Прибытие не подтверждено",Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }
@@ -191,65 +265,74 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
         val alarmObjectInfo = activity!!.intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
-        Log.d("PaveTheWay", "create")
+        if(alarmObjectInfo.lat!=0.0 && alarmObjectInfo.lon!=0.0){
+            Log.d("PaveTheWay", "create")
 
-        val roadManager = OSRMRoadManager(context)
-        if (context!!.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).contains("routeserver")) {
-            roadManager.setService("http:" + activity!!.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("routeserver", null) + "/route/v1/driving/")
-            roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
+            val roadManager = OSRMRoadManager(context)
+            if (context!!.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).contains("routeserver")) {
+                roadManager.setService("http:" + activity!!.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("routeserver", null) + "/route/v1/driving/")
+                roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
 
-            val waypoints = ArrayList<GeoPoint>()
-            val startPoint = GeoPoint(
-                MyLocation.imHere!!.latitude,
-                MyLocation.imHere!!.longitude
-            )
-            val endPoint = GeoPoint(
-                alarmObjectInfo.lat!!,
-                alarmObjectInfo.lon!!
-            )
+                val waypoints = ArrayList<GeoPoint>()
+                val startPoint = GeoPoint(
+                    MyLocation.imHere!!.latitude,
+                    MyLocation.imHere!!.longitude
+                )
+                val endPoint = GeoPoint(
+                    alarmObjectInfo.lat!!,
+                    alarmObjectInfo.lon!!
+                )
 
-            Log.d("endPoint", endPoint.toString())
-            waypoints.add(startPoint)
-            waypoints.add(endPoint)
+                Log.d("endPoint", endPoint.toString())
+                waypoints.add(startPoint)
+                waypoints.add(endPoint)
 
-            thread {
-                try {
-                    road = roadManager.getRoad(waypoints)
-                } catch (e: java.lang.Exception) {
-                    e.printStackTrace()
-                }
-                if (road!!.mStatus != Road.STATUS_OK) {
-                    activity!!.runOnUiThread {
-                        if (countTry <3) {
-                            paveTheWay()
-                            countTry++
-                        } else {
-                            Toast.makeText(context, "Невозможно проложить путь до объекта", Toast.LENGTH_LONG).show()
-                        }
+                thread {
+                    try {
+                        road = roadManager.getRoad(waypoints)
+                    } catch (e: java.lang.Exception) {
+                        e.printStackTrace()
                     }
-                } else {
-                    if (road!!.mRouteHigh.size> 2) {
+                    if (road!!.mStatus != Road.STATUS_OK) {
                         activity!!.runOnUiThread {
-                            val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-                            mMapView!!.overlays.add(roadOverlay)
-                            mMapView!!.invalidate()
-                            tracking(roadOverlay)
+                            if (countTry <3) {
+                                paveTheWay()
+                                countTry++
+                            } else {
+                                Toast.makeText(context, "Невозможно проложить путь до объекта", Toast.LENGTH_LONG).show()
+                            }
                         }
                     } else {
-                        if (distance(road!!)> 100) {
-                            return@thread
+                        if (road!!.mRouteHigh.size> 2) {
+                            activity!!.runOnUiThread {
+                                val roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
+                                mMapView!!.overlays.add(roadOverlay)
+                                mMapView!!.invalidate()
+                                tracking(roadOverlay)
+                            }
                         } else {
-                            // stop Tracking
-                            arriveToObject = true
+                            if (distance(road!!)> 100) {
+                                return@thread
+                            } else {
+                                // stop Tracking
+                                arriveToObject = true
+                            }
                         }
                     }
                 }
-            }
-        } else {
-            activity!!.runOnUiThread {
-                Toast.makeText(context, "Нет данных о сервере проложение пути", Toast.LENGTH_SHORT).show()
+            } else {
+                activity!!.runOnUiThread {
+                    Toast.makeText(context, "Нет данных о сервере проложение пути", Toast.LENGTH_SHORT).show()
+                }
             }
         }
+        else
+        {
+            activity!!.runOnUiThread {
+                Toast.makeText(context, "Не заданы координаты для объекта", Toast.LENGTH_SHORT).show()
+            }
+        }
+
     }
 
     private fun tracking(roadOverlay: Polyline) {
@@ -407,8 +490,10 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
         if (mMapView!!.overlays.count()> 3)
             mMapView!!.overlays.removeAt(mMapView!!.overlays.count() - 1)
 
-        if (road!!.mRouteHigh.size> 1)
-            road!!.mRouteHigh.clear()
+        if (road != null) {
+            if (road!!.mRouteHigh.count()> 1)
+                road!!.mRouteHigh.clear()
+        }
 
         if (locationOverlay.isFollowLocationEnabled) {
             locationOverlay.enableFollowLocation()
