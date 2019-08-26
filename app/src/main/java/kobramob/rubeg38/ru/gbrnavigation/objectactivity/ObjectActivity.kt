@@ -50,25 +50,29 @@ class ObjectActivity : AppCompatActivity() {
         NavigatorFragment.alertCanceled = false
         NavigatorFragment.proximityAlive = false
 
-        saveAlarm = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
+        if(savedInstanceState != null){
 
-        if (!EventBus.getDefault().isRegistered(this))
-            EventBus.getDefault().register(this)
+            PlanFragment.bitmapList.addAll(PlanFragment.bitmapList)
 
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            saveAlarm = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
-        val toolbar: Toolbar = this.findViewById(R.id.toolbar_main_map)
-        setSupportActionBar(toolbar)
-        supportActionBar!!.title = "Карточка объекта"
+            if (!EventBus.getDefault().isRegistered(this))
+                EventBus.getDefault().register(this)
 
-        val bnv: BottomNavigationView = findViewById(R.id.objectMenu)
-        bnv.menu.getItem(0).isChecked = true
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        openFragment(tabFragment)
-        supportActionBar!!.title = "Карточка объекта"
+            val toolbar: Toolbar = this.findViewById(R.id.toolbar_main_map)
+            setSupportActionBar(toolbar)
+            supportActionBar!!.title = "Карточка объекта"
 
-        bnv.setOnNavigationItemSelectedListener {
-            item ->
+            val bnv: BottomNavigationView = findViewById(R.id.objectMenu)
+            bnv.menu.getItem(0).isChecked = true
+
+            openFragment(tabFragment)
+            supportActionBar!!.title = "Карточка объекта"
+
+            bnv.setOnNavigationItemSelectedListener {
+                    item ->
 
                 when (item.itemId) {
                     R.id.cardObject -> {
@@ -83,6 +87,44 @@ class ObjectActivity : AppCompatActivity() {
                 }
                 true
             }
+        }
+        else
+        {
+            saveAlarm = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
+
+            if (!EventBus.getDefault().isRegistered(this))
+                EventBus.getDefault().register(this)
+
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+            val toolbar: Toolbar = this.findViewById(R.id.toolbar_main_map)
+            setSupportActionBar(toolbar)
+            supportActionBar!!.title = "Карточка объекта"
+
+            val bnv: BottomNavigationView = findViewById(R.id.objectMenu)
+            bnv.menu.getItem(0).isChecked = true
+
+            openFragment(tabFragment)
+            supportActionBar!!.title = "Карточка объекта"
+
+            bnv.setOnNavigationItemSelectedListener {
+                    item ->
+
+                when (item.itemId) {
+                    R.id.cardObject -> {
+                        openFragment(tabFragment)
+                        supportActionBar!!.title = "Карточка объекта"
+                    }
+
+                    R.id.navigator -> {
+                        openFragment(navigatorFragment)
+                        supportActionBar!!.title = "Навигатор"
+                    }
+                }
+                true
+            }
+        }
+
     }
 
     private fun openFragment(fragment: androidx.fragment.app.Fragment) {
@@ -135,7 +177,7 @@ class ObjectActivity : AppCompatActivity() {
                 RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
                     if (success) {
                         runOnUiThread {
-                            Toast.makeText(this, "Восстановление связи прошло успешно", Context.MODE_PRIVATE).show()
+                            Toast.makeText(this, "Восстановление связи прошло успешно", Toast.LENGTH_SHORT).show()
                         }
                     } else {
                         runOnUiThread {
@@ -151,9 +193,6 @@ class ObjectActivity : AppCompatActivity() {
                             }
 
                             Toast.makeText(this, "Приложение не смогло восстановить соединение", Toast.LENGTH_LONG).show()
-                            val loginActivity = Intent(this, LoginActivity::class.java)
-                            loginActivity.putExtra("imei", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
-                            startActivity(loginActivity)
                         }
                     }
                 }
@@ -233,7 +272,12 @@ class ObjectActivity : AppCompatActivity() {
                                     NavigatorFragment.arriveToObject = true
                                     NavigatorFragment.alertCanceled = true
                                     NavigatorFragment.proximityAlive = false
-                                    NavigatorFragment.road!!.mRouteHigh.clear()
+
+                                    if (NavigatorFragment.road != null) {
+                                        if (NavigatorFragment.road!!.mRouteHigh.count()> 1)
+                                            NavigatorFragment.road!!.mRouteHigh.clear()
+                                    }
+
                                     PlanFragment.countInQueue = 0
 
                                     val intent = Intent(this,ObjectActivity::class.java)
@@ -385,8 +429,10 @@ class ObjectActivity : AppCompatActivity() {
                         }
                         saveAlarm!!.clear()
                         PlanFragment.countInQueue = 0
+
+                        DataStore.status = event.message
+
                         val commonActivity = Intent(this, CommonActivity::class.java)
-                        commonActivity.putExtra("status", event.message)
                         startActivity(commonActivity)
                     }
                 }
@@ -410,8 +456,8 @@ class ObjectActivity : AppCompatActivity() {
                             }
                             saveAlarm!!.clear()
                             PlanFragment.countInQueue = 0
+                            DataStore.status = event.message
                             val commonActivity = Intent(this, CommonActivity::class.java)
-                            commonActivity.putExtra("status", event.message)
                             startActivity(commonActivity)
                         }
                     }
@@ -440,106 +486,4 @@ class ObjectActivity : AppCompatActivity() {
             }
         }
     }
-
-/*    var closeReceiver = false
-    private fun receiver() {
-        thread {
-            while (Alive) {
-                if (!closeReceiver) {
-                    if (NetworkService.stringMessageBroker.count() > 0) {
-                        receiver@
-                        for (i in 0 until NetworkService.stringMessageBroker.count()) {
-                            SharedPreferencesState.init(this@ObjectActivity)
-                            Log.d("ObjectReceiver", NetworkService.stringMessageBroker[i])
-                            val lenght = NetworkService.stringMessageBroker.count()
-                            val jsonMessage = JSONObject(NetworkService.stringMessageBroker[i])
-
-                            when (jsonMessage.getString("command")) {
-                                "disconnect" -> {
-                                    val sendMessage = JSONObject()
-                                    sendMessage.put("\$c$", "reg")
-                                    sendMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
-                                    sendMessage.put("password", getSharedPreferences("state", Context.MODE_PRIVATE).getString("imei", ""))
-
-                                    networkService.send(sendMessage.toString(), null) {
-                                        success: Boolean ->
-                                            if (success) {
-                                                Log.d("Connected", "true")
-                                            } else {
-                                                Log.d("Connected", "false")
-                                            }
-                                        }
-
-                                    runOnUiThread {
-                                        val dialog = AlertDialog.Builder(this@ObjectActivity)
-                                        dialog.setTitle("Потеряно соединение с сервером")
-                                            .setMessage("СОЕДИНЕНИЕ С СЕРВЕРОМ ПОТЕРЯНО ПРИЛОЖЕНИЕ ПЕРЕХОДИТ В АВТОНОМНЫЙ РЕЖИМ")
-                                            .setPositiveButton("Принял") { dialog, _ ->
-                                                dialog.cancel()
-                                            }
-                                        dialog.show()
-                                    }
-                                    NetworkService.stringMessageBroker.removeAt(i)
-                                }
-                                "reconnect" -> {
-                                    runOnUiThread {
-                                        Toast.makeText(this@ObjectActivity, "Соединение с сервером восстановлено", Toast.LENGTH_LONG).show()
-                                    }
-
-                                    NetworkService.stringMessageBroker.removeAt(i)
-                                }
-                                "gbrstatus" -> {
-                                    if (jsonMessage.getString("status") != "На тревоге") {
-                                        SharedPreferencesState.init(this@ObjectActivity)
-                                        if (jsonMessage.getString("status") != null) {
-                                            SharedPreferencesState.addPropertyString("status", jsonMessage.getString("status"))
-                                        }
-
-                                        runOnUiThread {
-                                            Toast.makeText(this@ObjectActivity, "Тревога отменена(смена статуса)!", Toast.LENGTH_LONG).show()
-
-                                            startActivity(Intent(this@ObjectActivity, StartActivity::class.java))
-                                        }
-                                    }
-                                    NetworkService.stringMessageBroker.removeAt(i)
-                                }
-                                "alarmpok" -> {
-                                    runOnUiThread {
-                                        try {
-                                            Toast.makeText(this@ObjectActivity, "Тревога подтвреждена", Toast.LENGTH_LONG).show()
-                                        } catch (e: java.lang.Exception) {
-                                            e.printStackTrace()
-                                        }
-                                    }
-                                    NetworkService.stringMessageBroker.removeAt(i)
-                                }
-
-                                "notalarm" -> {
-
-                                    closeReceiver = true
-
-                                    runOnUiThread {
-                                        Toast.makeText(this@ObjectActivity, "Тревога отменена!", Toast.LENGTH_LONG).show()
-                                        SharedPreferencesState.addPropertyString("status", "Свободен")
-                                        startActivity(Intent(this@ObjectActivity, StartActivity::class.java))
-                                    }
-                                    NetworkService.stringMessageBroker.removeAt(i)
-                                }
-                            }
-                            if (lenght> NetworkService.stringMessageBroker.count())
-                                break
-                        }
-                    }
-                }
-
-                sleep(100)
-            }
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Alive = false
-        println("onStop")
-    }*/
 }

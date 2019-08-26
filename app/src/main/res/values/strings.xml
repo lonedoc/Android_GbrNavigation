@@ -37,5 +37,8 @@
     <string name="fragmentimage">fragmentImage</string>
     <string name="exit">Закрыть</string>
     <string name="comment">Введите комметарий (необязательно)</string>
+    <string name="waitConnectToGPS">Ожидание подключение к GPS...</string>
+    <string name="authorization">Авторизация</string>
+    <string name="registration">Регистрация</string>
 
 </resources>

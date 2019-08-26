@@ -11,6 +11,7 @@ import java.lang.Exception
 class MyLocation : LocationListener {
     companion object {
         var imHere: Location? = null
+        var Enable:Boolean = false
     }
 
     @SuppressLint("MissingPermission")
@@ -37,6 +38,9 @@ class MyLocation : LocationListener {
 
     override fun onLocationChanged(location: Location?) {
         imHere = location
+        if(imHere==null){
+            Enable = true
+        }
     }
 
     override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {

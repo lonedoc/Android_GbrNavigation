@@ -23,7 +23,6 @@ class AdapterPlanList(private val bitmapList: ArrayList<Bitmap>, private val con
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        // holder.imageView.setImage(ImageSource.bitmap(bitmapList[position]))
         holder.imageView.setImageBitmap(bitmapList[position])
         holder.parentLayout.setOnClickListener {
             val fragment: Fragment = ImageFragment(bitmap = bitmapList[position])

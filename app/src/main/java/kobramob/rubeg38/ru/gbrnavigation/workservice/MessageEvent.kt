@@ -16,11 +16,7 @@ data class AlarmEvent(
 )
 
 data class RegistrationEvent(
-    val command: String,
-    val routeServer: ArrayList<String>,
-    val call: String,
-    val status: String,
-    val gbrStatus: ArrayList<String>
+    var command: String
 )
 
 data class ImageEvent(

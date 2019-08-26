@@ -1,9 +1,7 @@
 package kobramob.rubeg38.ru.gbrnavigation.loginactivity
 
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -12,26 +10,29 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.iid.FirebaseInstanceId
 import com.redmadrobot.inputmask.MaskedTextChangedListener
-import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
-import kobramob.rubeg38.ru.gbrnavigation.resource.DataBase
 import kobramob.rubeg38.ru.gbrnavigation.resource.SPGbrNavigation
+import kobramob.rubeg38.ru.gbrnavigation.workservice.ControlLifeCycleService
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RegistrationEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
-import kotlin.concurrent.thread
-import kotlin.system.exitProcess
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
+import java.lang.Thread.sleep
+import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 
 class LoginActivity : AppCompatActivity() {
 
     companion object {
         var isAlive = false
     }
+
     private var registration: Boolean = false
+    private var exit = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -62,6 +63,10 @@ class LoginActivity : AppCompatActivity() {
                     Toast.makeText(this, "Поле port не может быть пустым", Toast.LENGTH_LONG).show()
                 }
 
+                ipText.text.toString() == "" && portText.text.toString() == "" ->{
+                    Toast.makeText(this, "Поля ip и port не могут быть пустым", Toast.LENGTH_LONG).show()
+                }
+
                 ipText.text.toString().count() < 7 || ipText.text.toString().count() > 15 -> {
                     ipText.setText("")
                     Toast.makeText(this, "Не правильно введен ip адрес", Toast.LENGTH_LONG).show()
@@ -72,116 +77,98 @@ class LoginActivity : AppCompatActivity() {
                     Toast.makeText(this, "Не правильно введен port сервера", Toast.LENGTH_LONG).show()
                 }
 
-                else -> {
+                else ->{
 
+                    if(!EventBus.getDefault().isRegistered(this)){
+                        EventBus.getDefault().register(this)
+                    }
+
+                    isAlive = true
                     registration = true
 
-                    val service = Intent(this, RubegNetworkService::class.java)
 
-                    val ip: ArrayList<String> = ArrayList()
-                    ip.add(ipText.text.toString())
 
-                    service.putExtra("command", "start")
-                    service.putStringArrayListExtra("ip", ip)
-                    service.putExtra("port", portText.text.toString().toInt())
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        startForegroundService(service)
-                    } else {
-                        startService(service)
-                    }
                     thread {
-                        var token = ""
 
-                        FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
-                            token = it.token
-                        }
-                        while (token == "") {
+                        runOnUiThread {
+                            ControlLifeCycleService.startService(this,ipText.text.toString(),portText.text.toString().toInt())
                         }
 
-                        Log.d("FCMToken", token)
-
+                        val fcmToken = initFCMToken()
                         val registrationMessage = JSONObject()
                         registrationMessage.put("\$c$", "reg")
                         registrationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
                         registrationMessage.put("password", intent.getStringExtra("imei"))
-                        registrationMessage.put("token", token)
+                        registrationMessage.put("token",fcmToken )
 
                         sleep(1000)
                         RubegNetworkService.protocol.send(registrationMessage.toString()) {
-                            access: Boolean ->
-                                if (access) {
-                                    runOnUiThread {
+                                access: Boolean ->
+                            if (access) {
+                                runOnUiThread {
 
-                                        SPGbrNavigation.init(this)
-                                        SPGbrNavigation.addPropertyString("ip", ipText.text.toString())
-                                        SPGbrNavigation.addPropertyInt("port", portText.text.toString().toInt())
-                                        SPGbrNavigation.addPropertyString("imei", intent.getStringExtra("imei")!!)
-                                        SPGbrNavigation.addPropertyString("fcmtoken", token)
+                                    SPGbrNavigation.init(this)
+                                    SPGbrNavigation.addPropertyString("ip", ipText.text.toString())
+                                    SPGbrNavigation.addPropertyInt("port", portText.text.toString().toInt())
+                                    SPGbrNavigation.addPropertyString("imei", intent.getStringExtra("imei")!!)
+                                    SPGbrNavigation.addPropertyString("fcmtoken", fcmToken)
 
-                                        Toast.makeText(this, "Регистрация прошла успешно", Toast.LENGTH_SHORT).show()
-                                    }
-                                } else {
-                                    runOnUiThread {
-                                        service.putExtra("command", "stop")
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                            startForegroundService(service)
-                                        } else {
-                                            startService(service)
-                                        }
-                                        Toast.makeText(this, "Приложение не смогло зарегистрироваться на сервере", Toast.LENGTH_LONG).show()
-                                    }
+                                }
+                            } else {
+                                runOnUiThread {
+
+                                    Toast.makeText(this, "Приложение не смогло зарегистрироваться на сервере", Toast.LENGTH_LONG).show()
+
+                                    ControlLifeCycleService.stopService(this)
+
                                 }
                             }
+                        }
                     }
+
                 }
             }
         }
+    }
+
+    private fun initFCMToken(): String {
+
+        var token = ""
+
+        if(getSharedPreferences("gbrStorage",Context.MODE_PRIVATE).contains("fcmtoken"))
+            FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
+                token = it.token
+            }
+        else
+            token = getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken","").toString()
+
+        while (token == "" ) {
+            //init token
+        }
+
+
+        Log.d("FCMToken", token)
+
+        return token
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(event: RegistrationEvent) {
         when (event.command) {
             "regok" -> {
-                Log.d("Registration", "\n " + " " + "\n routeServer ${event.routeServer} \n call ${event.call} \n status ${event.status} \n gbrStatus ${event.gbrStatus}")
-                val dbHelper = DataBase(this)
-                val db = dbHelper.writableDatabase
 
-                val cursorRoute = db.query("RouteServerList", null, null, null, null, null, null)
-                if (cursorRoute.count == 0) {
-                    val cv = ContentValues()
-                    for (i in 0 until event.routeServer.count()) {
-                        cv.put("ip", event.routeServer[i])
-                        Log.d("DataBase", "id = " + db.insert("RouteServerList", null, cv))
-                    }
-                }
-                cursorRoute.close()
-
-                val cursorStatus = db.query("StatusList", null, null, null, null, null, null)
-                if (cursorStatus.count == 0) {
-                    val cv = ContentValues()
-                    for (i in 0 until event.gbrStatus.count()) {
-                        cv.put("status", event.gbrStatus[i])
-                        Log.d("DataBase", "id = " + db.insert("StatusList", null, cv))
-                    }
-                }
-                cursorStatus.close()
-
-                SPGbrNavigation.init(this)
-                if (event.call != "")
-                    SPGbrNavigation.addPropertyString("call", event.call)
-                else {
-                    SPGbrNavigation.addPropertyString("call", "")
-                    Toast.makeText(this, "Группа не была поставлена на дежурство в дежурном операторе", Toast.LENGTH_SHORT).show()
-                }
-                if (event.routeServer.count()> 0)
-                    SPGbrNavigation.addPropertyString("routeserver", event.routeServer[0])
-                else
-                    SPGbrNavigation.addPropertyString("routeserver", "91.189.160.38:5000")
+                Toast.makeText(this, "Регистрация прошла успешно", Toast.LENGTH_SHORT).show()
 
                 val intent = Intent(this@LoginActivity, CommonActivity::class.java)
-                intent.putExtra("status", event.status)
                 startActivity(intent)
+
+            }
+            "accessdenied"->{
+
+                Toast.makeText(this,"Данного пользователя не существует в базе",Toast.LENGTH_SHORT).show()
+
+                ControlLifeCycleService.stopService(this)
+
             }
         }
     }
@@ -190,6 +177,8 @@ class LoginActivity : AppCompatActivity() {
         super.onStart()
 
         isAlive = true
+
+        if(!EventBus.getDefault().isRegistered(this))
         EventBus.getDefault().register(this)
     }
 
@@ -197,12 +186,15 @@ class LoginActivity : AppCompatActivity() {
         super.onStop()
 
         isAlive = false
+
+        if(EventBus.getDefault().isRegistered(this))
         EventBus.getDefault().unregister(this)
+
     }
 
-    private var exit = false
     override fun onBackPressed() {
         if (exit) {
+            finish()
             exitProcess(0)
         } else {
             Toast.makeText(this, "Вы точно хотите выйти? Для того чтобы закрыть приложение нажмите еще раз", Toast.LENGTH_LONG).show()

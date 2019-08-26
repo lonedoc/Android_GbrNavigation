@@ -1,5 +1,6 @@
 package kobramob.rubeg38.ru.gbrnavigation.commonactivity
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
@@ -8,10 +9,10 @@ import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.location.LocationManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -35,8 +36,6 @@ import kobramob.rubeg38.ru.gbrnavigation.resource.DataBase
 import kobramob.rubeg38.ru.gbrnavigation.resource.SPGbrNavigation
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.workservice.*
-import kotlin.concurrent.thread
-import kotlin.system.exitProcess
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -48,12 +47,14 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 
 class CommonActivity : AppCompatActivity() {
 
     private val sizeNormal = 0
     private val sizeMini = 1
-    private lateinit var mMapView: MapView
+    private var mMapView: MapView? =null
 
     private lateinit var rotationGestureOverlay: RotationGestureOverlay
     private lateinit var locationOverlay: MyLocationNewOverlay
@@ -65,127 +66,33 @@ class CommonActivity : AppCompatActivity() {
 
         var isAlive = false
         lateinit var alertSound: MediaPlayer
-        private var planList: ArrayList<String> = ArrayList()
-        private var otvl: ArrayList<String> = ArrayList()
     }
 
+    @SuppressLint("InflateParams")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_common)
 
-        alertSound = MediaPlayer.create(this@CommonActivity, raw.alarm_sound)
+
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        /*if (alertSound.isPlaying) {
-            alertSound.stop()
-            alertSound.reset()
-        }*/
-
-        if (alertSound.isPlaying) {
-            alertSound.stop()
-            alertSound.reset()
-        }
-
-        alarmObjectInfo.print()
-
-        if (alarmObjectInfo.isNotEmpty()) {
-
-            val alertDialog = AlertDialog.Builder(this@CommonActivity)
-            val view = layoutInflater.inflate(R.layout.dialog_alarm, null, false)
-            alertDialog.setView(view)
-
-            val dialog = alertDialog.create()
-            dialog.setCancelable(false)
-            dialog.show()
-
-            val acceptAlertButton: Button = view!!.findViewById(AcceptAlert)
-            val dialogObjectName: TextView = view.findViewById(dialog_objectName)
-            val dialogObjectAddress: TextView = view.findViewById(dialog_objectAddress)
-
-            dialogObjectName.text = alarmObjectInfo.name
-            dialogObjectAddress.text = alarmObjectInfo.address
-            alertSound.start()
-
-            acceptAlertButton.setOnClickListener {
-
-                if (alertSound.isPlaying) {
-                    alertSound.stop()
-                    alertSound.reset()
-                }
-                if (alertSound.isPlaying) {
-                    alertSound.stop()
-                    alertSound.reset()
-                }
-                if (alertSound.isPlaying) {
-                    alertSound.stop()
-                    alertSound.reset()
-                }
-                if (alertSound.isPlaying) {
-                    alertSound.stop()
-                    alertSound.reset()
-                }
-
-                when {
-                    !RubegNetworkService.connectInternet -> {
-                        Toast.makeText(this, "Нет соединения с интернетом, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
-                        val objectActivity = Intent(this, ObjectActivity::class.java)
-                        objectActivity.putExtra("objectInfo", alarmObjectInfo)
-                        startActivity(objectActivity)
-                        alarmObjectInfo.clear()
-                    }
-                    !RubegNetworkService.connectServer -> {
-                        Toast.makeText(this, "Нет соединения с сервером, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
-                        val objectActivity = Intent(this, ObjectActivity::class.java)
-                        objectActivity.putExtra("objectInfo", alarmObjectInfo)
-                        startActivity(objectActivity)
-                        alarmObjectInfo.clear()
-                    }
-                    else -> {
-                        thread {
-                            val message = JSONObject()
-                            message.put("\$c$", "gbrkobra")
-                            message.put("command", "alarmp")
-                            message.put("number", alarmObjectInfo.number)
-
-                            RubegNetworkService.protocol.request(message.toString()) {
-                                success: Boolean, data: ByteArray? ->
-                                    if (success && data != null) {
-                                        runOnUiThread {
-                                            Toast.makeText(this, "Тревога подтверждена", Toast.LENGTH_SHORT).show()
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        runOnUiThread {
-                                            Toast.makeText(this,"Тревога не подтверждена", Toast.LENGTH_SHORT).show()
-                                        }
-
-                                    }
-                                }
-                            val objectActivity = Intent(this, ObjectActivity::class.java)
-                            objectActivity.putExtra("objectInfo", alarmObjectInfo)
-                            startActivity(objectActivity)
-                            alarmObjectInfo.clear()
-                        }
-                    }
-                }
-
-                dialog.cancel()
-            }
-        }
-
+        alertSound = MediaPlayer.create(this@CommonActivity, raw.alarm_sound)
         mMapView = findViewById(common_mapView)
 
         val toolbar: Toolbar = findViewById(common_toolbar)
         setSupportActionBar(toolbar)
-        val title: String = getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("call", "Позывной") + " ( " + intent.getStringExtra("status") + " ) "
+        val title: String = DataStore.call + " ( " + DataStore.status + " ) "
         supportActionBar?.title = title
 
         fillFabMenu()
 
+        while(mMapView == null)
+        {
+        }
+
         initMapView()
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -231,7 +138,7 @@ class CommonActivity : AppCompatActivity() {
                         followFab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, color.viewBackground))
                         followFab.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, color.colorPrimary))
                     }
-                    mMapView.controller.animateTo(GeoPoint(MyLocation.imHere))
+                    mMapView!!.controller.animateTo(GeoPoint(MyLocation.imHere))
 
                     SharedPreferencesState.init(this)
                     SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
@@ -256,6 +163,7 @@ class CommonActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("InflateParams")
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN, priority = 0)
     fun onStickyAlertEvent(event: AlarmEvent) {
         when {
@@ -265,7 +173,7 @@ class CommonActivity : AppCompatActivity() {
                 planAndPhoto.addAll(event.plan)
                 planAndPhoto.addAll(event.photo)
 
-                alarmObjectInfo = AlarmObjectInfo(event.name, event.number, event.lon, event.lat, event.inn, event.zakaz, event.address, event.area.name, event.area.alarmtime, event.plan, event.otvl,DataStore.reports)
+                alarmObjectInfo = AlarmObjectInfo(event.name, event.number, event.lon, event.lat, event.inn, event.zakaz, event.address, event.area.name, event.area.alarmtime, planAndPhoto, event.otvl,DataStore.reports)
 
                 alertSound.start()
 
@@ -348,9 +256,8 @@ class CommonActivity : AppCompatActivity() {
                 when (event.command) {
                     "gbrstatus" -> {
                         runOnUiThread {
-                            SPGbrNavigation.init(this)
-                            SPGbrNavigation.addPropertyString("status", event.message)
-                            val title: String = getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("call", "") + " ( " + event.message + " ) "
+                            DataStore.status =  event.message
+                            val title: String = DataStore.call + " ( " + event.message + " ) "
                             supportActionBar?.title = title
                         }
                     }
@@ -382,6 +289,103 @@ class CommonActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
+
+
+        if (alertSound.isPlaying) {
+            alertSound.stop()
+            alertSound.reset()
+        }
+
+        alarmObjectInfo.print()
+
+        if (alarmObjectInfo.isNotEmpty()) {
+
+            val alertDialog = AlertDialog.Builder(this@CommonActivity)
+            val view = layoutInflater.inflate(R.layout.dialog_alarm, null, false)
+            alertDialog.setView(view)
+
+            val dialog = alertDialog.create()
+            dialog.setCancelable(false)
+            dialog.show()
+
+            val acceptAlertButton: Button = view!!.findViewById(AcceptAlert)
+            val dialogObjectName: TextView = view.findViewById(dialog_objectName)
+            val dialogObjectAddress: TextView = view.findViewById(dialog_objectAddress)
+
+            dialogObjectName.text = alarmObjectInfo.name
+            dialogObjectAddress.text = alarmObjectInfo.address
+            alertSound.start()
+
+            acceptAlertButton.setOnClickListener {
+
+                if (alertSound.isPlaying) {
+                    alertSound.stop()
+                    alertSound.reset()
+                }
+                if (alertSound.isPlaying) {
+                    alertSound.stop()
+                    alertSound.reset()
+                }
+                if (alertSound.isPlaying) {
+                    alertSound.stop()
+                    alertSound.reset()
+                }
+                if (alertSound.isPlaying) {
+                    alertSound.stop()
+                    alertSound.reset()
+                }
+
+                when {
+                    !RubegNetworkService.connectInternet -> {
+                        Toast.makeText(this, "Нет соединения с интернетом, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
+                        val objectActivity = Intent(this, ObjectActivity::class.java)
+                        objectActivity.putExtra("objectInfo", alarmObjectInfo)
+                        startActivity(objectActivity)
+                        alarmObjectInfo.clear()
+                    }
+                    !RubegNetworkService.connectServer -> {
+                        Toast.makeText(this, "Нет соединения с сервером, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
+                        val objectActivity = Intent(this, ObjectActivity::class.java)
+                        objectActivity.putExtra("objectInfo", alarmObjectInfo)
+                        startActivity(objectActivity)
+                        alarmObjectInfo.clear()
+                    }
+                    else -> {
+                        thread {
+                            val message = JSONObject()
+                            message.put("\$c$", "gbrkobra")
+                            message.put("command", "alarmp")
+                            message.put("number", alarmObjectInfo.number)
+
+                            RubegNetworkService.protocol.request(message.toString()) {
+                                    success: Boolean, data: ByteArray? ->
+                                if (success && data != null) {
+                                    runOnUiThread {
+                                        Toast.makeText(this, "Тревога подтверждена", Toast.LENGTH_SHORT).show()
+                                    }
+
+                                }
+                                else
+                                {
+                                    runOnUiThread {
+                                        Toast.makeText(this,"Тревога не подтверждена", Toast.LENGTH_SHORT).show()
+                                    }
+
+                                }
+                            }
+                            val objectActivity = Intent(this, ObjectActivity::class.java)
+                            objectActivity.putExtra("objectInfo", alarmObjectInfo)
+                            startActivity(objectActivity)
+                            alarmObjectInfo.clear()
+                        }
+                    }
+                }
+
+                dialog.cancel()
+            }
+        }
+
+
         isAlive = true
 
         if (!RubegNetworkService.isServiceStarted) {
@@ -411,7 +415,7 @@ class CommonActivity : AppCompatActivity() {
                 RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
                     if (success) {
                         runOnUiThread {
-                            Toast.makeText(this, "Восстановление связи прошло успешно", Context.MODE_PRIVATE).show()
+                            Toast.makeText(this, "Восстановление связи прошло успешно", Toast.LENGTH_SHORT).show()
                         }
                     } else {
                         runOnUiThread {
@@ -441,7 +445,7 @@ class CommonActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        mMapView.onResume()
+        mMapView!!.onResume()
         if (!locationOverlay.isMyLocationEnabled && !scaleBarOverlay.isEnabled) {
             locationOverlay.enableMyLocation()
             scaleBarOverlay.enableScaleBar()
@@ -451,9 +455,14 @@ class CommonActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
 
-        mMapView.onPause()
-        locationOverlay.disableMyLocation()
-        scaleBarOverlay.disableScaleBar()
+        mMapView!!.onPause()
+
+        if(locationOverlay.isMyLocationEnabled && scaleBarOverlay.isEnabled)
+        {
+            locationOverlay.disableMyLocation()
+            scaleBarOverlay.disableScaleBar()
+        }
+
 
         if (locationOverlay.isFollowLocationEnabled)
             locationOverlay.disableFollowLocation()
@@ -467,36 +476,75 @@ class CommonActivity : AppCompatActivity() {
 
     private fun initMapView() {
         org.osmdroid.config.Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
-        mMapView.setTileSource(TileSourceFactory.MAPNIK)
-        mMapView.setHasTransientState(true)
-        mMapView.controller.setZoom(15.0)
-        mMapView.isTilesScaledToDpi = true
-        mMapView.isFlingEnabled = true
-        mMapView.controller.animateTo(GeoPoint(MyLocation.imHere!!.latitude, MyLocation.imHere!!.longitude))
+        mMapView!!.setTileSource(TileSourceFactory.MAPNIK)
+        mMapView!!.setHasTransientState(true)
+        mMapView!!.controller.setZoom(15.0)
+        mMapView!!.isTilesScaledToDpi = true
+        mMapView!!.isFlingEnabled = true
 
-        mMapView.overlays.add(locationOverlay())
-        mMapView.overlays.add(initRotationGestureOverlay())
-        mMapView.overlays.add(initScaleBarOverlay())
+        val manager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        val buildAlertMessageNoGps = {
+            val builder = android.app.AlertDialog.Builder(this)
+            builder.setMessage("GPS отключен, хотите ли вы его включить? (Приложение не работает без GPS)")
+                .setCancelable(false)
+                .setPositiveButton("Да"){_,_ ->
+                    startActivity(Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                    thread {
+                        while(!manager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+                        {
+                        }
+                        runOnUiThread {
+                            mMapView!!.controller.animateTo(GeoPoint(MyLocation.imHere!!.latitude, MyLocation.imHere!!.longitude))
+
+                            mMapView!!.overlays.add(locationOverlay())
+                            mMapView!!.overlays.add(initRotationGestureOverlay())
+                            mMapView!!.overlays.add(initScaleBarOverlay())
+                        }
+                    }
+                }
+                .setNegativeButton("No") {
+                        dialog,_->
+                    dialog.cancel()
+
+                }
+            val alert = builder.create()
+            alert.show()
+        }
+
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            buildAlertMessageNoGps()
+        }
+        else
+        {
+            mMapView!!.controller.animateTo(GeoPoint(MyLocation.imHere!!.latitude, MyLocation.imHere!!.longitude))
+
+            mMapView!!.overlays.add(locationOverlay())
+            mMapView!!.overlays.add(initRotationGestureOverlay())
+            mMapView!!.overlays.add(initScaleBarOverlay())
+        }
+
+
     }
 
     private fun locationOverlay(): MyLocationNewOverlay {
         val gpsMyLocationProvider = GpsMyLocationProvider(this)
         gpsMyLocationProvider.addLocationSource(MyLocation.imHere!!.provider)
-        locationOverlay = MyLocationNewOverlay(gpsMyLocationProvider, mMapView)
+        locationOverlay = MyLocationNewOverlay(gpsMyLocationProvider, mMapView!!)
         locationOverlay.setDirectionArrow(customIcon(drawable.ic_navigator_icon), customIcon(drawable.ic_navigator_active_icon))
         locationOverlay.isDrawAccuracyEnabled = false
         return locationOverlay
     }
 
     private fun initRotationGestureOverlay(): RotationGestureOverlay {
-        rotationGestureOverlay = RotationGestureOverlay(mMapView)
+        rotationGestureOverlay = RotationGestureOverlay(mMapView!!)
         rotationGestureOverlay.isEnabled = true
-        mMapView.setMultiTouchControls(true)
+        mMapView!!.setMultiTouchControls(true)
         return rotationGestureOverlay
     }
 
     private fun initScaleBarOverlay(): ScaleBarOverlay {
-        scaleBarOverlay = ScaleBarOverlay(mMapView)
+        scaleBarOverlay = ScaleBarOverlay(mMapView!!)
         scaleBarOverlay.setCentred(true)
         scaleBarOverlay.setScaleBarOffset(resources.displayMetrics.widthPixels / 2, 10)
         return scaleBarOverlay
@@ -557,22 +605,7 @@ class CommonActivity : AppCompatActivity() {
             }
         }
 
-        val statusList: ArrayList<String> = ArrayList()
-
-        val dbHelper = DataBase(this)
-        val db = dbHelper.writableDatabase
-
-        val cursorStatus = db.query("StatusList", null, null, null, null, null, null)
-        if (cursorStatus.moveToFirst()) {
-
-            val status = cursorStatus.getColumnIndex("status")
-            do {
-                if (cursorStatus.getString(status) != "На тревоге") {
-                    statusList.add(cursorStatus.getString(status))
-                }
-            } while (cursorStatus.moveToNext())
-        }
-        cursorStatus.close()
+        val statusList: ArrayList<String> = DataStore.statusList
 
         statusList.sort()
 
@@ -601,14 +634,13 @@ class CommonActivity : AppCompatActivity() {
                                     access: Boolean, data: ByteArray? ->
                                         if (access && data != null) {
                                             runOnUiThread {
-                                                SPGbrNavigation.init(this)
-                                                SPGbrNavigation.addPropertyString("status", JSONObject(String(data)).getString("status"))
-                                                val title: String = getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("call", "") + " ( " + JSONObject(String(data)).getString("status") + " ) "
+                                                DataStore.status = JSONObject(String(data)).getString("status")
+                                                val title: String = DataStore.call + " ( " + DataStore.status + " ) "
                                                 supportActionBar?.title = title
                                             }
                                         } else {
                                             runOnUiThread {
-                                                Toast.makeText(this, "Сообщение не дошло", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(this, "Смена статуса невозможно, сервер не отвечает", Toast.LENGTH_SHORT).show()
                                             }
                                         }
                                     }
@@ -644,9 +676,11 @@ class CommonActivity : AppCompatActivity() {
 
             fabMenu.addMenuButton(actionButton)
         }
+
     }
 
     private var exit = false
+
     override fun onBackPressed() {
         if (exit) {
             exitProcess(0)
@@ -656,16 +690,3 @@ class CommonActivity : AppCompatActivity() {
         }
     }
 }
-
-/*val metrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(metrics)
-        val heightPixels = metrics.heightPixels
-        val widthPixels = metrics.widthPixels
-        val densityDpi = metrics.densityDpi
-        val xdpi = metrics.xdpi
-        val ydpi = metrics.ydpi
-        Log.i("CommonActivity", "widthPixels  = $widthPixels")
-        Log.i("CommonActivity", "heightPixels = $heightPixels")
-        Log.i("CommonActivity", "densityDpi   = $densityDpi")
-        Log.i("CommonActivity", "xdpi         = $xdpi")
-        Log.i("CommonActivity", "ydpi         = $ydpi")*/
