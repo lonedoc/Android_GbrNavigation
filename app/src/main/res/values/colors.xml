@@ -5,7 +5,10 @@
     <color name="colorPrimaryDark">#6B140D</color>
     <color name="colorAccent">#D13124</color>
 
+    <color name="arriveToObject">#478D15</color>
     <color name="viewBackground">#FFFFFF</color>
+
+    <color name="button_state_enable_false">#525252</color>
 
     <color name="textDark">#000000</color>
     <color name="textWhite">#FFFFFF</color>

@@ -19,15 +19,19 @@ class MyLocation : LocationListener {
         val locationManager: LocationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         try {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 8000, 100.toFloat(), this)
+            locationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER,
+                0,
+                0.toFloat(),
+                this)
         } catch (e: Exception) {
             e.printStackTrace()
         }
         try {
             locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER,
-                8000,
-                100.toFloat(),
+                0,
+                0.toFloat(),
                 this
             )
         } catch (e: Exception) {

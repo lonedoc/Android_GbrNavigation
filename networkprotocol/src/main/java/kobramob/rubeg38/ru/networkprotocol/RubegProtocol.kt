@@ -220,7 +220,7 @@ class RubegProtocol {
         thread {
             while (protocolAlive) {
 
-                if (this.lastResponseTime + 10000 <= System.currentTimeMillis()) {
+                if (this.lastResponseTime + 17000 <= System.currentTimeMillis()) {
 
                     this.lastResponseTime = System.currentTimeMillis()
 
@@ -348,7 +348,7 @@ class RubegProtocol {
                 // Send
                 val windowIsFull = this.onAirPackets.count() >= MAX_PACKETS_COUNT
                 val nothingToSend = this.packetsToSend.count() == 0
-                val syncTimeHasCome = this.lastRequestTime + 8900 <= System.currentTimeMillis() // 10s - (max RTT + interval)
+                val syncTimeHasCome = this.lastRequestTime + 5000 <= System.currentTimeMillis() // 10s - (max RTT + interval)
 
                 if (!nothingToSend && !windowIsFull) {
                     val packet = this.packetsToSend.dequeue()

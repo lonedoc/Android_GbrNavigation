@@ -2,6 +2,7 @@ package kobramob.rubeg38.ru.gbrnavigation.loginactivity
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -86,20 +87,36 @@ class LoginActivity : AppCompatActivity() {
                     isAlive = true
                     registration = true
 
-
-
                     thread {
 
                         runOnUiThread {
-                            ControlLifeCycleService.startService(this,ipText.text.toString(),portText.text.toString().toInt())
+                            //ControlLifeCycleService.startService(this,ipText.text.toString(),portText.text.toString().toInt())
+                            val service = Intent(this, RubegNetworkService::class.java)
+
+                            service.putExtra("command", "start")
+                            service.putStringArrayListExtra("ip", arrayListOf(ipText.text.toString()))
+                            service.putExtra("port", portText.text.toString().toInt())
+
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                startForegroundService(service)
+                            } else {
+                                startService(service)
+                            }
+
                         }
 
+
+                        println("Hello")
+
                         val fcmToken = initFCMToken()
+
                         val registrationMessage = JSONObject()
                         registrationMessage.put("\$c$", "reg")
                         registrationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
                         registrationMessage.put("password", intent.getStringExtra("imei"))
                         registrationMessage.put("token",fcmToken )
+
+                        Log.d("Registration",registrationMessage.toString())
 
                         sleep(1000)
                         RubegNetworkService.protocol.send(registrationMessage.toString()) {
@@ -133,14 +150,19 @@ class LoginActivity : AppCompatActivity() {
 
     private fun initFCMToken(): String {
 
+        println("Hello 2")
         var token = ""
 
-        if(getSharedPreferences("gbrStorage",Context.MODE_PRIVATE).contains("fcmtoken"))
+        if(!getSharedPreferences("gbrStorage",Context.MODE_PRIVATE).contains("fcmtoken")){
+            println("Hello 3")
             FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
                 token = it.token
             }
-        else
+        }
+        else{
+            println("Hello 4")
             token = getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken","").toString()
+        }
 
         while (token == "" ) {
             //init token

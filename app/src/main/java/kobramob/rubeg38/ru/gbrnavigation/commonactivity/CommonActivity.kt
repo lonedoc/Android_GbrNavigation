@@ -11,8 +11,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.LocationManager
 import android.media.MediaPlayer
-import android.os.Build
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -30,10 +30,10 @@ import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.R.*
 import kobramob.rubeg38.ru.gbrnavigation.R.id.*
+import kobramob.rubeg38.ru.gbrnavigation.ReferenceActivity
 import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
-import kobramob.rubeg38.ru.gbrnavigation.resource.DataBase
-import kobramob.rubeg38.ru.gbrnavigation.resource.SPGbrNavigation
+import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectDataStore
 import kobramob.rubeg38.ru.gbrnavigation.resource.SharedPreferencesState
 import kobramob.rubeg38.ru.gbrnavigation.workservice.*
 import org.greenrobot.eventbus.EventBus
@@ -47,6 +47,9 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
@@ -75,6 +78,7 @@ class CommonActivity : AppCompatActivity() {
 
 
 
+
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         alertSound = MediaPlayer.create(this@CommonActivity, raw.alarm_sound)
@@ -96,7 +100,7 @@ class CommonActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.main_map, menu)
+        menuInflater.inflate(R.menu.common_menu, menu)
         return true
     }
 
@@ -121,9 +125,17 @@ class CommonActivity : AppCompatActivity() {
                         dialog.cancel()
                     }.show()
             }
-            change_map -> {
-                Toast.makeText(this, "Функция на данный момент не доступна", Toast.LENGTH_SHORT).show()
+            reference->{
+                ///Вызов справочника
+                val referenceActivity = Intent(this,ReferenceActivity::class.java)
+                startActivity(referenceActivity)
             }
+           /* change_map -> {
+                Toast.makeText(this, "Функция на данный момент не доступна", Toast.LENGTH_SHORT).show()
+            }*/
+            /*setting->{
+
+            }*/
         }
         return super.onOptionsItemSelected(item)
     }
@@ -163,12 +175,13 @@ class CommonActivity : AppCompatActivity() {
         }
     }
 
+    var alertAccept:Boolean = false
     @SuppressLint("InflateParams")
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN, priority = 0)
     fun onStickyAlertEvent(event: AlarmEvent) {
         when {
             event.command.isNotEmpty() -> {
-
+                alertAccept = true
                 val planAndPhoto: ArrayList<String> = ArrayList()
                 planAndPhoto.addAll(event.plan)
                 planAndPhoto.addAll(event.photo)
@@ -227,7 +240,15 @@ class CommonActivity : AppCompatActivity() {
                                         if (success && data != null) {
                                             runOnUiThread {
 
-                                                Toast.makeText(this, "Тревога подтверждена", Toast.LENGTH_SHORT).show()
+                                                val currentTime: String = SimpleDateFormat(
+                                                    "HH:mm:ss",
+                                                    Locale.getDefault()
+                                                ).format(Date())
+
+                                                ObjectDataStore.timeAlarmApply(currentTime)
+
+                                                Toast.makeText(this, "Тревога подтверждена в $currentTime", Toast.LENGTH_SHORT).show()
+
                                             }
                                         } else {
                                             runOnUiThread {
@@ -249,36 +270,96 @@ class CommonActivity : AppCompatActivity() {
         }
     }
 
+    var timer:CountDownTimer? = null
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN, priority = 0)
     fun onStickyMessageEvent(event: MessageEvent) {
         when {
             event.command.isNotEmpty() -> {
                 when (event.command) {
                     "gbrstatus" -> {
-                        runOnUiThread {
-                            DataStore.status =  event.message
-                            val title: String = DataStore.call + " ( " + event.message + " ) "
-                            supportActionBar?.title = title
-                        }
-                    }
-                    "internet" -> {
-                        if (event.message == "lost") {
-                            // Dialog
-                            Toast.makeText(this, "Нет соединения с интернетом, приложение переходит в автономный режим", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                    "reconnectInternet" -> {
-                        if (event.message == "true") {
-                            Toast.makeText(this, "Интернет соединение восстановлено", Toast.LENGTH_LONG).show()
-                        } else {
-                            Toast.makeText(this, "Интернет соединение не восстановлено", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                    "reconnectServer" -> {
-                        if (event.message == "true") {
-                            Toast.makeText(this, "Соединение с сервером восстановлено", Toast.LENGTH_LONG).show()
-                        } else {
-                            Toast.makeText(this, "Соединение с сервером не восстановлено", Toast.LENGTH_LONG).show()
+                        try{
+                            runOnUiThread {
+                                DataStore.status =  event.message
+                                val title: String = DataStore.call + " ( " + event.message + " ) "
+                                supportActionBar?.title = title
+
+                                for(i in 0 until DataStore.statusList.count())
+                                {
+                                    if(DataStore.statusList[i].name == event.message && DataStore.statusList[i].time!= "0")
+                                    {
+
+                                        val stopStatus = {
+                                            thread {
+                                                this.timer?.cancel()
+                                                val statusChangeMessage = JSONObject()
+                                                statusChangeMessage.put("\$c$", "gbrkobra")
+                                                statusChangeMessage.put("command", "status")
+                                                statusChangeMessage.put("newstatus", "Свободен")
+                                                RubegNetworkService.protocol.request(statusChangeMessage.toString()) {
+                                                        access: Boolean, data: ByteArray? ->
+                                                    if (access && data != null) {
+                                                        runOnUiThread {
+                                                            DataStore.status = JSONObject(String(data)).getString("status")
+                                                            val title: String = DataStore.call + " ( " + DataStore.status + " ) "
+                                                            supportActionBar?.title = title
+                                                        }
+                                                    } else {
+                                                        runOnUiThread {
+                                                            Toast.makeText(this, "Смена статуса невозможно, сервер не отвечает", Toast.LENGTH_SHORT).show()
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        val statusTimerDialog = AlertDialog.Builder(this@CommonActivity)
+                                        val view = layoutInflater.inflate(R.layout.status_timer_dialog,null,false)
+                                        statusTimerDialog.setView(view)
+                                        statusTimerDialog.setTitle(DataStore.statusList[i].name)
+                                        statusTimerDialog.setPositiveButton("Завершить"){
+                                            dialogInterface, i ->
+                                            stopStatus()
+                                        }
+
+                                        val dialog = statusTimerDialog.create()
+                                        dialog.setCancelable(false)
+                                        dialog.show()
+
+                                        val statusTimer:TextView = view.findViewById(status_timer)
+
+                                        this.timer?.cancel()
+
+                                        this.timer = object : CountDownTimer(DataStore.statusList[i].time.toLong() * 60000, 1000) {
+                                            override fun onFinish() {
+
+                                                stopStatus()
+                                            }
+
+                                            override fun onTick(time: Long) {
+                                                println("Tick $time")
+                                                updateTimer((time / 1000).toInt())
+                                            }
+
+                                            private fun updateTimer(time: Int) {
+                                                val hours = time / 3600
+                                                val minute = (time % 3600)/60
+                                                val seconds = time % 60
+
+                                                val timeRemains = "$hours:$minute:$seconds"
+                                                statusTimer.text = timeRemains
+
+                                            }
+                                        }
+
+                                        this.timer?.start()
+
+
+                                    }
+                                }
+
+                            }
+                        }catch (e:java.lang.Exception){
+                            e.printStackTrace()
                         }
                     }
                 }
@@ -288,8 +369,6 @@ class CommonActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-
-
 
         if (alertSound.isPlaying) {
             alertSound.stop()
@@ -389,58 +468,30 @@ class CommonActivity : AppCompatActivity() {
         isAlive = true
 
         if (!RubegNetworkService.isServiceStarted) {
-            val ip: ArrayList<String> = ArrayList()
-            ip.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
+            ControlLifeCycleService.reconnectToServer(this)
+        }
 
-            val service = Intent(this, RubegNetworkService::class.java)
-            service.putExtra("command", "start")
-            service.putStringArrayListExtra("ip", ip)
-            service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
+        if(!EventBus.getDefault().isRegistered(this))
+        EventBus.getDefault().register(this)
 
-            startService(service)
-            thread {
-                Thread.sleep(500)
+        if(!alertAccept){
+            val message = JSONObject()
+            message.put("\$c$","getalarm")
+            message.put("namegbr",DataStore.namegbr)
+            RubegNetworkService.protocol.send(message = message.toString()){
+                if(it){
+                    runOnUiThread {
+                        Toast.makeText(this,"Проверка тревоги",Toast.LENGTH_SHORT).show()
+                    }
 
-                val authorizationMessage = JSONObject()
-                authorizationMessage.put("\$c$", "reg")
-                authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
-                authorizationMessage.put(
-                    "password",
-                    getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", "")
-                )
-                authorizationMessage.put(
-                    "token",
-                    getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken", "")
-                )
-                RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
-                    if (success) {
-                        runOnUiThread {
-                            Toast.makeText(this, "Восстановление связи прошло успешно", Toast.LENGTH_SHORT).show()
-                        }
-                    } else {
-                        runOnUiThread {
-                            val ipList: ArrayList<String> = ArrayList()
-                            ipList.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
-                            service.putExtra("command", "stop")
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                startForegroundService(service)
-                            } else {
-                                startService(service)
-                            }
-
-                            Toast.makeText(this, "Приложение не смогло восстановить соединение", Toast.LENGTH_LONG).show()
-                            val loginActivity = Intent(this, LoginActivity::class.java)
-                            loginActivity.putExtra("imei", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
-                            startActivity(loginActivity)
-                        }
+                }
+                else{
+                    runOnUiThread {
+                        Toast.makeText(this,"Ошибка при проверке тревоги",Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         }
-
-        EventBus.getDefault().register(this)
-        locationOverlay.enableMyLocation()
-        scaleBarOverlay.enableScaleBar()
     }
 
     override fun onResume() {
@@ -472,6 +523,7 @@ class CommonActivity : AppCompatActivity() {
         super.onStop()
         isAlive = false
         EventBus.getDefault().unregister(this)
+        alertAccept = false
     }
 
     private fun initMapView() {
@@ -493,6 +545,7 @@ class CommonActivity : AppCompatActivity() {
                     thread {
                         while(!manager.isProviderEnabled(LocationManager.GPS_PROVIDER))
                         {
+                            //gps problem
                         }
                         runOnUiThread {
                             mMapView!!.controller.animateTo(GeoPoint(MyLocation.imHere!!.latitude, MyLocation.imHere!!.longitude))
@@ -518,7 +571,6 @@ class CommonActivity : AppCompatActivity() {
         else
         {
             mMapView!!.controller.animateTo(GeoPoint(MyLocation.imHere!!.latitude, MyLocation.imHere!!.longitude))
-
             mMapView!!.overlays.add(locationOverlay())
             mMapView!!.overlays.add(initRotationGestureOverlay())
             mMapView!!.overlays.add(initScaleBarOverlay())
@@ -605,33 +657,33 @@ class CommonActivity : AppCompatActivity() {
             }
         }
 
-        val statusList: ArrayList<String> = DataStore.statusList
 
-        statusList.sort()
 
         val fabMenu: FloatingActionMenu = findViewById(common_fab_menu)
-        for (i in 0 until statusList.count()) {
-            val actionButton = com.github.clans.fab.FloatingActionButton(this)
-            actionButton.labelText = statusList[i]
-            actionButton.colorNormal = ContextCompat.getColor(this, color.colorPrimary)
-            actionButton.setOnClickListener {
-                if (fabMenu.isOpened) {
-                    when {
-                        !RubegNetworkService.connectInternet -> {
-                            Toast.makeText(this, "Нет соединения с интернетом, приложение переходит в автономный режим", Toast.LENGTH_LONG).show()
-                        }
-                        !RubegNetworkService.connectServer -> {
-                            Toast.makeText(this, "Нет соединения с сервером, приложение переходит в автономный режим", Toast.LENGTH_LONG).show()
-                        }
-                        else -> {
-                            thread {
-                                val statusChangeMessage = JSONObject()
-                                statusChangeMessage.put("\$c$", "gbrkobra")
-                                statusChangeMessage.put("command", "status")
-                                statusChangeMessage.put("newstatus", actionButton.labelText)
 
-                                RubegNetworkService.protocol.request(statusChangeMessage.toString()) {
-                                    access: Boolean, data: ByteArray? ->
+
+        for (i in 0 until  DataStore.statusList.count()) {
+            if( DataStore.statusList[i].name != "На тревоге"){
+                val actionButton = com.github.clans.fab.FloatingActionButton(this)
+                actionButton.labelText =  DataStore.statusList[i].name
+                actionButton.colorNormal = ContextCompat.getColor(this, color.colorPrimary)
+                actionButton.setOnClickListener {
+                    if (fabMenu.isOpened) {
+                        when {
+                            !RubegNetworkService.connectInternet -> {
+                                Toast.makeText(this, "Нет соединения с интернетом, приложение переходит в автономный режим", Toast.LENGTH_LONG).show()
+                            }
+                            !RubegNetworkService.connectServer -> {
+                                Toast.makeText(this, "Нет соединения с сервером, приложение переходит в автономный режим", Toast.LENGTH_LONG).show()
+                            }
+                            else -> {
+                                thread {
+                                    val statusChangeMessage = JSONObject()
+                                    statusChangeMessage.put("\$c$", "gbrkobra")
+                                    statusChangeMessage.put("command", "status")
+                                    statusChangeMessage.put("newstatus", actionButton.labelText)
+                                    RubegNetworkService.protocol.request(statusChangeMessage.toString()) {
+                                            access: Boolean, data: ByteArray? ->
                                         if (access && data != null) {
                                             runOnUiThread {
                                                 DataStore.status = JSONObject(String(data)).getString("status")
@@ -644,37 +696,38 @@ class CommonActivity : AppCompatActivity() {
                                             }
                                         }
                                     }
+                                }
                             }
                         }
+                        fabMenu.close(true)
                     }
-                    fabMenu.close(true)
+            }
+                when ( DataStore.statusList[i].name) {
+                    "Заправляется" -> { actionButton.setImageResource(drawable.ic_refueling) }
+                    "Обед" -> { actionButton.setImageResource(drawable.ic_dinner) }
+                    "Ремонт" -> { actionButton.setImageResource(drawable.ic_repairs) }
+                    "Свободен" -> { actionButton.setImageResource(drawable.ic_freedom) }
+                    else -> { actionButton.setImageResource(drawable.ic_unknown_status) }
                 }
-            }
-            when (statusList[i]) {
-                "Заправляется" -> { actionButton.setImageResource(drawable.ic_refueling) }
-                "Обед" -> { actionButton.setImageResource(drawable.ic_dinner) }
-                "Ремонт" -> { actionButton.setImageResource(drawable.ic_repairs) }
-                "Свободен" -> { actionButton.setImageResource(drawable.ic_freedom) }
-                else -> { actionButton.setImageResource(drawable.ic_unknown_status) }
-            }
-            when (resources.configuration.orientation) {
-                ORIENTATION_LANDSCAPE -> {
-                    when (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) {
-                        Configuration.SCREENLAYOUT_SIZE_LARGE -> { actionButton.buttonSize = sizeNormal }
-                        Configuration.SCREENLAYOUT_SIZE_XLARGE -> { actionButton.buttonSize = sizeNormal }
-                        else -> { actionButton.buttonSize = sizeMini }
+                when (resources.configuration.orientation) {
+                    ORIENTATION_LANDSCAPE -> {
+                        when (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) {
+                            Configuration.SCREENLAYOUT_SIZE_LARGE -> { actionButton.buttonSize = sizeNormal }
+                            Configuration.SCREENLAYOUT_SIZE_XLARGE -> { actionButton.buttonSize = sizeNormal }
+                            else -> { actionButton.buttonSize = sizeMini }
+                        }
+                    }
+                    ORIENTATION_PORTRAIT -> {
+                        when (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) {
+                            Configuration.SCREENLAYOUT_SIZE_LARGE -> { actionButton.buttonSize = sizeNormal }
+                            Configuration.SCREENLAYOUT_SIZE_XLARGE -> { actionButton.buttonSize = sizeNormal }
+                            else -> { actionButton.buttonSize = sizeMini }
+                        }
                     }
                 }
-                ORIENTATION_PORTRAIT -> {
-                    when (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) {
-                        Configuration.SCREENLAYOUT_SIZE_LARGE -> { actionButton.buttonSize = sizeNormal }
-                        Configuration.SCREENLAYOUT_SIZE_XLARGE -> { actionButton.buttonSize = sizeNormal }
-                        else -> { actionButton.buttonSize = sizeMini }
-                    }
-                }
-            }
 
-            fabMenu.addMenuButton(actionButton)
+                fabMenu.addMenuButton(actionButton)
+            }
         }
 
     }

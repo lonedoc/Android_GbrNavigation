@@ -2,7 +2,6 @@ package kobramob.rubeg38.ru.gbrnavigation.objectactivity
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
@@ -17,7 +16,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kobramob.rubeg38.ru.gbrnavigation.R
@@ -53,13 +51,15 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
     private lateinit var scaleBarOverlay: ScaleBarOverlay
     private lateinit var locationOverlay: MyLocationNewOverlay
 
+    private var enableWhileResume = false
+    private var countTry = 0
     companion object {
         var mMapView: MapView? = null
-        var proximityAlive = false
+
         var arriveToObject = false
-        var alertCanceled = false
         var road: Road? = null
         var arrived: FloatingActionButton? = null
+
     }
 
     override fun longPressHelper(p: GeoPoint?): Boolean {
@@ -98,7 +98,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
         arrived = rootView.findViewById(R.id.navigator_arrived)
 
         myLocation.setOnClickListener {
-
             try {
                 if (locationOverlay.isFollowLocationEnabled) {
                     locationOverlay.disableFollowLocation()
@@ -131,7 +130,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
         yandex.setOnClickListener {
             try {
                 if(alarmObjectInfo.lat!=0.0 && alarmObjectInfo.lon!=0.0){
-                    val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=${alarmObjectInfo.lat}&lon_to=${ alarmObjectInfo.lon}")
+                    val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=${alarmObjectInfo.lat}&lon_to=${alarmObjectInfo.lon}")
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     intent.setPackage("ru.yandex.yandexnavi")
                     startActivity(intent)
@@ -147,6 +146,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
         }
 
         arrived!!.setOnClickListener {
+            ObjectDataStore.arrivedToObjectSend = true
             when {
                 !RubegNetworkService.connectInternet -> {
                     Toast.makeText(
@@ -163,7 +163,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                     ).show()
                 }
                 else -> {
-                    Log.d("proximity", "На месте")
                     val message = JSONObject()
                     message.put("\$c$", "gbrkobra")
                     message.put("command", "alarmpr")
@@ -172,72 +171,20 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                         success: Boolean ->
                             if (success) {
                                 activity!!.runOnUiThread {
+
                                     arrived!!.visibility = View.GONE
-                                    if (road!!.mRouteHigh.count()> 1) {
+                                    if (road!!.mRouteHigh.count() > 1) {
                                         road!!.mRouteHigh.clear()
                                         mMapView!!.overlays.removeAt(mMapView!!.overlays.count() - 1)
                                         mMapView!!.invalidate()
                                     }
-                                    proximityAlive = false
+                                    ObjectActivity.proximityAlive = false
                                     arriveToObject = true
-                                    Toast.makeText(context, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
-                                    val alertDialog = AlertDialog.Builder(context!!)
-                                    val view = layoutInflater.inflate(R.layout.dialog_reports, null, false)
-                                    val reportSpinner: Spinner = view.findViewById(R.id.reports_spinner)
-                                    val reportText: EditText = view.findViewById(R.id.report_EditText)
-                                    reportSpinner.prompt = "Список рапортов"
-                                    reportSpinner.adapter = ArrayAdapter(
-                                        activity!!,
-                                        R.layout.report_spinner_item,
-                                        DataStore.reports
-                                    )
-                                    var selectedReport = ""
-                                    reportSpinner.onItemSelectedListener = object:AdapterView.OnItemSelectedListener{
-                                        override fun onNothingSelected(p0: AdapterView<*>?) {
-                                        }
-
-                                        override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                                            if(reportSpinner.selectedItem !=null){
-                                                selectedReport = DataStore.reports[p2]
-                                                Log.d("selected report",selectedReport)
-                                            }
-                                        }
-                                    }
-
-                                    alertDialog.setView(view)
-                                    alertDialog.setTitle("Отправка рапорта")
-                                    alertDialog.setPositiveButton("Отправить"){ _: DialogInterface, _: Int ->
-                                        val reportsMessage = JSONObject()
-                                        reportsMessage.put("\$c$", "reports")
-                                        reportsMessage.put("report",selectedReport)
-                                        reportsMessage.put("comment","${reportText.text}")
-                                        reportsMessage.put("namegbr",DataStore.namegbr)
-                                        reportsMessage.put("name",alarmObjectInfo.name)
-                                        reportsMessage.put("number",alarmObjectInfo.number)
-                                        Log.d("Report","$reportsMessage")
-
-                                        RubegNetworkService.protocol.request("$reportsMessage"){
-                                                success:Boolean, _:ByteArray?->
-                                            if(success){
-                                                activity!!.runOnUiThread {
-                                                    Toast.makeText(activity!!,"Рапорт доставлен",Toast.LENGTH_SHORT).show()
-                                                }
-                                            }
-                                            else
-                                            {
-                                                activity!!.runOnUiThread {
-                                                    Toast.makeText(activity!!,"Рапорт не доставлен",Toast.LENGTH_SHORT).show()
-                                                }
-                                            }
-                                        }
-                                    }
-
-
-                                    val dialog = alertDialog.create()
-                                    dialog.setCancelable(false)
-                                    dialog.show()
-
-
+                                    Toast.makeText(
+                                        context,
+                                        "Прибытие подтверждено",
+                                        Toast.LENGTH_LONG
+                                    ).show()
                                 }
                             }
                         else
@@ -254,8 +201,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
         return rootView
     }
 
-    private var enableWhileResume = false
-    private var countTry = 0
     private fun paveTheWay() {
 
         val alarmObjectInfo = activity!!.intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
@@ -264,7 +209,8 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
             Log.d("PaveTheWay", "create")
 
             val roadManager = OSRMRoadManager(context)
-            if (DataStore.routeServer.count()>1)
+
+            if (DataStore.routeServer.count()>0)
             {
                 roadManager.setService("http:" + DataStore.routeServer[0] + "/route/v1/driving/")
                 roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
@@ -339,7 +285,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
             var newRoadOverlay = roadOverlay
             try {
                 while (road!!.mRouteHigh.size> 2) {
-
                     if (distance(road!!) > startDistanceBetweenPoints + 30) {
                         // Перестроить путь
                         road!!.mRouteHigh.clear()
@@ -354,7 +299,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                     } else {
                         if (distance(road!!) <40) {
                             // удалить точку
-
                             road!!.mRouteHigh.removeAt(1)
 
                             mMapView!!.overlays.remove(newRoadOverlay)
@@ -369,7 +313,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                             sleep(500)
                         } else {
                             // передвинуть 0 точку
-
                             road!!.mRouteHigh.removeAt(0)
                             road!!.mRouteHigh.add(
                                 0,
@@ -378,7 +321,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                                     MyLocation.imHere!!.longitude
                                 )
                             )
-
                             mMapView!!.overlays.remove(newRoadOverlay)
 
                             newRoadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
@@ -562,8 +504,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
         }
     }
 
-
-
     private fun distance(road: Road): Float {
         return try {
             val locationA = Location("point A")
@@ -577,8 +517,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
             0f
         }
     }
-
-
 
     override fun onDestroy() {
         super.onDestroy()

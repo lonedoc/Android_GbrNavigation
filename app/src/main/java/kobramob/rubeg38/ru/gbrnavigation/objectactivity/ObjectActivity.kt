@@ -1,58 +1,58 @@
 package kobramob.rubeg38.ru.gbrnavigation.objectactivity
 
 import android.annotation.SuppressLint
-import android.app.PendingIntent
-import android.content.*
+import android.content.Context
+import android.content.Intent
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
-import android.view.View
-import android.view.WindowManager
+import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kobramob.rubeg38.ru.gbrnavigation.R
+import kobramob.rubeg38.ru.gbrnavigation.ReferenceActivity
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.AlarmObjectInfo
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.NavigatorFragment.Companion.mMapView
-import kobramob.rubeg38.ru.gbrnavigation.workservice.DataStore
-import kobramob.rubeg38.ru.gbrnavigation.workservice.MessageEvent
-import kobramob.rubeg38.ru.gbrnavigation.workservice.MyLocation
-import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
-import kotlin.concurrent.thread
+import kobramob.rubeg38.ru.gbrnavigation.workservice.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
+import java.lang.Exception
 import java.lang.Thread.sleep
+import kotlin.concurrent.thread
+
 
 class ObjectActivity : AppCompatActivity() {
 
-    private val tabFragment: TabFragment = TabFragment()
+    private val objectTabFragment: ObjectTabFragment = ObjectTabFragment()
     private val navigatorFragment: NavigatorFragment = NavigatorFragment()
-    /*private val networkService = NetworkService()*/
 
     companion object {
         var isAlive = false
-        const val BROADCAST_ACTION = "kobramob.ruber38.ru.gbrnavigation.objectactivity"
 
         var saveAlarm: AlarmObjectInfo? = null
+
+        var alertCanceled = false
+        var proximityAlive = false
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_object)
 
         NavigatorFragment.arriveToObject = false
-        NavigatorFragment.alertCanceled = false
-        NavigatorFragment.proximityAlive = false
+        alertCanceled = false
+        proximityAlive = false
 
-        if(savedInstanceState != null){
-
-            PlanFragment.bitmapList.addAll(PlanFragment.bitmapList)
+        if(savedInstanceState != null)
+        {
 
             saveAlarm = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
@@ -68,7 +68,7 @@ class ObjectActivity : AppCompatActivity() {
             val bnv: BottomNavigationView = findViewById(R.id.objectMenu)
             bnv.menu.getItem(0).isChecked = true
 
-            openFragment(tabFragment)
+            openFragment(objectTabFragment)
             supportActionBar!!.title = "Карточка объекта"
 
             bnv.setOnNavigationItemSelectedListener {
@@ -76,7 +76,7 @@ class ObjectActivity : AppCompatActivity() {
 
                 when (item.itemId) {
                     R.id.cardObject -> {
-                        openFragment(tabFragment)
+                        openFragment(objectTabFragment)
                         supportActionBar!!.title = "Карточка объекта"
                     }
 
@@ -87,6 +87,36 @@ class ObjectActivity : AppCompatActivity() {
                 }
                 true
             }
+
+            val commonTimer:Chronometer = findViewById(R.id.common_timer)
+            commonTimer.base = SystemClock.elapsedRealtime() - ObjectDataStore.timeAlarmApplyLong!!
+            commonTimer.setBackgroundColor(ContextCompat.getColor(this,R.color.colorPrimaryDark))
+            commonTimer.setTextColor(ContextCompat.getColor(this,R.color.textWhite))
+            commonTimer.setOnChronometerTickListener {
+            }
+            commonTimer.start()
+
+            val travelTimer:Chronometer = findViewById(R.id.travel_timer)
+            travelTimer.base = SystemClock.elapsedRealtime() - ObjectDataStore.timeAlarmApplyLong!!
+            travelTimer.setBackgroundColor(ContextCompat.getColor(this,R.color.colorPrimaryDark))
+            travelTimer.setTextColor(ContextCompat.getColor(this,R.color.textWhite))
+            travelTimer.setOnChronometerTickListener {
+
+                val elapsedMillis: Long = (SystemClock.elapsedRealtime()
+                        - it.base)
+
+                ObjectDataStore.timeAlarmApplyLong = elapsedMillis
+
+                if(NavigatorFragment.arriveToObject){
+                    val parentCommonTimer:LinearLayout = findViewById(R.id.parent_common_timer)
+                    parentCommonTimer.visibility = View.VISIBLE
+                    ObjectDataStore.saveToTimeToArrived((elapsedMillis/1000).toInt())
+                    it.setBackgroundColor(ContextCompat.getColor(this,R.color.arriveToObject))
+                    it.stop()
+                }
+
+            }
+            travelTimer.start()
         }
         else
         {
@@ -104,7 +134,7 @@ class ObjectActivity : AppCompatActivity() {
             val bnv: BottomNavigationView = findViewById(R.id.objectMenu)
             bnv.menu.getItem(0).isChecked = true
 
-            openFragment(tabFragment)
+            openFragment(objectTabFragment)
             supportActionBar!!.title = "Карточка объекта"
 
             bnv.setOnNavigationItemSelectedListener {
@@ -112,7 +142,7 @@ class ObjectActivity : AppCompatActivity() {
 
                 when (item.itemId) {
                     R.id.cardObject -> {
-                        openFragment(tabFragment)
+                        openFragment(objectTabFragment)
                         supportActionBar!!.title = "Карточка объекта"
                     }
 
@@ -123,10 +153,55 @@ class ObjectActivity : AppCompatActivity() {
                 }
                 true
             }
+            Log.d("Debug","SystemClock.elapsedRealtime() = ${SystemClock.elapsedRealtime()}")
+            val commonTimer:Chronometer = findViewById(R.id.common_timer)
+            commonTimer.base = SystemClock.elapsedRealtime()
+            commonTimer.setBackgroundColor(ContextCompat.getColor(this,R.color.colorPrimaryDark))
+            commonTimer.setTextColor(ContextCompat.getColor(this,R.color.textWhite))
+            commonTimer.setOnChronometerTickListener {
+
+            }
+            commonTimer.start()
+
+            val travelTimer:Chronometer = findViewById(R.id.travel_timer)
+            travelTimer.base = SystemClock.elapsedRealtime()
+            travelTimer.setBackgroundColor(ContextCompat.getColor(this,R.color.colorPrimaryDark))
+            travelTimer.setTextColor(ContextCompat.getColor(this,R.color.textWhite))
+            travelTimer.setOnChronometerTickListener {
+
+                val elapsedMillis: Long = (SystemClock.elapsedRealtime() - it.base)
+                ObjectDataStore.timeAlarmApplyLong = elapsedMillis
+
+                if(NavigatorFragment.arriveToObject){
+                    val parentCommonTimer:LinearLayout = findViewById(R.id.parent_common_timer)
+                    parentCommonTimer.visibility = View.VISIBLE
+                    ObjectDataStore.saveToTimeToArrived((elapsedMillis/1000).toInt())
+                    it.setBackgroundColor(ContextCompat.getColor(this,R.color.arriveToObject))
+                    it.stop()
+                }
+
+            }
+            travelTimer.start()
         }
 
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.common_menu,menu)
+        return true
+    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.reference ->{
+                ///Вызов справочника
+                val referenceActivity = Intent(this, ReferenceActivity::class.java)
+                referenceActivity.putExtra("objectInfo", saveAlarm)
+                referenceActivity.putExtra("objectActivity",true)
+                startActivity(referenceActivity)
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
     private fun openFragment(fragment: androidx.fragment.app.Fragment) {
         val transaction = supportFragmentManager.beginTransaction()
         transaction.replace(R.id.fragment_container, fragment)
@@ -136,7 +211,7 @@ class ObjectActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         super.onBackPressed()
-        openFragment(tabFragment)
+        openFragment(objectTabFragment)
         val bnv: BottomNavigationView = findViewById(R.id.objectMenu)
         bnv.menu.getItem(0).isChecked = true
     }
@@ -151,104 +226,69 @@ class ObjectActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
-        if (!RubegNetworkService.isServiceStarted) {
-            val ip: ArrayList<String> = ArrayList()
-            ip.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
-
-            val service = Intent(this, RubegNetworkService::class.java)
-            service.putExtra("command", "start")
-            service.putStringArrayListExtra("ip", ip)
-            service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
-
-            startService(service)
-            thread {
-                sleep(500)
-                val authorizationMessage = JSONObject()
-                authorizationMessage.put("\$c$", "reg")
-                authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
-                authorizationMessage.put(
-                    "password",
-                    getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", "")
-                )
-                authorizationMessage.put(
-                    "token",
-                    getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken", "")
-                )
-                RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
-                    if (success) {
-                        runOnUiThread {
-                            Toast.makeText(this, "Восстановление связи прошло успешно", Toast.LENGTH_SHORT).show()
-                        }
-                    } else {
-                        runOnUiThread {
-                            val ipList: ArrayList<String> = ArrayList()
-                            ipList.add(getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
-                            service.putExtra("command", "stop")
-                            service.putStringArrayListExtra("ip", ipList)
-                            service.putExtra("port", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getInt("port", 9010))
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                startForegroundService(service)
-                            } else {
-                                startService(service)
-                            }
-
-                            Toast.makeText(this, "Приложение не смогло восстановить соединение", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                }
-            }
-        }
-
-        if (CommonActivity.alertSound.isPlaying) {
-            CommonActivity.alertSound.stop()
-            CommonActivity.alertSound.reset()
-        }
-
-        if (!NavigatorFragment.proximityAlive)
-            proximityCheck()
-
         isAlive = true
+
+
+        if (!RubegNetworkService.isServiceStarted) {
+            ControlLifeCycleService.reconnectToServer(this)
+        }
+
+        try {
+            if (CommonActivity.alertSound.isPlaying) {
+                CommonActivity.alertSound.stop()
+                CommonActivity.alertSound.reset()
+            }
+        }catch (e:Exception){
+            e.printStackTrace()
+        }
+
+
+        val alarmObjectInfo = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
+
+        if (!proximityAlive && alarmObjectInfo.lat!=0.0 && alarmObjectInfo.lon!=0.0 && !ObjectDataStore.arrivedToObjectSend)
+            proximityCheck(alarmObjectInfo)
+
         Log.d("ObjectActivity", "onStart")
         if (!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this)
+
     }
+
     @SuppressLint("InflateParams")
-    private fun proximityCheck() {
+    private fun proximityCheck(alarmObjectInfo: AlarmObjectInfo) {
         thread {
-            val alarmObjectInfo = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
-            if(alarmObjectInfo.lat!=0.0 && alarmObjectInfo.lon!=0.0){
+
                 val location = Location("point A")
                 location.latitude = alarmObjectInfo.lat!!
                 location.longitude = alarmObjectInfo.lon!!
+
+            val distance = if(DataStore.cityCard.pcsinfo.dist == "0")
+                50
+            else
+                DataStore.cityCard.pcsinfo.dist.toInt()
+
                 while (!NavigatorFragment.arriveToObject) {
+
                     sleep(1000)
-                    NavigatorFragment.proximityAlive = true
-                    if (NavigatorFragment.alertCanceled) {
-                        NavigatorFragment.proximityAlive = false
-                        NavigatorFragment.arriveToObject = true
-                        PlanFragment.countInQueue = 0
-                    }
-                    Log.d("proximity", (MyLocation.imHere!!.distanceTo(location).toString()))
-                    if (MyLocation.imHere!!.distanceTo(location)> 500) {
-                        if (NavigatorFragment.arrived != null) {
-                            runOnUiThread {
-                                NavigatorFragment.arrived!!.visibility = View.GONE
-                            }
-                        }
-                    } else {
-                        if (NavigatorFragment.arrived != null && !NavigatorFragment.arriveToObject) {
-                            runOnUiThread {
-                                NavigatorFragment.arrived!!.visibility = View.VISIBLE
-                            }
-                        }
-                    }
-                    if (MyLocation.imHere!!.distanceTo(location) < 200 && !NavigatorFragment.arriveToObject) {
+
+                    proximityAlive = true
+
+                    checkAlertState()
+
+                    enableForcedArrival(location,distance)
+
+                    if (MyLocation.imHere!!.distanceTo(location) < distance && !NavigatorFragment.arriveToObject && !ObjectDataStore.arrivedToObjectSend) {
+
                         runOnUiThread {
+
+
+                            proximityAlive = false
+
+                            NavigatorFragment.arriveToObject = true
+
                             if (NavigatorFragment.arrived != null) {
                                 NavigatorFragment.arrived!!.visibility = View.GONE
                             }
-                            NavigatorFragment.proximityAlive = false
-                            NavigatorFragment.arriveToObject = true
 
                             when {
                                 !RubegNetworkService.connectInternet -> {
@@ -268,30 +308,32 @@ class ObjectActivity : AppCompatActivity() {
                                 }
                                 !isAlive ->{
 
-                                    PlanFragment.bitmapList.clear()
                                     NavigatorFragment.arriveToObject = true
-                                    NavigatorFragment.alertCanceled = true
-                                    NavigatorFragment.proximityAlive = false
+
+                                    alertCanceled = true
+
+                                    proximityAlive = false
 
                                     if (NavigatorFragment.road != null) {
                                         if (NavigatorFragment.road!!.mRouteHigh.count()> 1)
                                             NavigatorFragment.road!!.mRouteHigh.clear()
                                     }
 
-                                    PlanFragment.countInQueue = 0
-
                                     val intent = Intent(this,ObjectActivity::class.java)
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                     intent.putExtra("objectInfo", saveAlarm)
                                     startActivity(intent)
+
                                 }
                                 else -> {
+
                                     val arrivedDialog = AlertDialog.Builder(this)
-                                    arrivedDialog.setCancelable(false)
                                     arrivedDialog.setTitle("Прибытие")
+                                        .setCancelable(false)
                                         .setMessage("Вы прибыли на место")
                                         .setPositiveButton("Подтвердить") {
                                                 _, _ ->
+                                            ObjectDataStore.arrivedToObjectSend = true
                                             val message = JSONObject()
                                             message.put("\$c$", "gbrkobra")
                                             message.put("command", "alarmpr")
@@ -300,68 +342,19 @@ class ObjectActivity : AppCompatActivity() {
                                                     success: Boolean ->
                                                 if (success) {
                                                     runOnUiThread {
-                                                        if (NavigatorFragment.road!!.mRouteHigh.count()> 1) {
-                                                            if (mMapView != null) {
-                                                                NavigatorFragment.road!!.mRouteHigh.clear()
-                                                                mMapView!!.overlays.removeAt(mMapView!!.overlays.count() - 1)
-                                                                mMapView!!.invalidate()
+                                                        if (NavigatorFragment.road != null) {
+                                                            if (NavigatorFragment.road!!.mRouteHigh.count() > 1) {
+                                                                if (mMapView != null) {
+                                                                    NavigatorFragment.road!!.mRouteHigh.clear()
+                                                                    mMapView!!.overlays.removeAt(
+                                                                        mMapView!!.overlays.count() - 1
+                                                                    )
+                                                                    mMapView!!.invalidate()
+                                                                }
                                                             }
                                                         }
+
                                                         Toast.makeText(this, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
-                                                        val alertDialog = AlertDialog.Builder(this)
-                                                        val view = layoutInflater.inflate(R.layout.dialog_reports, null, false)
-                                                        val report_spinner: Spinner = view.findViewById(R.id.reports_spinner)
-                                                        val report_text: EditText = view.findViewById(R.id.report_EditText)
-                                                        report_spinner.prompt = "Список рапортов"
-                                                        report_spinner.adapter = ArrayAdapter(
-                                                            this,
-                                                            R.layout.report_spinner_item,
-                                                            DataStore.reports
-                                                        )
-                                                        var selectedReport = ""
-                                                        report_spinner.onItemSelectedListener = object:AdapterView.OnItemSelectedListener{
-                                                            override fun onNothingSelected(p0: AdapterView<*>?) {
-                                                            }
-
-                                                            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                                                                if(report_spinner.selectedItem !=null){
-                                                                    selectedReport = DataStore.reports[p2]
-                                                                    Log.d("selected report",selectedReport)
-                                                                }
-                                                            }
-                                                        }
-
-                                                        alertDialog.setView(view)
-                                                        alertDialog.setTitle("Отправка рапорта")
-                                                        alertDialog.setPositiveButton("Отправить"){ _: DialogInterface, _: Int ->
-                                                            val reportsMessage = JSONObject()
-                                                            reportsMessage.put("\$c$", "reports")
-                                                            reportsMessage.put("report",selectedReport)
-                                                            reportsMessage.put("comment","${report_text.text}")
-                                                            reportsMessage.put("namegbr",DataStore.namegbr)
-                                                            reportsMessage.put("name",alarmObjectInfo.name)
-                                                            reportsMessage.put("number",alarmObjectInfo.number)
-                                                            Log.d("Report","$reportsMessage")
-                                                            RubegNetworkService.protocol.send("$reportsMessage"){
-                                                                    success:Boolean->
-                                                                if(success){
-                                                                    runOnUiThread {
-                                                                        Toast.makeText(this,"Рапорт доставлен",Toast.LENGTH_SHORT).show()
-                                                                    }
-                                                                }
-                                                                else
-                                                                {
-                                                                    runOnUiThread {
-                                                                        Toast.makeText(this,"Рапорт не доставлен",Toast.LENGTH_SHORT).show()
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-
-                                                        val dialog = alertDialog.create()
-                                                        dialog.setCancelable(false)
-                                                        dialog.show()
-
                                                     }
                                                 }
                                                 else
@@ -371,37 +364,69 @@ class ObjectActivity : AppCompatActivity() {
                                                     }
                                                 }
                                             }
-                                        }.show()
+                                        }
+                                        .setNeutralButton("Отложить"){
+                                            dialogInterface, i ->
+                                            dialogInterface.cancel()
+                                            ObjectDataStore.putOffArrivedToObjectSend = true
+                                        }
+                                        .show()
                                 }
                             }
                         }
+                        sleep(50000)
                     }
+
                 }
+
                 if (NavigatorFragment.arrived != null) {
                     runOnUiThread {
                         NavigatorFragment.arrived!!.visibility = View.GONE
                     }
                 }
+        }
+    }
+
+    private fun checkAlertState() {
+        if (alertCanceled) {
+            proximityAlive = false
+            NavigatorFragment.arriveToObject = true
+        }
+    }
+
+    private fun enableForcedArrival(location: Location, distance: Int) {
+        if (MyLocation.imHere!!.distanceTo(location)> distance) {
+            if (NavigatorFragment.arrived != null) {
+                runOnUiThread {
+                    NavigatorFragment.arrived!!.visibility = View.GONE
+                }
+            }
+        } else {
+            if (NavigatorFragment.arrived != null && !NavigatorFragment.arriveToObject) {
+                runOnUiThread {
+                    NavigatorFragment.arrived!!.visibility = View.VISIBLE
+                }
             }
         }
     }
 
+
     override fun onStop() {
         super.onStop()
         Log.d("ObjectActivity", "onStop")
+
         isAlive = false
 
         if (EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().unregister(this)
+
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        PlanFragment.bitmapList.clear()
-        PlanFragment.countInQueue = 0
         NavigatorFragment.arriveToObject = true
-        NavigatorFragment.alertCanceled = true
-        NavigatorFragment.proximityAlive = false
+        alertCanceled = true
+        proximityAlive = false
         if (NavigatorFragment.road != null) {
             if (NavigatorFragment.road!!.mRouteHigh.count()> 1)
                 NavigatorFragment.road!!.mRouteHigh.clear()
@@ -412,51 +437,66 @@ class ObjectActivity : AppCompatActivity() {
     fun onMessageEvent(event: MessageEvent) {
         when (event.command) {
             "notalarm" -> {
+
                 EventBus.getDefault().unregister(this)
+
                 Toast.makeText(this, "Тревога завершена/отменена", Toast.LENGTH_SHORT).show()
+
                 EventBus.getDefault().removeAllStickyEvents()
+
                 thread{
                     sleep(500)
+
                     runOnUiThread {
-                        PlanFragment.bitmapList.clear()
-                        PlanFragment.countInQueue = 0
+
                         NavigatorFragment.arriveToObject = true
-                        NavigatorFragment.alertCanceled = true
-                        NavigatorFragment.proximityAlive = false
+                        alertCanceled = true
+
                         if (NavigatorFragment.road != null) {
                             if (NavigatorFragment.road!!.mRouteHigh.count()> 1)
                                 NavigatorFragment.road!!.mRouteHigh.clear()
                         }
+
                         saveAlarm!!.clear()
-                        PlanFragment.countInQueue = 0
 
                         DataStore.status = event.message
+                        ObjectDataStore.clearAllAlarmData()
 
                         val commonActivity = Intent(this, CommonActivity::class.java)
                         startActivity(commonActivity)
                     }
                 }
+
             }
             "gbrstatus" -> {
                 if (event.message != "На тревоге") {
+
                     Toast.makeText(this, "Тревога отменена (смена статуса)", Toast.LENGTH_SHORT).show()
+
                     EventBus.getDefault().removeAllStickyEvents()
+
+                    if(EventBus.getDefault().isRegistered(this))
                     EventBus.getDefault().unregister(this)
+
                     thread{
                         sleep(500)
                         runOnUiThread {
-                            PlanFragment.bitmapList.clear()
-                            PlanFragment.countInQueue = 0
+
                             NavigatorFragment.arriveToObject = true
-                            NavigatorFragment.alertCanceled = true
-                            NavigatorFragment.proximityAlive = false
+
                             if (NavigatorFragment.road != null) {
                                 if (NavigatorFragment.road!!.mRouteHigh.count()> 1)
                                     NavigatorFragment.road!!.mRouteHigh.clear()
                             }
+
+                            alertCanceled = true
+
                             saveAlarm!!.clear()
-                            PlanFragment.countInQueue = 0
+
                             DataStore.status = event.message
+
+                            ObjectDataStore.clearAllAlarmData()
+
                             val commonActivity = Intent(this, CommonActivity::class.java)
                             startActivity(commonActivity)
                         }
@@ -464,26 +504,7 @@ class ObjectActivity : AppCompatActivity() {
 
                 }
             }
-            "internet" -> {
-                if (event.message == "lost") {
-                    // Dialog
-                    Toast.makeText(this, "Нет соединения с интернетом, приложение переходит в автономный режим", Toast.LENGTH_LONG).show()
-                }
-            }
-            "reconnectInternet" -> {
-                if (event.message == "true") {
-                    Toast.makeText(this, "Интернет соединение восстановлено", Toast.LENGTH_LONG).show()
-                } else {
-                    Toast.makeText(this, "Интернет соединение не восстановлено", Toast.LENGTH_LONG).show()
-                }
-            }
-            "reconnectServer" -> {
-                if (event.message == "true") {
-                    Toast.makeText(this, "Соединение с сервером восстановлено", Toast.LENGTH_LONG).show()
-                } else {
-                    Toast.makeText(this, "Соединение с сервером не восстановлено", Toast.LENGTH_LONG).show()
-                }
-            }
         }
     }
+
 }

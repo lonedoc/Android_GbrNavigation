@@ -11,17 +11,52 @@
 >
     <androidx.appcompat.widget.Toolbar style="@style/Toolbar"
                                        android:id="@+id/toolbar_main_map"
-                                       app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        app:popupTheme="@style/PopupToolbarNormal"
     />
+
 
     <FrameLayout
             android:id="@+id/fragment_container"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-    >
-    </FrameLayout>
+    />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="bottom|center"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+            <Chronometer
+                android:id="@+id/travel_timer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textSize="18sp"
+                />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/parent_common_timer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1"
+            android:visibility="gone">
+            <Chronometer
+                android:id="@+id/common_timer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textSize="18sp"
+                />
+        </LinearLayout>
+    </LinearLayout>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/objectMenu"
@@ -32,7 +67,7 @@
             app:itemIconTint="@color/textWhite"
             app:itemTextColor="@color/textWhite"
             android:background="@color/colorPrimaryDark"
-            app:menu="@menu/object_menu"
+            app:menu="@menu/object_navigation_bar"
     />
 
 

@@ -40,5 +40,12 @@
     <string name="waitConnectToGPS">Ожидание подключение к GPS...</string>
     <string name="authorization">Авторизация</string>
     <string name="registration">Регистрация</string>
+    <string name="apply_config">Принять настройки</string>
+    <string name="setting_name">Настройки</string>
+    <string name="setting_dialog_to_status">Настройка диалоговых окно для статусов</string>
+    <string name="status">Статус</string>
+    <string name="sendReports">Отправить рапорт</string>
+    <string name="sendArrived">Отправить прибытие</string>
+    <string name="reference">Справочник</string>
 
 </resources>

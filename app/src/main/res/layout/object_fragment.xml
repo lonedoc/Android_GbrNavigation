@@ -10,7 +10,7 @@
 <ScrollView android:layout_width="match_parent"
             android:layout_height="match_parent"
 >
-    <LinearLayout android:layout_width="wrap_content"
+    <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:orientation="vertical"
     >
@@ -54,6 +54,26 @@
                 android:layout_marginStart="10dp"
 
         />
+        <TextView
+            android:id="@+id/objectAlarmApplyTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:textColor="@color/textDark"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="10dp"
+            />
+
+        <TextView
+            android:id="@+id/objectTimeToArrived"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:textColor="@color/textDark"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="10dp"
+            android:visibility="gone"
+            />
 
         <TextView
                 android:id="@+id/objectCustomer"
@@ -93,6 +113,35 @@
                   android:layout_marginStart="10dp"
                   android:visibility="gone"
         />
+
+        <Button
+            android:id="@+id/button_send_arrived"
+            android:layout_marginTop="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/sendArrived"
+            android:textSize="16sp"
+            android:backgroundTint="@color/button_reports_send"
+            android:textColor="@color/text_button_report_send"
+            android:enabled="false"
+            />
+
+        <Button
+            android:id="@+id/button_send_reports"
+            android:layout_marginTop="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/sendReports"
+            android:textSize="16sp"
+            android:backgroundTint="@color/button_reports_send"
+            android:textColor="@color/text_button_report_send"
+            android:enabled="false"
+            />
+
     </LinearLayout>
 </ScrollView>
 </LinearLayout>

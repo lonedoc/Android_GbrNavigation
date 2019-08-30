@@ -23,10 +23,7 @@ import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
-import kobramob.rubeg38.ru.gbrnavigation.workservice.ControlLifeCycleService
-import kobramob.rubeg38.ru.gbrnavigation.workservice.MyLocation
-import kobramob.rubeg38.ru.gbrnavigation.workservice.RegistrationEvent
-import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
+import kobramob.rubeg38.ru.gbrnavigation.workservice.*
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 import org.greenrobot.eventbus.EventBus
@@ -105,8 +102,7 @@ class MainActivity : AppCompatActivity() {
     private fun checkData() {
         if (getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).contains("ip") &&
             getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).contains("port") &&
-            getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).contains("imei") &&
-            getSharedPreferences("gbrStorage",Context.MODE_PRIVATE).contains("call")
+            getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).contains("imei")
         ) {
             authorization()
         } else {
@@ -120,6 +116,8 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.READ_PHONE_STATE) == permissionGranted
         ) {
             registration = true
+
+
 
             thread {
 
@@ -152,6 +150,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun authorization() {
         authorization = true
+        val myLocation = MyLocation()
+        myLocation.initLocation(this)
 
         thread {
 
@@ -209,16 +209,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkGPS(){
+    private fun checkGPS() {
 
         val myLocation = MyLocation()
         myLocation.initLocation(this)
+
         var longitude = 0.0
         val mainText: TextView = findViewById(R.id.main_text)
 
         runOnUiThread {
 
             mainText.text = getString(R.string.waitConnectToGPS)
+
+            if(!MyLocation.Enable){
+                myLocation.initLocation(this)
+            }
 
             val manager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
@@ -244,15 +249,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        var tryReconnect = 0
+
         while (longitude == 0.0) {
-            if(!MyLocation.Enable){
+            if(tryReconnect>3){
+                println("Longitude ${MyLocation.Enable}")
                 myLocation.initLocation(this)
+                tryReconnect = 0
             }
             try {
+                println("Longitude $longitude")
                 longitude = MyLocation.imHere!!.longitude
+                tryReconnect++
             } catch (e: Exception) {
             }
-            sleep(1000)
+            sleep(3000)
         }
 
         runOnUiThread {
@@ -357,5 +368,8 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         ControlLifeCycleService.stopService(this)
+        DataStore.clearAllData()
+        finish()
+        exitProcess(0)
     }
 }

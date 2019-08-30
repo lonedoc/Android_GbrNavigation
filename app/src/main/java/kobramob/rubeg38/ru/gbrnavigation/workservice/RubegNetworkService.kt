@@ -18,6 +18,7 @@ import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
 import kobramob.rubeg38.ru.gbrnavigation.mainactivity.MainActivity
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
+import kobramob.rubeg38.ru.gbrnavigation.resource.SPGbrNavigation
 import kobramob.rubeg38.ru.gbrnavigation.workservice.NotificationService.createNotification
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocol
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocolDelegate
@@ -189,13 +190,16 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
 
                         this.sessionId = registration.tid
 
+
+
                         DataStore.initRegistrationData(
                             namegbr = registration.namegbr,
                             call = registration.call,
                             status = registration.status,
                             statusList = registration.gpsstatus,
                             routeServer = registration.routeserver,
-                            reports = registration.reports
+                            reports = registration.reports,
+                            cityCard = registration.citycard
                         )
 
                         if (MainActivity.isAlive || LoginActivity.isAlive) {
@@ -211,18 +215,23 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
 
                         val status = gson.fromJson(message, StatusGson::class.java)
 
-                        val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
-                            .addData("command", status.command)
-                            .addData("status", status.status)
-                            .build()
-                        createNotification(remoteMessage,this)
-
-                        EventBus.getDefault().postSticky(
-                            MessageEvent(
-                                command = status.command,
-                                message = status.status
+                        if(status.status != "")
+                        {
+                            if(CommonActivity.isAlive && status.status!="На тревоге"){
+                                val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
+                                    .addData("command", status.command)
+                                    .addData("status", status.status)
+                                    .build()
+                                createNotification(remoteMessage,this)
+                            }
+                            EventBus.getDefault().postSticky(
+                                MessageEvent(
+                                    command = status.command,
+                                    message = status.status
+                                )
                             )
-                        )
+                        }
+
                     }
                     "alarm" -> {
 
@@ -239,6 +248,9 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
                             ptk.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             startActivity(ptk)
                         }
+
+                        SPGbrNavigation.init(this)
+                        SPGbrNavigation.addPropertyString("alarm",message)
 
                         if(alarm.inn=="")
                             alarm.inn = "0"
@@ -364,6 +376,7 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
         GlobalScope.launch(Dispatchers.IO) {
             while (isServiceStarted) {
                 launch(Dispatchers.IO) {
+                    Log.d("Service","process")
                     pingFakeServer()
                 }
                 delay(1 * 60 * 1000)
@@ -394,6 +407,7 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
             Fuel.post("https://jsonplaceholder.typicode.com/posts")
                 .jsonBody(json)
                 .response { _, _, result ->
+
                     val (bytes, error) = result
                     if (bytes != null) {
                         //faik
@@ -414,7 +428,6 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
             }
             stopForeground(true)
             stopSelf()
-            Log.d("Service", "Destroy")
             sessionId = null
             protocol.stop()
         } catch (e: Exception) {
@@ -429,37 +442,45 @@ class RubegNetworkService : Service(), RubegProtocolDelegate {
         thread {
             var oldSpeed = 0
             while (protocol.isConnected) {
+                try {
+                    if (MyLocation.imHere!!.speed > 0 && sessionId != null && MyLocation.Enable || MyLocation.imHere!!.speed >= oldSpeed && sessionId != null && MyLocation.Enable ) {
+                        oldSpeed++
 
+                        val coordinateMessage = JSONObject()
+                        coordinateMessage.put("\$c$", "gbrkobra")
+                        coordinateMessage.put("command", "location")
+                        coordinateMessage.put("id", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
+                        coordinateMessage.put("lon", MyLocation.imHere?.longitude)
+                        coordinateMessage.put("lat", MyLocation.imHere?.latitude)
+                        coordinateMessage.put("speed", (MyLocation.imHere?.speed)!!.toInt())
+
+                        protocol.send(coordinateMessage.toString()) {
+                            if(it) {
+                                Log.d("Coordinate", "Server receiver")
+                            }
+                            else
+                            {
+                                Log.d("Coordinate", "Server not receiver")
+                            }
+                        }
+                    }
+                }catch (e:Exception)
+                {
+                    e.printStackTrace()
+                }
                 connectServer = true
                 connectInternet = true
 
-                if (MyLocation.imHere!!.speed > 0 && sessionId != null || MyLocation.imHere!!.speed >= oldSpeed && sessionId != null) {
-                    oldSpeed++
-                    val coordinateMessage = JSONObject()
-                    coordinateMessage.put("\$c$", "gbrkobra")
-                    coordinateMessage.put("command", "location")
-                    coordinateMessage.put("id", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
-                    coordinateMessage.put("lon", MyLocation.imHere?.longitude)
-                    coordinateMessage.put("lat", MyLocation.imHere?.latitude)
-                    coordinateMessage.put("speed", MyLocation.imHere?.speed)
-                    protocol.send(coordinateMessage.toString()) {
-                        if(it) {
-                            Log.d("Coordinate", "Server receiver")
-                        }
-                        else
-                        {
-                            Log.d("Coordinate", "Server not receiver")
-                        }
-                    }
-                }
 
-                sleep(8000)
+
+                sleep(2000)
             }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.d("Service","destroy")
         isServiceStarted = false
     }
 

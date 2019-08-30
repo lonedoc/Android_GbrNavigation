@@ -3,6 +3,11 @@ package kobramob.rubeg38.ru.gbrnavigation.resource
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import kobramob.rubeg38.ru.gbrnavigation.commonactivity.AlarmObjectInfo
+import kobramob.rubeg38.ru.gbrnavigation.workservice.DataStore
+import java.io.Serializable
 
 @SuppressLint("StaticFieldLeak")
 object SPGbrNavigation {
@@ -32,6 +37,8 @@ object SPGbrNavigation {
         editor!!.putString(name, value)
         editor!!.apply()
     }
+
+
     fun addPropertyFloat(name: String, value: Float) {
         if (settings == null) {
             init()
@@ -54,3 +61,4 @@ object SPGbrNavigation {
         editor!!.apply()
     }
 }
+

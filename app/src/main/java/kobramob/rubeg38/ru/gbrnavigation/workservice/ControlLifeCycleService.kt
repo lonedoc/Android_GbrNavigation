@@ -3,6 +3,10 @@ package kobramob.rubeg38.ru.gbrnavigation.workservice
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.widget.Toast
+import org.json.JSONObject
+import java.lang.Thread.sleep
+import kotlin.concurrent.thread
 
 
 object ControlLifeCycleService {
@@ -47,4 +51,34 @@ object ControlLifeCycleService {
             context.startService(service)
         }
     }
+
+    fun reconnectToServer(context:Context){
+        startService(context,context.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!,9010)
+
+        thread {
+            sleep(500)
+
+            val authorizationMessage = JSONObject()
+            authorizationMessage.put("\$c$", "reg")
+            authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
+            authorizationMessage.put(
+                "password",
+                context.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", "")
+            )
+            authorizationMessage.put(
+                "token",
+                context.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken", "")
+            )
+            RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
+                if (success) {
+                    //reconnect
+                } else {
+                    //disconnect
+                    stopService(context)
+                    this.reconnectToServer(context)
+                }
+            }
+        }
+    }
+
 }

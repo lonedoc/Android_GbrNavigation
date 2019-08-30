@@ -2,7 +2,6 @@ package kobramob.rubeg38.ru.gbrnavigation.workservice
 
 import java.io.Serializable
 
-class DataClass
 data class AlarmGson(
     val command: String,
     val name: String,
@@ -33,11 +32,22 @@ data class RegistrationGson(
     val tid: String,
     val call: String,
     val status: String,
-    val gpsstatus: ArrayList<String> = ArrayList(),
+    val gpsstatus: ArrayList<GpsStatus> = ArrayList(),
     val routeserver: ArrayList<String> = ArrayList(),
     val reports: ArrayList<String> = ArrayList(),
-    val namegbr:String
+    val namegbr:String,
+    val citycard:CityCard
 )
+
+data class GpsStatus(val name:String,val time:String)
+
+data class CityCard(val pcsinfo:PscInfo,val esinfo:ArrayList<EsInfo>,val usinfo:ArrayList<UsInfo>)
+
+data class PscInfo(val name:String,val operatorphone:String,val servicecenterphone:String,val dist:String)
+
+data class EsInfo(val name:String,val phone:String) : Serializable
+
+data class UsInfo(val name:String,val phone:String) : Serializable
 
 data class AreaInfo(val name: String, val alarmtime: String)
 

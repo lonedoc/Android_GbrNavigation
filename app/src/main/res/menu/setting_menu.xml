@@ -2,9 +2,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/reference"
-        android:orderInCategory="100"
-        app:showAsAction="never"
-        android:title="@string/reference"
+        android:icon="@drawable/ic_apply_config"
+        android:id="@+id/apply_config"
+        android:title="@string/apply_config"
+        app:showAsAction="ifRoom"
         />
 </menu>
