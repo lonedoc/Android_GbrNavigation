@@ -8,6 +8,7 @@
             style="@style/Toolbar"
             android:id="@+id/common_toolbar"
             app:popupTheme="@style/PopupToolbarNormal"
+
     />
     <RelativeLayout
             android:layout_width="match_parent"

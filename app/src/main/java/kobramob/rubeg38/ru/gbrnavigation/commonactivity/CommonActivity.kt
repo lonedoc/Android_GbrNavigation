@@ -11,6 +11,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.LocationManager
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.Menu
@@ -47,6 +48,7 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -76,13 +78,11 @@ class CommonActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_common)
 
-
-
-
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         alertSound = MediaPlayer.create(this@CommonActivity, raw.alarm_sound)
         mMapView = findViewById(common_mapView)
+
 
         val toolbar: Toolbar = findViewById(common_toolbar)
         setSupportActionBar(toolbar)
@@ -117,6 +117,8 @@ class CommonActivity : AppCompatActivity() {
                         service.putExtra("command", "stop")
                         startService(service)
 
+                        DataStore.clearAllData()
+
                         val loginActivity = Intent(this, LoginActivity::class.java)
                         loginActivity.putExtra("imei", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
                         startActivity(loginActivity)
@@ -130,12 +132,6 @@ class CommonActivity : AppCompatActivity() {
                 val referenceActivity = Intent(this,ReferenceActivity::class.java)
                 startActivity(referenceActivity)
             }
-           /* change_map -> {
-                Toast.makeText(this, "Функция на данный момент не доступна", Toast.LENGTH_SHORT).show()
-            }*/
-            /*setting->{
-
-            }*/
         }
         return super.onOptionsItemSelected(item)
     }
@@ -150,7 +146,11 @@ class CommonActivity : AppCompatActivity() {
                         followFab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, color.viewBackground))
                         followFab.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, color.colorPrimary))
                     }
-                    mMapView!!.controller.animateTo(GeoPoint(MyLocation.imHere))
+                    try{
+                        mMapView?.controller?.animateTo(GeoPoint(MyLocation.imHere))
+                    }catch (e:java.lang.Exception){
+                        e.printStackTrace()
+                    }
 
                     SharedPreferencesState.init(this)
                     SharedPreferencesState.addPropertyFloat("lat", locationOverlay.myLocation.latitude.toFloat())
@@ -186,7 +186,7 @@ class CommonActivity : AppCompatActivity() {
                 planAndPhoto.addAll(event.plan)
                 planAndPhoto.addAll(event.photo)
 
-                alarmObjectInfo = AlarmObjectInfo(event.name, event.number, event.lon, event.lat, event.inn, event.zakaz, event.address, event.area.name, event.area.alarmtime, planAndPhoto, event.otvl,DataStore.reports)
+                val alarmObjectInfo = AlarmObjectInfo(event.name, event.number, event.lon, event.lat, event.inn, event.zakaz, event.address, event.area.name, event.area.alarmtime, planAndPhoto, event.otvl,DataStore.reports)
 
                 alertSound.start()
 
@@ -194,9 +194,14 @@ class CommonActivity : AppCompatActivity() {
                 val view = layoutInflater.inflate(R.layout.dialog_alarm, null, false)
                 alertDialog.setView(view)
 
-                val dialog = alertDialog.create()
-                dialog.setCancelable(false)
-                dialog.show()
+                try{
+                    val dialog = alertDialog.create()
+                    dialog.setCancelable(false)
+                    dialog.show()
+                }catch (e:java.lang.Exception){
+                    e.printStackTrace()
+                }
+
 
                 val acceptAlertButton: Button = view!!.findViewById(AcceptAlert)
                 val dialogObjectName: TextView = view.findViewById(dialog_objectName)
@@ -219,14 +224,12 @@ class CommonActivity : AppCompatActivity() {
                             val objectActivity = Intent(this, ObjectActivity::class.java)
                             objectActivity.putExtra("objectInfo", alarmObjectInfo)
                             startActivity(objectActivity)
-                            alarmObjectInfo.clear()
                         }
                         !RubegNetworkService.connectServer -> {
                             Toast.makeText(this, "Нет соединения с сервером, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
                             val objectActivity = Intent(this, ObjectActivity::class.java)
                             objectActivity.putExtra("objectInfo", alarmObjectInfo)
                             startActivity(objectActivity)
-                            alarmObjectInfo.clear()
                         }
                         else -> {
                             thread {
@@ -235,7 +238,7 @@ class CommonActivity : AppCompatActivity() {
                                 message.put("command", "alarmp")
                                 message.put("number", alarmObjectInfo.number)
 
-                                RubegNetworkService.protocol.request(message.toString()) {
+                                RubegNetworkService.protocol?.request(message.toString()) {
                                     success: Boolean, data: ByteArray? ->
                                         if (success && data != null) {
                                             runOnUiThread {
@@ -260,17 +263,18 @@ class CommonActivity : AppCompatActivity() {
                                 val objectActivity = Intent(this, ObjectActivity::class.java)
                                 objectActivity.putExtra("objectInfo", alarmObjectInfo)
                                 startActivity(objectActivity)
-                                alarmObjectInfo.clear()
                             }
                         }
                     }
-                    dialog.cancel()
+                    dialog?.cancel()
                 }
             }
         }
     }
 
     var timer:CountDownTimer? = null
+    var dialog:AlertDialog? = null
+
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN, priority = 0)
     fun onStickyMessageEvent(event: MessageEvent) {
         when {
@@ -282,12 +286,10 @@ class CommonActivity : AppCompatActivity() {
                                 DataStore.status =  event.message
                                 val title: String = DataStore.call + " ( " + event.message + " ) "
                                 supportActionBar?.title = title
-
                                 for(i in 0 until DataStore.statusList.count())
                                 {
                                     if(DataStore.statusList[i].name == event.message && DataStore.statusList[i].time!= "0")
                                     {
-
                                         val stopStatus = {
                                             thread {
                                                 this.timer?.cancel()
@@ -295,7 +297,7 @@ class CommonActivity : AppCompatActivity() {
                                                 statusChangeMessage.put("\$c$", "gbrkobra")
                                                 statusChangeMessage.put("command", "status")
                                                 statusChangeMessage.put("newstatus", "Свободен")
-                                                RubegNetworkService.protocol.request(statusChangeMessage.toString()) {
+                                                RubegNetworkService.protocol?.request(statusChangeMessage.toString()) {
                                                         access: Boolean, data: ByteArray? ->
                                                     if (access && data != null) {
                                                         runOnUiThread {
@@ -311,7 +313,6 @@ class CommonActivity : AppCompatActivity() {
                                                 }
                                             }
                                         }
-
                                         val statusTimerDialog = AlertDialog.Builder(this@CommonActivity)
                                         val view = layoutInflater.inflate(R.layout.status_timer_dialog,null,false)
                                         statusTimerDialog.setView(view)
@@ -321,17 +322,18 @@ class CommonActivity : AppCompatActivity() {
                                             stopStatus()
                                         }
 
-                                        val dialog = statusTimerDialog.create()
-                                        dialog.setCancelable(false)
-                                        dialog.show()
+                                        dialog = statusTimerDialog.create()
+                                        dialog?.setCancelable(false)
+                                        dialog?.show()
 
                                         val statusTimer:TextView = view.findViewById(status_timer)
 
                                         this.timer?.cancel()
 
-                                        this.timer = object : CountDownTimer(DataStore.statusList[i].time.toLong() * 60000, 1000) {
+                                        this.timer = object : CountDownTimer(DataStore.statusList[i].time.toLong() * 60000, 1000)
+                                        {
                                             override fun onFinish() {
-
+                                                dialog?.cancel()
                                                 stopStatus()
                                             }
 
@@ -356,6 +358,11 @@ class CommonActivity : AppCompatActivity() {
 
                                     }
                                 }
+                                if(event.message == "Свободен")
+                                {
+                                    this.timer?.cancel()
+                                    dialog?.cancel()
+                                }
 
                             }
                         }catch (e:java.lang.Exception){
@@ -374,139 +381,77 @@ class CommonActivity : AppCompatActivity() {
             alertSound.stop()
             alertSound.reset()
         }
-
-        alarmObjectInfo.print()
-
-        if (alarmObjectInfo.isNotEmpty()) {
-
-            val alertDialog = AlertDialog.Builder(this@CommonActivity)
-            val view = layoutInflater.inflate(R.layout.dialog_alarm, null, false)
-            alertDialog.setView(view)
-
-            val dialog = alertDialog.create()
-            dialog.setCancelable(false)
-            dialog.show()
-
-            val acceptAlertButton: Button = view!!.findViewById(AcceptAlert)
-            val dialogObjectName: TextView = view.findViewById(dialog_objectName)
-            val dialogObjectAddress: TextView = view.findViewById(dialog_objectAddress)
-
-            dialogObjectName.text = alarmObjectInfo.name
-            dialogObjectAddress.text = alarmObjectInfo.address
-            alertSound.start()
-
-            acceptAlertButton.setOnClickListener {
-
-                if (alertSound.isPlaying) {
-                    alertSound.stop()
-                    alertSound.reset()
-                }
-                if (alertSound.isPlaying) {
-                    alertSound.stop()
-                    alertSound.reset()
-                }
-                if (alertSound.isPlaying) {
-                    alertSound.stop()
-                    alertSound.reset()
-                }
-                if (alertSound.isPlaying) {
-                    alertSound.stop()
-                    alertSound.reset()
-                }
-
-                when {
-                    !RubegNetworkService.connectInternet -> {
-                        Toast.makeText(this, "Нет соединения с интернетом, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
-                        val objectActivity = Intent(this, ObjectActivity::class.java)
-                        objectActivity.putExtra("objectInfo", alarmObjectInfo)
-                        startActivity(objectActivity)
-                        alarmObjectInfo.clear()
-                    }
-                    !RubegNetworkService.connectServer -> {
-                        Toast.makeText(this, "Нет соединения с сервером, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
-                        val objectActivity = Intent(this, ObjectActivity::class.java)
-                        objectActivity.putExtra("objectInfo", alarmObjectInfo)
-                        startActivity(objectActivity)
-                        alarmObjectInfo.clear()
-                    }
-                    else -> {
-                        thread {
-                            val message = JSONObject()
-                            message.put("\$c$", "gbrkobra")
-                            message.put("command", "alarmp")
-                            message.put("number", alarmObjectInfo.number)
-
-                            RubegNetworkService.protocol.request(message.toString()) {
-                                    success: Boolean, data: ByteArray? ->
-                                if (success && data != null) {
-                                    runOnUiThread {
-                                        Toast.makeText(this, "Тревога подтверждена", Toast.LENGTH_SHORT).show()
-                                    }
-
-                                }
-                                else
-                                {
-                                    runOnUiThread {
-                                        Toast.makeText(this,"Тревога не подтверждена", Toast.LENGTH_SHORT).show()
-                                    }
-
-                                }
-                            }
-                            val objectActivity = Intent(this, ObjectActivity::class.java)
-                            objectActivity.putExtra("objectInfo", alarmObjectInfo)
-                            startActivity(objectActivity)
-                            alarmObjectInfo.clear()
-                        }
-                    }
-                }
-
-                dialog.cancel()
-            }
-        }
-
-
         isAlive = true
 
         if (!RubegNetworkService.isServiceStarted) {
             ControlLifeCycleService.reconnectToServer(this)
+            thread{
+                while (!RubegNetworkService.isServiceStarted){
+                }
+                runOnUiThread {
+                    val message = JSONObject()
+                    message.put("\$c$","getalarm")
+                    message.put("namegbr",DataStore.namegbr)
+                    RubegNetworkService.protocol?.send(message = message.toString()){
+                        if(it){
+                            runOnUiThread {
+                                Toast.makeText(this,"Проверка тревоги",Toast.LENGTH_SHORT).show()
+                            }
+
+                        }
+                        else{
+                            runOnUiThread {
+                                Toast.makeText(this,"Ошибка при проверке тревоги",Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+
+                val message = JSONObject()
+                message.put("\$c$","getalarm")
+                message.put("namegbr",DataStore.namegbr)
+                RubegNetworkService.protocol?.send(message = message.toString()){
+                    if(it){
+                        runOnUiThread {
+                            Toast.makeText(this,"Проверка тревоги",Toast.LENGTH_SHORT).show()
+                        }
+
+                    }
+                    else{
+                        runOnUiThread {
+                            Toast.makeText(this,"Ошибка при проверке тревоги",Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
         }
 
         if(!EventBus.getDefault().isRegistered(this))
         EventBus.getDefault().register(this)
 
-        if(!alertAccept){
-            val message = JSONObject()
-            message.put("\$c$","getalarm")
-            message.put("namegbr",DataStore.namegbr)
-            RubegNetworkService.protocol.send(message = message.toString()){
-                if(it){
-                    runOnUiThread {
-                        Toast.makeText(this,"Проверка тревоги",Toast.LENGTH_SHORT).show()
-                    }
-
-                }
-                else{
-                    runOnUiThread {
-                        Toast.makeText(this,"Ошибка при проверке тревоги",Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        }
     }
 
     override fun onResume() {
         super.onResume()
-        mMapView!!.onResume()
+
+        if(mMapView != null)
+        mMapView?.onResume()
+
         if (!locationOverlay.isMyLocationEnabled && !scaleBarOverlay.isEnabled) {
             locationOverlay.enableMyLocation()
             scaleBarOverlay.enableScaleBar()
         }
     }
 
+
+
     override fun onPause() {
         super.onPause()
 
-        mMapView!!.onPause()
+        mMapView?.onPause()
 
         if(locationOverlay.isMyLocationEnabled && scaleBarOverlay.isEnabled)
         {
@@ -514,25 +459,31 @@ class CommonActivity : AppCompatActivity() {
             scaleBarOverlay.disableScaleBar()
         }
 
-
         if (locationOverlay.isFollowLocationEnabled)
+        {
             locationOverlay.disableFollowLocation()
+        }
+
     }
 
     override fun onStop() {
         super.onStop()
         isAlive = false
+
+        if(EventBus.getDefault().isRegistered(this))
         EventBus.getDefault().unregister(this)
+
         alertAccept = false
     }
 
+
     private fun initMapView() {
         org.osmdroid.config.Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
-        mMapView!!.setTileSource(TileSourceFactory.MAPNIK)
-        mMapView!!.setHasTransientState(true)
-        mMapView!!.controller.setZoom(15.0)
-        mMapView!!.isTilesScaledToDpi = true
-        mMapView!!.isFlingEnabled = true
+        mMapView?.setTileSource(TileSourceFactory.MAPNIK)
+        mMapView?.setHasTransientState(true)
+        mMapView?.controller?.setZoom(15.0)
+        mMapView?.isTilesScaledToDpi = true
+        mMapView?.isFlingEnabled = true
 
         val manager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
@@ -548,55 +499,68 @@ class CommonActivity : AppCompatActivity() {
                             //gps problem
                         }
                         runOnUiThread {
-                            mMapView!!.controller.animateTo(GeoPoint(MyLocation.imHere!!.latitude, MyLocation.imHere!!.longitude))
-
-                            mMapView!!.overlays.add(locationOverlay())
-                            mMapView!!.overlays.add(initRotationGestureOverlay())
-                            mMapView!!.overlays.add(initScaleBarOverlay())
+                            try {
+                                mMapView?.controller?.animateTo(GeoPoint(MyLocation.imHere!!.latitude, MyLocation.imHere!!.longitude))
+                            }catch (e:java.lang.Exception){
+                                e.printStackTrace()
+                            }
+                            mMapView?.overlays?.add(locationOverlay())
+                            mMapView?.overlays?.add(initRotationGestureOverlay())
+                            mMapView?.overlays?.add(initScaleBarOverlay())
                         }
                     }
                 }
                 .setNegativeButton("No") {
                         dialog,_->
                     dialog.cancel()
-
                 }
             val alert = builder.create()
             alert.show()
         }
 
-        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+        {
             buildAlertMessageNoGps()
         }
         else
         {
-            mMapView!!.controller.animateTo(GeoPoint(MyLocation.imHere!!.latitude, MyLocation.imHere!!.longitude))
-            mMapView!!.overlays.add(locationOverlay())
-            mMapView!!.overlays.add(initRotationGestureOverlay())
-            mMapView!!.overlays.add(initScaleBarOverlay())
-        }
+            try {
+                mMapView?.controller?.animateTo(GeoPoint(MyLocation.imHere!!.latitude, MyLocation.imHere!!.longitude))
+            }catch (e:java.lang.Exception){
+                e.printStackTrace()
+            }
 
+            mMapView?.overlays?.add(locationOverlay())
+            mMapView?.overlays?.add(initRotationGestureOverlay())
+            mMapView?.overlays?.add(initScaleBarOverlay())
+        }
 
     }
 
     private fun locationOverlay(): MyLocationNewOverlay {
+
         val gpsMyLocationProvider = GpsMyLocationProvider(this)
-        gpsMyLocationProvider.addLocationSource(MyLocation.imHere!!.provider)
-        locationOverlay = MyLocationNewOverlay(gpsMyLocationProvider, mMapView!!)
+        try {
+            gpsMyLocationProvider.addLocationSource(MyLocation.imHere!!.provider)
+        }catch (e:java.lang.Exception){
+            e.printStackTrace()
+        }
+
+        locationOverlay = MyLocationNewOverlay(gpsMyLocationProvider, mMapView)
         locationOverlay.setDirectionArrow(customIcon(drawable.ic_navigator_icon), customIcon(drawable.ic_navigator_active_icon))
         locationOverlay.isDrawAccuracyEnabled = false
         return locationOverlay
     }
 
     private fun initRotationGestureOverlay(): RotationGestureOverlay {
-        rotationGestureOverlay = RotationGestureOverlay(mMapView!!)
+        rotationGestureOverlay = RotationGestureOverlay(mMapView)
         rotationGestureOverlay.isEnabled = true
-        mMapView!!.setMultiTouchControls(true)
+        mMapView?.setMultiTouchControls(true)
         return rotationGestureOverlay
     }
 
     private fun initScaleBarOverlay(): ScaleBarOverlay {
-        scaleBarOverlay = ScaleBarOverlay(mMapView!!)
+        scaleBarOverlay = ScaleBarOverlay(mMapView)
         scaleBarOverlay.setCentred(true)
         scaleBarOverlay.setScaleBarOffset(resources.displayMetrics.widthPixels / 2, 10)
         return scaleBarOverlay
@@ -657,10 +621,7 @@ class CommonActivity : AppCompatActivity() {
             }
         }
 
-
-
         val fabMenu: FloatingActionMenu = findViewById(common_fab_menu)
-
 
         for (i in 0 until  DataStore.statusList.count()) {
             if( DataStore.statusList[i].name != "На тревоге"){
@@ -682,7 +643,7 @@ class CommonActivity : AppCompatActivity() {
                                     statusChangeMessage.put("\$c$", "gbrkobra")
                                     statusChangeMessage.put("command", "status")
                                     statusChangeMessage.put("newstatus", actionButton.labelText)
-                                    RubegNetworkService.protocol.request(statusChangeMessage.toString()) {
+                                    RubegNetworkService.protocol?.request(statusChangeMessage.toString()) {
                                             access: Boolean, data: ByteArray? ->
                                         if (access && data != null) {
                                             runOnUiThread {
@@ -734,9 +695,19 @@ class CommonActivity : AppCompatActivity() {
 
     private var exit = false
 
+    override fun onDestroy() {
+        super.onDestroy()
+        if(!exit)
+            ControlLifeCycleService.stopService(this)
+
+        finish()
+        exitProcess(0)
+    }
+
     override fun onBackPressed() {
         if (exit) {
-            exitProcess(0)
+            ControlLifeCycleService.stopService(this)
+            finishAffinity()
         } else {
             Toast.makeText(this, "Вы точно хотите выйти? Для того чтобы закрыть приложение нажмите еще раз", Toast.LENGTH_LONG).show()
             exit = true

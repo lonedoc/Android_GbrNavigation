@@ -9,7 +9,7 @@ class AlarmObjectInfo() : Serializable {
     var number: String? = null
     var lon: Double? = null
     var lat: Double? = null
-    var inn: Long? = null
+    var inn: String? = null
     var zakaz: String? = null
     var address: String? = null
     var areaName: String? = null
@@ -22,7 +22,7 @@ class AlarmObjectInfo() : Serializable {
         number: String,
         lon: Double?,
         lat: Double?,
-        inn: Long?,
+        inn: String?,
         zakaz: String,
         address: String,
         areaName: String,

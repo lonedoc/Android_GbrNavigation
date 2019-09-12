@@ -15,6 +15,7 @@ import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.gbrnavigation.resource.SPGbrNavigation
 import kobramob.rubeg38.ru.gbrnavigation.workservice.ControlLifeCycleService
+import kobramob.rubeg38.ru.gbrnavigation.workservice.DataStore
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RegistrationEvent
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
 import org.greenrobot.eventbus.EventBus
@@ -115,11 +116,11 @@ class LoginActivity : AppCompatActivity() {
                         registrationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
                         registrationMessage.put("password", intent.getStringExtra("imei"))
                         registrationMessage.put("token",fcmToken )
-
+                        registrationMessage.put("keepalive","10")
                         Log.d("Registration",registrationMessage.toString())
 
                         sleep(1000)
-                        RubegNetworkService.protocol.send(registrationMessage.toString()) {
+                        RubegNetworkService.protocol?.send(registrationMessage.toString()) {
                                 access: Boolean ->
                             if (access) {
                                 runOnUiThread {
@@ -136,7 +137,7 @@ class LoginActivity : AppCompatActivity() {
 
                                     Toast.makeText(this, "Приложение не смогло зарегистрироваться на сервере", Toast.LENGTH_LONG).show()
 
-                                    ControlLifeCycleService.stopService(this)
+                                    ControlLifeCycleService.stopService(applicationContext)
 
                                 }
                             }
@@ -183,13 +184,14 @@ class LoginActivity : AppCompatActivity() {
 
                 val intent = Intent(this@LoginActivity, CommonActivity::class.java)
                 startActivity(intent)
-
+                finish()
+                
             }
             "accessdenied"->{
 
                 Toast.makeText(this,"Данного пользователя не существует в базе",Toast.LENGTH_SHORT).show()
 
-                ControlLifeCycleService.stopService(this)
+                ControlLifeCycleService.stopService(applicationContext)
 
             }
         }
@@ -216,8 +218,9 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         if (exit) {
-            finish()
-            exitProcess(0)
+            ControlLifeCycleService.stopService(applicationContext)
+            DataStore.clearAllData()
+            android.os.Process.killProcess(android.os.Process.myPid())
         } else {
             Toast.makeText(this, "Вы точно хотите выйти? Для того чтобы закрыть приложение нажмите еще раз", Toast.LENGTH_LONG).show()
             exit = true

@@ -15,6 +15,7 @@ import kobramob.rubeg38.ru.gbrnavigation.commonactivity.AlarmObjectInfo
 import kobramob.rubeg38.ru.gbrnavigation.workservice.DataStore
 import kobramob.rubeg38.ru.gbrnavigation.workservice.RubegNetworkService
 import org.json.JSONObject
+import java.lang.Exception
 import kotlin.concurrent.thread
 
 class ObjectFragment : androidx.fragment.app.Fragment() {
@@ -76,7 +77,7 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
                 reportsMessage.put("name",alarmObjectInfo.name)
                 reportsMessage.put("number",alarmObjectInfo.number)
                 Log.d("Report","$reportsMessage")
-                RubegNetworkService.protocol.send("$reportsMessage"){
+                RubegNetworkService.protocol?.send("$reportsMessage"){
                         success:Boolean->
                     if(success){
                         activity!!.runOnUiThread {
@@ -110,7 +111,7 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
                     message.put("\$c$", "gbrkobra")
                     message.put("command", "alarmpr")
                     message.put("number", alarmObjectInfo.number)
-                    RubegNetworkService.protocol.send(message = message.toString()) {
+                    RubegNetworkService.protocol?.send(message = message.toString()) {
                             success: Boolean ->
                         if (success) {
                             activity!!.runOnUiThread {
@@ -145,45 +146,74 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
         }
 
 
-        if (alarmObjectInfo.name != " ") {
-            objectName.text = alarmObjectInfo.name
-        } else {
+        try {
+            if (alarmObjectInfo.name != " ") {
+                objectName.text = alarmObjectInfo.name
+            } else {
+                objectName.visibility = View.GONE
+            }
+        } catch (e:Exception) {
             objectName.visibility = View.GONE
         }
 
-        if (alarmObjectInfo.address != " ") {
-            objectAddress.text = alarmObjectInfo.address
-        } else {
+        try {
+            if (alarmObjectInfo.address != " ") {
+                objectAddress.text = alarmObjectInfo.address
+            } else {
+                objectAddress.visibility = View.GONE
+            }
+        } catch (e:Exception) {
             objectAddress.visibility = View.GONE
         }
 
-        if (alarmObjectInfo.zakaz != " ") {
-            objectCustomer.text = "Заказчик: ${alarmObjectInfo.zakaz}"
-        } else {
+        try {
+            if (alarmObjectInfo.zakaz != " ") {
+                objectCustomer.text = "Заказчик: ${alarmObjectInfo.zakaz}"
+            } else {
+                objectCustomer.visibility = View.GONE
+            }
+        } catch (e:Exception) {
             objectCustomer.visibility = View.GONE
         }
 
-        if(ObjectDataStore.timeAlarmApply != null){
-            objectAlarmApply.text = "Время принятия тревоги: ${ObjectDataStore.timeAlarmApply}"
-        } else {
+        try {
+            if(ObjectDataStore.timeAlarmApply != null){
+                objectAlarmApply.text = "Время принятия тревоги: ${ObjectDataStore.timeAlarmApply}"
+            } else {
+                objectAlarmApply.visibility = View.GONE
+            }
+        } catch (e:Exception) {
             objectAlarmApply.visibility = View.GONE
         }
 
-        if (alarmObjectInfo.inn != 0L) {
-            objectTIP.text = "ИНН: ${alarmObjectInfo.inn}"
-        } else {
+        try {
+            if (alarmObjectInfo.areaAlarmTime != "") {
+                objectAlarmTime.text = "Время тревоги ${alarmObjectInfo.areaAlarmTime}"
+            } else {
+                objectAlarm.visibility = View.GONE
+            }
+        } catch (e:Exception) {
+            objectAlarmTime.visibility = View.GONE
+        }
+
+        try {
+
+            if (alarmObjectInfo.inn != "") {
+                objectTIP.text = "ИНН: ${alarmObjectInfo.inn}"
+            } else {
+                objectTIP.visibility = View.GONE
+            }
+        } catch (e:Exception) {
             objectTIP.visibility = View.GONE
         }
 
-        if (alarmObjectInfo.areaName != "") {
-            objectAlarm.text = alarmObjectInfo.areaName
-        } else {
-            objectAlarm.visibility = View.GONE
-        }
-
-        if (alarmObjectInfo.areaAlarmTime != "") {
-            objectAlarmTime.text = "Время тревоги ${alarmObjectInfo.areaAlarmTime}"
-        } else {
+        try {
+            if (alarmObjectInfo.areaName != "") {
+                objectAlarm.text = alarmObjectInfo.areaName
+            } else {
+                objectAlarm.visibility = View.GONE
+            }
+        } catch (e:Exception) {
             objectAlarm.visibility = View.GONE
         }
 
@@ -195,75 +225,79 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
     override fun onResume() {
         super.onResume()
         isAlive = true
+        Log.d("ObjectFragment","$isAlive")
 
-        if(ObjectDataStore.timeToArrived != null ){
-            objectTimeToArrived?.visibility = View.VISIBLE
-            objectTimeToArrived?.text = ObjectDataStore.timeToArrived
-        }
-        else
-        {
-            thread{
+        thread {
+            if (ObjectDataStore.timeToArrived != null) {
+                activity!!.runOnUiThread {
+                    objectTimeToArrived?.visibility = View.VISIBLE
+                    objectTimeToArrived?.text = ObjectDataStore.timeToArrived
+                }
+            } else {
+                Log.d("ObjectFragment", "StartThread 1")
                 do {
-                    if(ObjectDataStore.timeToArrived != null){
+                    if (ObjectDataStore.timeToArrived != null) {
                         activity!!.runOnUiThread {
                             objectTimeToArrived?.visibility = View.VISIBLE
                             objectTimeToArrived?.text = ObjectDataStore.timeToArrived
                         }
                     }
-                }while (isAlive && ObjectDataStore.timeToArrived == null)
+                } while (isAlive && ObjectDataStore.timeToArrived == null)
+                Log.d("ObjectFragment", "StopThread 1")
             }
-
         }
+        thread {
+            if (ObjectDataStore.arrivedToObjectSend && buttonSendReports != null) {
+                activity!!.runOnUiThread {
+                    buttonSendReports?.isEnabled = true
 
-        if(ObjectDataStore.arrivedToObjectSend && buttonSendReports != null)
-        {
-            buttonSendReports?.isEnabled = true
+                    if (ObjectDataStore.putOffArrivedToObjectSend)
+                        buttonSendArrived?.isEnabled = true
+                }
 
-            if(ObjectDataStore.putOffArrivedToObjectSend)
-                buttonSendArrived?.isEnabled = true
+            } else {
+                Log.d("ObjectFragment", "StartThread 2")
+                do {
 
-        }
-        else
-        {
-            thread{
-                do{
-                    activity!!.runOnUiThread {
-                        if(ObjectDataStore.arrivedToObjectSend){
+                    if (ObjectDataStore.arrivedToObjectSend) {
+                        activity!!.runOnUiThread {
                             buttonSendReports?.isEnabled = true
 
-                            if(ObjectDataStore.putOffArrivedToObjectSend)
-                            buttonSendArrived?.isEnabled = true
-                        }
-                    }
-                }while(!buttonSendReports?.isEnabled!! && isAlive)
-
-            }
-        }
-        if(ObjectDataStore.putOffArrivedToObjectSend && buttonSendArrived != null)
-        {
-
-                buttonSendArrived?.isEnabled = true
-
-        }
-        else
-        {
-            thread{
-                do{
-                    activity!!.runOnUiThread {
-                        if(ObjectDataStore.putOffArrivedToObjectSend){
+                            if (ObjectDataStore.putOffArrivedToObjectSend)
                                 buttonSendArrived?.isEnabled = true
                         }
                     }
-                }while(!buttonSendArrived?.isEnabled!! && isAlive)
 
+                } while (!buttonSendReports?.isEnabled!! && isAlive)
+                Log.d("ObjectFragment", "StopThread 2")
             }
         }
-
+        thread {
+            if(ObjectDataStore.putOffArrivedToObjectSend && buttonSendArrived != null)
+            {
+                activity!!.runOnUiThread {
+                    buttonSendArrived?.isEnabled = true
+                }
+            }
+            else
+            {
+                Log.d("ObjectFragment","StartThread 3")
+                do{
+                    if(ObjectDataStore.putOffArrivedToObjectSend){
+                        activity!!.runOnUiThread {
+                            buttonSendArrived?.isEnabled = true
+                        }
+                    }
+                }while(!buttonSendArrived?.isEnabled!! && isAlive)
+                Log.d("ObjectFragment","StopThread 3")
+            }
+        }
     }
 
     override fun onPause() {
         super.onPause()
         isAlive = false
+        Log.d("ObjectFragment","$isAlive")
     }
 
 }

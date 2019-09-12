@@ -6,7 +6,7 @@ data class AlarmEvent(
     val number: String,
     val lon: Double,
     val lat: Double,
-    val inn: Long,
+    val inn: String,
     var zakaz: String = "",
     val address: String,
     val area: AreaInfo,

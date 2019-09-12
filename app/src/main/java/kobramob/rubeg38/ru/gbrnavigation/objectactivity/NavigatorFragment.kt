@@ -167,7 +167,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                     message.put("\$c$", "gbrkobra")
                     message.put("command", "alarmpr")
                     message.put("number", alarmObjectInfo.number)
-                    RubegNetworkService.protocol.send(message = message.toString()) {
+                    RubegNetworkService.protocol?.send(message = message.toString()) {
                         success: Boolean ->
                             if (success) {
                                 activity!!.runOnUiThread {

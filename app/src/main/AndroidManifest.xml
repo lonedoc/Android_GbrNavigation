@@ -4,6 +4,7 @@
     package="kobramob.rubeg38.ru.gbrnavigation">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -37,7 +38,8 @@
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="n">
-        <activity android:name=".ReferenceActivity"></activity>
+
+        <activity android:name=".ReferenceActivity" />
 
         <service
             android:name=".resource.FCM"
@@ -57,16 +59,21 @@
 
         <activity
             android:name=".loginactivity.LoginActivity"
-            android:keepScreenOn="true" />
+            android:keepScreenOn="true"
+            android:noHistory="true"
+            />
         <activity
             android:name=".mainactivity.MainActivity"
-            android:keepScreenOn="true">
+            android:keepScreenOn="true"
+            android:noHistory="true"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".commonactivity.CommonActivity"
             android:keepScreenOn="true" />
@@ -79,6 +86,14 @@
         <activity
             android:name=".objectactivity.ObjectActivity"
             android:keepScreenOn="true" />
+
+        <!--<service
+            android:name="mad.location.manager.lib.Services.KalmanLocationService"
+            android:enabled="true"
+            android:exported="false"
+            android:stopWithTask="false" />-->
+
+
     </application>
 
 </manifest>

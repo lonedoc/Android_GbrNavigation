@@ -20,6 +20,7 @@ import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
+import java.lang.Thread.sleep
 
 object NotificationService {
     fun createNotification(remoteMessage:RemoteMessage,context:Context){
@@ -63,7 +64,6 @@ object NotificationService {
                     .setSound(statusSound)
                     .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
                     .setCategory(NotificationCompat.CATEGORY_ALARM)
-                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
                     .setAutoCancel(true)
                     .setSmallIcon(R.drawable.ic_unknown_status).color = ContextCompat.getColor(context, R.color.colorPrimary)
                 val notification = builder.build()
@@ -86,13 +86,13 @@ object NotificationService {
                 notificationManager.notify(7, notification)
             }
             "disconnectServer" -> {
+                sleep(7000)
                 val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                 builder.setContentTitle("Соединение с сервером")
                     .setContentText("Соединение с сервером потеряно")
                     .setContentIntent(pendingIntent)
                     .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
                     .setCategory(NotificationCompat.CATEGORY_ALARM)
-                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
                     .setAutoCancel(true)
                     .setSound(alarmSound)
                     .setSmallIcon(R.drawable.ic_disconnect).color = ContextCompat.getColor(context, R.color.colorPrimary)
@@ -103,6 +103,7 @@ object NotificationService {
                 notificationManager.notify(2, notification)
             }
             "reconnectServer" -> {
+                sleep(7000)
                 val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                 builder.setContentTitle("Соединение с сервером")
                     .setContentIntent(pendingIntent)
@@ -110,7 +111,6 @@ object NotificationService {
                     .setSound(statusSound)
                     .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
                     .setCategory(NotificationCompat.CATEGORY_ALARM)
-                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
                     .setAutoCancel(true)
                     .setSmallIcon(R.drawable.ic_connect).color = ContextCompat.getColor(context, R.color.colorPrimary)
                 val notification = builder.build()
@@ -125,7 +125,6 @@ object NotificationService {
                     .setSound(statusSound)
                     .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
                     .setCategory(NotificationCompat.CATEGORY_ALARM)
-                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
                     .setAutoCancel(true)
                     .setSmallIcon(R.drawable.ic_connect).color = ContextCompat.getColor(context, R.color.colorPrimary)
                 val notification = builder.build()
@@ -133,6 +132,7 @@ object NotificationService {
                 notificationManager.notify(2, notification)
             }
             "disconnectInternet" -> {
+                sleep(7000)
                 Log.d("disconnectInternet", "Yes")
                 val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                 builder.setContentTitle("Интернет")
@@ -141,7 +141,6 @@ object NotificationService {
                     .setSound(statusSound)
                     .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
                     .setCategory(NotificationCompat.CATEGORY_ALARM)
-                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
                     .setAutoCancel(true)
                     .setSmallIcon(R.drawable.ic_disconnect).color = ContextCompat.getColor(context, R.color.colorPrimary)
                 val notification = builder.build()
@@ -149,6 +148,7 @@ object NotificationService {
                 notificationManager.notify(3, notification)
             }
             "reconnectInternet" -> {
+                sleep(7000)
                 val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                 builder.setContentTitle("Интернет")
                     .setContentIntent(pendingIntent)
@@ -156,7 +156,6 @@ object NotificationService {
                     .setSound(statusSound)
                     .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
                     .setCategory(NotificationCompat.CATEGORY_ALARM)
-                    .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
                     .setAutoCancel(true)
                     .setSmallIcon(R.drawable.ic_connect).color = ContextCompat.getColor(context, R.color.colorPrimary)
                 val notification = builder.build()
@@ -214,7 +213,6 @@ object NotificationService {
                 it.enableLights(true)
                 it.lightColor = Color.RED
                 it.enableVibration(true)
-                it.vibrationPattern = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
                 it.setSound(statusSound,audioAttributes)
                 it
             }
@@ -239,7 +237,6 @@ object NotificationService {
                 it.enableLights(true)
                 it.lightColor = Color.RED
                 it.enableVibration(true)
-                it.vibrationPattern = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
                 it
             }
             notificationManager.createNotificationChannel(channel)

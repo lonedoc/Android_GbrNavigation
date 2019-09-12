@@ -32,16 +32,12 @@ class PCSInfoFragment:Fragment() {
 
         if(DataStore.cityCard.pcsinfo.operatorphone != "")
         {
-            pcsinfoList.add(Pair("Держурный оператор",DataStore.cityCard.pcsinfo.operatorphone))
+            pcsinfoList.add(Pair("Дежурный оператор",DataStore.cityCard.pcsinfo.operatorphone))
         }
 
         if(DataStore.cityCard.pcsinfo.servicecenterphone != ""){
             pcsinfoList.add(Pair("Сервисный центр",DataStore.cityCard.pcsinfo.servicecenterphone))
         }
-
-        println(DataStore.cityCard.pcsinfo.operatorphone)
-        println(DataStore.cityCard.pcsinfo.servicecenterphone)
-        println("${pcsinfoList.count()}")
 
         if(pcsinfoList.count()>0)
         {

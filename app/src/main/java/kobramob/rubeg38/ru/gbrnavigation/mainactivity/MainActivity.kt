@@ -12,24 +12,27 @@ import android.os.Bundle
 import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.View
-import android.widget.*
+import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
 import com.google.firebase.iid.FirebaseInstanceId
-import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
 import kobramob.rubeg38.ru.gbrnavigation.workservice.*
-import kotlin.concurrent.thread
-import kotlin.system.exitProcess
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
+import java.lang.Thread.sleep
+import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity() {
 
@@ -47,12 +50,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         if (!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this)
-
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.cancelAll()
 
         val imageView: ImageView = findViewById(R.id.main_icon)
         val progressBar: ProgressBar = findViewById(R.id.main_progressBar)
@@ -94,6 +93,8 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
 
         isAlive = false
+
+        println("MainActivity onStop")
         if (EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().unregister(this)
     }
@@ -116,11 +117,7 @@ class MainActivity : AppCompatActivity() {
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.READ_PHONE_STATE) == permissionGranted
         ) {
             registration = true
-
-
-
             thread {
-
                 checkGPS()
 
                 sleep(2000)
@@ -139,6 +136,7 @@ class MainActivity : AppCompatActivity() {
                     loginActivity.putExtra("imei", deviceID)
 
                     startActivity(loginActivity)
+                    finish()
                 }
             }
         } else {
@@ -149,15 +147,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun authorization() {
+        println("Authorization")
         authorization = true
         val myLocation = MyLocation()
-        myLocation.initLocation(this)
+        myLocation.initLocation(applicationContext)
 
         thread {
 
             checkGPS()
 
-            ControlLifeCycleService.startService(this)
+            ControlLifeCycleService.startService(applicationContext)
 
             thread {
                 sleep(2000)
@@ -183,10 +182,11 @@ class MainActivity : AppCompatActivity() {
                     "token",
                     token
                 )
+                authorizationMessage.put("keepalive","10")
 
                 Log.d("Authorization", authorizationMessage.toString())
                 runOnUiThread {
-                    RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
+                    RubegNetworkService.protocol?.send(authorizationMessage.toString()) { success: Boolean ->
                         if (success) {
                             RubegNetworkService.connectServer = true
                             RubegNetworkService.connectInternet = true
@@ -194,13 +194,14 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             runOnUiThread {
 
-                                ControlLifeCycleService.stopService(this)
+                                ControlLifeCycleService.stopService(applicationContext)
 
                                 Toast.makeText(this, "Приложение не смогло авторизироваться на сервере", Toast.LENGTH_LONG).show()
 
                                 val loginActivity = Intent(this, LoginActivity::class.java)
                                 loginActivity.putExtra("imei", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
                                 startActivity(loginActivity)
+                                finish()
                             }
                         }
                     }
@@ -212,17 +213,16 @@ class MainActivity : AppCompatActivity() {
     private fun checkGPS() {
 
         val myLocation = MyLocation()
-        myLocation.initLocation(this)
-
         var longitude = 0.0
         val mainText: TextView = findViewById(R.id.main_text)
 
         runOnUiThread {
 
+            myLocation.initLocation(applicationContext)
             mainText.text = getString(R.string.waitConnectToGPS)
 
             if(!MyLocation.Enable){
-                myLocation.initLocation(this)
+                myLocation.initLocation(applicationContext)
             }
 
             val manager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -253,15 +253,17 @@ class MainActivity : AppCompatActivity() {
 
         while (longitude == 0.0) {
             if(tryReconnect>3){
-                println("Longitude ${MyLocation.Enable}")
-                myLocation.initLocation(this)
-                tryReconnect = 0
+                longitude = 1.0
+                runOnUiThread {
+                    Toast.makeText(this,"Ваше месторасположение не определено",Toast.LENGTH_SHORT).show()
+                }
             }
             try {
                 println("Longitude $longitude")
-                longitude = MyLocation.imHere!!.longitude
+                longitude = MyLocation.imHere?.longitude!!
                 tryReconnect++
             } catch (e: Exception) {
+                tryReconnect++
             }
             sleep(3000)
         }
@@ -275,7 +277,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
+    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     fun onRegistrationEvent(event: RegistrationEvent) {
 
         when(event.command){
@@ -285,16 +287,19 @@ class MainActivity : AppCompatActivity() {
 
                 val intent = Intent(this@MainActivity, CommonActivity::class.java)
                 startActivity(intent)
+                finish()
+                
             }
             "accessdenied"->{
 
                 Toast.makeText(this,"Данного пользователя не существует в базе",Toast.LENGTH_SHORT).show()
 
-                ControlLifeCycleService.stopService(this)
+                ControlLifeCycleService.stopService(applicationContext)
 
                 val loginActivity = Intent(this, LoginActivity::class.java)
                 loginActivity.putExtra("imei", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
                 startActivity(loginActivity)
+                finish()
             }
         }
 
@@ -312,6 +317,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkPermission() {
         if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) != permissionGranted ||
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_COARSE_LOCATION) != permissionGranted ||
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_NETWORK_STATE) != permissionGranted ||
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.INTERNET) != permissionGranted ||
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.VIBRATE) != permissionGranted ||
@@ -329,6 +335,7 @@ class MainActivity : AppCompatActivity() {
                 this,
                 arrayOf(
                     android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION,
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     android.Manifest.permission.CALL_PHONE,
                     android.Manifest.permission.WAKE_LOCK,
@@ -357,19 +364,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         if (exit) {
-            finish()
-            exitProcess(0)
+
+            ControlLifeCycleService.stopService(applicationContext)
+
+            android.os.Process.killProcess(android.os.Process.myPid())
         } else {
             Toast.makeText(this, "Вы точно хотите выйти? Для того чтобы закрыть приложение нажмите еще раз", Toast.LENGTH_LONG).show()
             exit = true
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        ControlLifeCycleService.stopService(this)
-        DataStore.clearAllData()
-        finish()
-        exitProcess(0)
     }
 }

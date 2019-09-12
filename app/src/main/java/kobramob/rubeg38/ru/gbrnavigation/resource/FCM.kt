@@ -60,8 +60,8 @@ class FCM : FirebaseMessagingService() {
         when (remoteMessage!!.notification!!.body!!) {
             "Связь с сервером потеряна" -> {
                 val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                builder.setContentTitle("Соединение с сервером")
-                    .setContentText(remoteMessage.notification!!.body!!)
+                builder.setContentTitle("Соединение с сервером GOVNO")
+                    .setContentText(remoteMessage.notification!!.body!! + "Соединение с сервером говно")
                     .setContentIntent(pendingIntent)
                     .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
                     .setCategory(NotificationCompat.CATEGORY_ALARM)

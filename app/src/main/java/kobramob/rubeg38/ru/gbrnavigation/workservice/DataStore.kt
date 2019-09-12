@@ -4,6 +4,8 @@ import android.util.Log
 
 object DataStore {
 
+    var appClosed = false
+
     var reports:ArrayList<String> = ArrayList()
 
     var namegbr:String = "гбр"

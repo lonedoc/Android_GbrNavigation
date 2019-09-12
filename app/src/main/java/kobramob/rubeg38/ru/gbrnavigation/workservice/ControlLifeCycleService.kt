@@ -11,6 +11,7 @@ import kotlin.concurrent.thread
 
 object ControlLifeCycleService {
     fun startService(context:Context){
+        println("Service start")
         val ip: ArrayList<String> = ArrayList()
         ip.add(context.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
 
@@ -28,6 +29,7 @@ object ControlLifeCycleService {
 
     fun startService(context:Context,ip:String,port:Int){
 
+        println("ReconnectService")
         val service = Intent(context, RubegNetworkService::class.java)
 
         service.putExtra("command", "start")
@@ -42,22 +44,23 @@ object ControlLifeCycleService {
     }
 
     fun stopService(context:Context){
-        val service = Intent(context, RubegNetworkService::class.java)
-        service.putExtra("command", "stop")
+        if (RubegNetworkService.isServiceStarted)
+        {
+            val service = Intent(context, RubegNetworkService::class.java)
+            service.putExtra("command", "stop")
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(service)
-        } else {
-            context.startService(service)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(service)
+            } else {
+                context.startService(service)
+            }
         }
     }
 
     fun reconnectToServer(context:Context){
         startService(context,context.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!,9010)
-
         thread {
             sleep(500)
-
             val authorizationMessage = JSONObject()
             authorizationMessage.put("\$c$", "reg")
             authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
@@ -69,7 +72,9 @@ object ControlLifeCycleService {
                 "token",
                 context.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken", "")
             )
-            RubegNetworkService.protocol.send(authorizationMessage.toString()) { success: Boolean ->
+            authorizationMessage.put("keepalive","10")
+
+            RubegNetworkService.protocol?.send(authorizationMessage.toString()) { success: Boolean ->
                 if (success) {
                     //reconnect
                 } else {

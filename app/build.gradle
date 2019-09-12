@@ -19,8 +19,8 @@ android {
         applicationId "kobramob.rubeg38.ru.gbrnavigation"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 27
-        versionName "1.7.5"
+        versionCode 33
+        versionName "1.8.1"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -95,8 +95,8 @@ dependencies {
     //you can use newer GMS version if you need
     implementation 'com.google.android.gms:play-services-places:17.0.0'
     implementation 'com.google.android.gms:play-services-maps:17.0.0'
-    implementation 'com.google.firebase:firebase-core:17.1.0'
-    implementation 'com.google.firebase:firebase-analytics:17.1.0'
+    implementation 'com.google.firebase:firebase-core:17.2.0'
+    implementation 'com.google.firebase:firebase-analytics:17.2.0'
     implementation 'com.google.firebase:firebase-auth:19.0.0'
     implementation 'com.google.firebase:firebase-firestore:21.0.0'
 
@@ -122,6 +122,9 @@ dependencies {
     implementation 'com.github.kittinunf.fuel:fuel:2.1.0'
     implementation 'com.github.kittinunf.fuel:fuel-android:2.1.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-M1'
+
+
+    implementation 'com.github.maddevsio:mad-location-manager:0.1.9'
 
     implementation project(':networkprotocol')
 }

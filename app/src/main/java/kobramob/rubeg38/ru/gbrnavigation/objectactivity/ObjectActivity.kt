@@ -1,14 +1,18 @@
 package kobramob.rubeg38.ru.gbrnavigation.objectactivity
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
-import android.view.*
-import android.widget.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.WindowManager
+import android.widget.Chronometer
+import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -18,7 +22,6 @@ import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.ReferenceActivity
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.AlarmObjectInfo
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
-import kobramob.rubeg38.ru.gbrnavigation.loginactivity.LoginActivity
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.NavigatorFragment.Companion.mMapView
 import kobramob.rubeg38.ru.gbrnavigation.workservice.*
 import org.greenrobot.eventbus.EventBus
@@ -88,35 +91,44 @@ class ObjectActivity : AppCompatActivity() {
                 true
             }
 
-            val commonTimer:Chronometer = findViewById(R.id.common_timer)
-            commonTimer.base = SystemClock.elapsedRealtime() - ObjectDataStore.timeAlarmApplyLong!!
-            commonTimer.setBackgroundColor(ContextCompat.getColor(this,R.color.colorPrimaryDark))
-            commonTimer.setTextColor(ContextCompat.getColor(this,R.color.textWhite))
-            commonTimer.setOnChronometerTickListener {
-            }
-            commonTimer.start()
-
-            val travelTimer:Chronometer = findViewById(R.id.travel_timer)
-            travelTimer.base = SystemClock.elapsedRealtime() - ObjectDataStore.timeAlarmApplyLong!!
-            travelTimer.setBackgroundColor(ContextCompat.getColor(this,R.color.colorPrimaryDark))
-            travelTimer.setTextColor(ContextCompat.getColor(this,R.color.textWhite))
-            travelTimer.setOnChronometerTickListener {
-
-                val elapsedMillis: Long = (SystemClock.elapsedRealtime()
-                        - it.base)
-
-                ObjectDataStore.timeAlarmApplyLong = elapsedMillis
-
-                if(NavigatorFragment.arriveToObject){
-                    val parentCommonTimer:LinearLayout = findViewById(R.id.parent_common_timer)
-                    parentCommonTimer.visibility = View.VISIBLE
-                    ObjectDataStore.saveToTimeToArrived((elapsedMillis/1000).toInt())
-                    it.setBackgroundColor(ContextCompat.getColor(this,R.color.arriveToObject))
-                    it.stop()
+            try{
+                val commonTimer:Chronometer = findViewById(R.id.common_timer)
+                commonTimer.base = SystemClock.elapsedRealtime() - ObjectDataStore.timeAlarmApplyLong!!
+                commonTimer.setBackgroundColor(ContextCompat.getColor(this,R.color.colorPrimaryDark))
+                commonTimer.setTextColor(ContextCompat.getColor(this,R.color.textWhite))
+                commonTimer.setOnChronometerTickListener {
                 }
-
+                commonTimer.start()
+            }catch (e:Exception){
+                e.printStackTrace()
             }
-            travelTimer.start()
+
+            try{
+                val travelTimer:Chronometer = findViewById(R.id.travel_timer)
+                travelTimer.base = SystemClock.elapsedRealtime() - ObjectDataStore.timeAlarmApplyLong!!
+                travelTimer.setBackgroundColor(ContextCompat.getColor(this,R.color.colorPrimaryDark))
+                travelTimer.setTextColor(ContextCompat.getColor(this,R.color.textWhite))
+                travelTimer.setOnChronometerTickListener {
+
+                    val elapsedMillis: Long = (SystemClock.elapsedRealtime()
+                            - it.base)
+
+                    ObjectDataStore.timeAlarmApplyLong = elapsedMillis
+
+                    if(NavigatorFragment.arriveToObject){
+                        val parentCommonTimer:LinearLayout = findViewById(R.id.parent_common_timer)
+                        parentCommonTimer.visibility = View.VISIBLE
+                        ObjectDataStore.saveToTimeToArrived((elapsedMillis/1000).toInt())
+                        it.setBackgroundColor(ContextCompat.getColor(this,R.color.arriveToObject))
+                        it.stop()
+                    }
+
+                }
+                travelTimer.start()
+            }catch (e:Exception){
+                e.printStackTrace()
+            }
+
         }
         else
         {
@@ -187,7 +199,7 @@ class ObjectActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.common_menu,menu)
+        menuInflater.inflate(R.menu.object_menu,menu)
         return true
     }
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -233,16 +245,6 @@ class ObjectActivity : AppCompatActivity() {
             ControlLifeCycleService.reconnectToServer(this)
         }
 
-        try {
-            if (CommonActivity.alertSound.isPlaying) {
-                CommonActivity.alertSound.stop()
-                CommonActivity.alertSound.reset()
-            }
-        }catch (e:Exception){
-            e.printStackTrace()
-        }
-
-
         val alarmObjectInfo = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
         if (!proximityAlive && alarmObjectInfo.lat!=0.0 && alarmObjectInfo.lon!=0.0 && !ObjectDataStore.arrivedToObjectSend)
@@ -261,11 +263,17 @@ class ObjectActivity : AppCompatActivity() {
                 val location = Location("point A")
                 location.latitude = alarmObjectInfo.lat!!
                 location.longitude = alarmObjectInfo.lon!!
-
-            val distance = if(DataStore.cityCard.pcsinfo.dist == "0")
+            val distance: Int
+            distance = try {
+                if(DataStore.cityCard.pcsinfo.dist == "")
+                    50
+                else {
+                    DataStore.cityCard.pcsinfo.dist.toInt()
+                }
+            }catch (e:java.lang.Exception){
+                e.printStackTrace()
                 50
-            else
-                DataStore.cityCard.pcsinfo.dist.toInt()
+            }
 
                 while (!NavigatorFragment.arriveToObject) {
 
@@ -338,7 +346,7 @@ class ObjectActivity : AppCompatActivity() {
                                             message.put("\$c$", "gbrkobra")
                                             message.put("command", "alarmpr")
                                             message.put("number", alarmObjectInfo.number)
-                                            RubegNetworkService.protocol.send(message = message.toString()) {
+                                            RubegNetworkService.protocol?.send(message = message.toString()) {
                                                     success: Boolean ->
                                                 if (success) {
                                                     runOnUiThread {
@@ -431,6 +439,7 @@ class ObjectActivity : AppCompatActivity() {
             if (NavigatorFragment.road!!.mRouteHigh.count()> 1)
                 NavigatorFragment.road!!.mRouteHigh.clear()
         }
+       // AppWatcher.objectWatcher.watch(this)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, priority = 1, sticky = true)
@@ -464,6 +473,7 @@ class ObjectActivity : AppCompatActivity() {
 
                         val commonActivity = Intent(this, CommonActivity::class.java)
                         startActivity(commonActivity)
+                        finish()
                     }
                 }
 
@@ -499,6 +509,7 @@ class ObjectActivity : AppCompatActivity() {
 
                             val commonActivity = Intent(this, CommonActivity::class.java)
                             startActivity(commonActivity)
+                            finish()
                         }
                     }
 

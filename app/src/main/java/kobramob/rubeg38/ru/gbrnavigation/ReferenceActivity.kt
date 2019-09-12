@@ -18,6 +18,7 @@ import kobramob.rubeg38.ru.gbrnavigation.commonactivity.AlarmObjectInfo
 import kobramob.rubeg38.ru.gbrnavigation.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.gbrnavigation.objectactivity.ObjectActivity
 import kobramob.rubeg38.ru.gbrnavigation.workservice.DataStore
+import java.lang.Exception
 
 class ReferenceActivity : AppCompatActivity() {
 
@@ -32,7 +33,14 @@ class ReferenceActivity : AppCompatActivity() {
         val toolbar: Toolbar = findViewById(R.id.reference_toolbar)
         setSupportActionBar(toolbar)
 
-        val title:String = DataStore.cityCard.pcsinfo.name
+        var title = " "
+
+        try{
+            title = DataStore.cityCard.pcsinfo.name
+        }catch (e:Exception){
+            e.printStackTrace()
+        }
+
         supportActionBar?.title = title
 
         openFragment(referenceTabFragment)

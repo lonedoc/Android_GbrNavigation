@@ -30,7 +30,7 @@ class RubegProtocol {
     private var lastRequestTime: Long
     private var lastResponseTime: Long
 
-    var connected: Boolean
+    private var connected: Boolean
 
     private var outcomingMessagesCount: Long
     private var incomingMessagesCount: Long
@@ -220,7 +220,7 @@ class RubegProtocol {
         thread {
             while (protocolAlive) {
 
-                if (this.lastResponseTime + 17000 <= System.currentTimeMillis()) {
+                if (this.lastResponseTime + 20000 <= System.currentTimeMillis()) {
 
                     this.lastResponseTime = System.currentTimeMillis()
 
@@ -273,15 +273,15 @@ class RubegProtocol {
                 // debug
                 println("<- { content type: ${packet.headers.contentType},  message number: ${packet.headers.messageNumber}, packet number: ${packet.headers.packetNumber} }")
 
-                if (packet.headers.contentType == ContentType.ACKNOWLEDGEMENT) {
-                    handleAcknowledgementPacket(packet as AcknowledgementPacket)
-                } else if (packet.headers.contentType == ContentType.CONNECTION) {
-                    val messageNumber = packet.headers.messageNumber
+                when {
+                    packet.headers.contentType == ContentType.ACKNOWLEDGEMENT -> handleAcknowledgementPacket(packet as AcknowledgementPacket)
+                    packet.headers.contentType == ContentType.CONNECTION -> {
+                        /* val messageNumber = packet.headers.messageNumber
 
-                    if (messageNumber > this.incomingMessagesCount)
-                        this.incomingMessagesCount = messageNumber
-                } else {
-                    handleDataPacket(packet as DataPacket)
+                                if (messageNumber > this.incomingMessagesCount)
+                                    this.incomingMessagesCount = messageNumber*/
+                    }
+                    else -> handleDataPacket(packet as DataPacket)
                 }
 
                 // Handle failed messages
@@ -348,7 +348,7 @@ class RubegProtocol {
                 // Send
                 val windowIsFull = this.onAirPackets.count() >= MAX_PACKETS_COUNT
                 val nothingToSend = this.packetsToSend.count() == 0
-                val syncTimeHasCome = this.lastRequestTime + 5000 <= System.currentTimeMillis() // 10s - (max RTT + interval)
+                val syncTimeHasCome = this.lastRequestTime + 3000 <= System.currentTimeMillis() // 10s - (max RTT + interval)
 
                 if (!nothingToSend && !windowIsFull) {
                     val packet = this.packetsToSend.dequeue()
@@ -486,9 +486,10 @@ class RubegProtocol {
 
             if (transmission.done) {
                 if (transmission.isResponseExpected) {
-                    val expectedNumber = this.incomingMessagesCount + 1
 
-                    this.incomingTransmissions[expectedNumber] = IncomingTransmission(transmission.responseHandler)
+                    this.incomingMessagesCount++
+                    this.incomingTransmissions[this.incomingMessagesCount] = IncomingTransmission(transmission.responseHandler)
+
 
                 } else {
                     transmission.responseHandler(true, null)

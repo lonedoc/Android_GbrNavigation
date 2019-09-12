@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".loginactivity.LoginActivity"
-        android:gravity="center"
-        android:id="@+id/linearLayout">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".loginactivity.LoginActivity"
+    android:gravity="center"
+    android:id="@+id/linearLayout">
 
 
     <ScrollView android:layout_width="match_parent"
@@ -34,12 +34,12 @@
 
             <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/login_ip_layout"
-
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
-                    android:layout_marginTop="32dp">
+                    android:layout_marginTop="32dp"
+                >
                 <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/login_ip"
                         android:layout_width="match_parent"
@@ -78,6 +78,7 @@
                     android:textSize="16sp"
                     android:background="@color/colorAccent"
                     android:textColor="@color/textWhite"
+                android:layout_gravity="bottom"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:id="@+id/login_button"
