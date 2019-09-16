@@ -4,7 +4,7 @@
     android:layout_height="match_parent" xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    tools:context="kobramob.rubeg38.ru.gbrnavigation.ReferenceTabFragment">
+    tools:context="kobramob.rubeg38.ru.gbrnavigation.referenceactivity.ReferenceTabFragment">
 
 
     <com.google.android.material.tabs.TabLayout

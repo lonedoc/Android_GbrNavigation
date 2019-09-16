@@ -89,14 +89,14 @@ class RubegProtocol {
 
     val isConnected: Boolean
         get() {
-            return this.connected && this.delegate?.sessionId != null
+            return this.connected && this.delegate?.token != null
         }
 
     fun request(message: String, responseHandler: ResponseHandler) {
         this.send(
             message.toByteArray(),
             ContentType.STRING,
-            this.delegate?.sessionId,
+            this.delegate?.token,
             true,
             responseHandler
         )
@@ -106,7 +106,7 @@ class RubegProtocol {
         this.send(
             data,
             ContentType.BINARY,
-            this.delegate?.sessionId,
+            this.delegate?.token,
             true,
             responseHandler
         )
@@ -116,7 +116,7 @@ class RubegProtocol {
         this.send(
             message.toByteArray(),
             ContentType.STRING,
-            this.delegate?.sessionId,
+            this.delegate?.token,
             false
         ) { success, _ -> resultHandler(success) }
     }
@@ -125,7 +125,7 @@ class RubegProtocol {
         this.send(
             data,
             ContentType.BINARY,
-            this.delegate?.sessionId,
+            this.delegate?.token,
             false
         ) { success, _ -> resultHandler(success) }
     }
@@ -248,7 +248,7 @@ class RubegProtocol {
 
                     this.currentHostIndex++
 
-                    this.delegate?.sessionId = null
+                    this.delegate?.token = null
                 }
 
                 val buffer = ByteBuffer.allocate(1536)
@@ -376,7 +376,7 @@ class RubegProtocol {
 
                 // Maintain connection
                 if (syncTimeHasCome) {
-                    val sessionId = this.delegate?.sessionId
+                    val sessionId = this.delegate?.token
 
                     if (this.isConnected) {
                         val connectionPacket = ConnectionPacket(sessionId!!)

@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" xmlns:tools="http://schemas.android.com/tools"
-                tools:context=".objectactivity.PlanFragment" android:gravity="center"
+                tools:context="objectactivity.planfragment.PlanFragment" android:gravity="center"
 >
 
     <ProgressBar

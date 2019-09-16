@@ -39,15 +39,7 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="n">
 
-        <activity android:name=".ReferenceActivity" />
-
-        <service
-            android:name=".resource.FCM"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
+        <activity android:name="referenceactivity.ReferenceActivity" />
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
@@ -58,12 +50,12 @@
             android:value="default" />
 
         <activity
-            android:name=".loginactivity.LoginActivity"
+            android:name="loginactivity.LoginActivity"
             android:keepScreenOn="true"
             android:noHistory="true"
             />
         <activity
-            android:name=".mainactivity.MainActivity"
+            android:name="mainactivity.MainActivity"
             android:keepScreenOn="true"
             android:noHistory="true"
             >
@@ -75,16 +67,16 @@
         </activity>
 
         <activity
-            android:name=".commonactivity.CommonActivity"
+            android:name="commonactivity.CommonActivity"
             android:keepScreenOn="true" />
 
         <service
-            android:name=".workservice.RubegNetworkService"
+            android:name="workservice.ProtocolNetworkService"
             android:enabled="true"
             android:exported="false" />
 
         <activity
-            android:name=".objectactivity.ObjectActivity"
+            android:name="objectactivity.ObjectActivity"
             android:keepScreenOn="true" />
 
         <!--<service
