@@ -2,6 +2,7 @@ package kobramob.rubeg38.ru.networkprotocol
 
 import android.util.Log
 import java.io.IOException
+import java.lang.Exception
 import java.lang.Thread.sleep
 import java.net.DatagramSocket
 import java.net.InetSocketAddress
@@ -218,180 +219,190 @@ class RubegProtocol {
 
     private fun startReadLoop() {
         thread {
-            while (protocolAlive) {
+            try{
+                while (protocolAlive) {
 
-                if (this.lastResponseTime + 20000 <= System.currentTimeMillis()) {
+                    if (this.lastResponseTime + 20000 <= System.currentTimeMillis()) {
 
+                        this.lastResponseTime = System.currentTimeMillis()
+
+                        this.connected = false
+
+                        this.outcomingMessagesCount = 0
+                        this.incomingMessagesCount = 0
+
+                        this.onAirPackets.clear()
+
+                        this.packetsToSend.removeAll { true }
+
+                        if(incomingTransmissions.isNotEmpty())
+                            this.incomingTransmissions.forEach { it.value.responseHandler(false, null) }
+
+                        if(outcomingTransmissions.isNotEmpty())
+                            this.outcomingTransmissions.forEach { it.value.responseHandler(false, null) }
+
+                        this.incomingTransmissions.clear()
+                        this.outcomingTransmissions.clear()
+
+
+
+                        this.delegate?.connectionLost()
+
+                        this.currentHostIndex++
+
+                        this.delegate?.token = null
+                    }
+
+                    val buffer = ByteBuffer.allocate(1536)
+
+                    try {
+                        this.channel.receive(buffer)
+
+                        buffer.flip()
+
+                        if (!buffer.hasRemaining())
+                            continue
+
+                    } catch (ex: IOException) {
+                        continue
+                    }
+
+                    this.connected = true
                     this.lastResponseTime = System.currentTimeMillis()
 
-                    this.connected = false
+                    val packet = PacketUtils.decode(buffer.array())
 
-                    this.outcomingMessagesCount = 0
-                    this.incomingMessagesCount = 0
+                    // debug
+                    println("<- { content type: ${packet.headers.contentType},  message number: ${packet.headers.messageNumber}, packet number: ${packet.headers.packetNumber} }")
 
-                    this.onAirPackets.clear()
+                    when {
+                        packet.headers.contentType == ContentType.ACKNOWLEDGEMENT -> handleAcknowledgementPacket(packet as AcknowledgementPacket)
+                        packet.headers.contentType == ContentType.CONNECTION -> {
+                            /* val messageNumber = packet.headers.messageNumber
 
-                    this.packetsToSend.removeAll { true }
-
-                    if(incomingTransmissions.isNotEmpty())
-                    this.incomingTransmissions.forEach { it.value.responseHandler(false, null) }
-
-                    if(outcomingTransmissions.isNotEmpty())
-                    this.outcomingTransmissions.forEach { it.value.responseHandler(false, null) }
-
-                    this.incomingTransmissions.clear()
-                    this.outcomingTransmissions.clear()
-
-
-
-                    this.delegate?.connectionLost()
-
-                    this.currentHostIndex++
-
-                    this.delegate?.token = null
-                }
-
-                val buffer = ByteBuffer.allocate(1536)
-
-                try {
-                    this.channel.receive(buffer)
-
-                    buffer.flip()
-
-                    if (!buffer.hasRemaining())
-                        continue
-
-                } catch (ex: IOException) {
-                    continue
-                }
-
-                this.connected = true
-                this.lastResponseTime = System.currentTimeMillis()
-
-                val packet = PacketUtils.decode(buffer.array())
-
-                // debug
-                println("<- { content type: ${packet.headers.contentType},  message number: ${packet.headers.messageNumber}, packet number: ${packet.headers.packetNumber} }")
-
-                when {
-                    packet.headers.contentType == ContentType.ACKNOWLEDGEMENT -> handleAcknowledgementPacket(packet as AcknowledgementPacket)
-                    packet.headers.contentType == ContentType.CONNECTION -> {
-                        /* val messageNumber = packet.headers.messageNumber
-
-                                if (messageNumber > this.incomingMessagesCount)
-                                    this.incomingMessagesCount = messageNumber*/
+                                    if (messageNumber > this.incomingMessagesCount)
+                                        this.incomingMessagesCount = messageNumber*/
+                        }
+                        else -> handleDataPacket(packet as DataPacket)
                     }
-                    else -> handleDataPacket(packet as DataPacket)
+
+                    // Handle failed messages
+                    val failedTransmissions = this.incomingTransmissions.filter { it.value.failed }
+
+                    failedTransmissions.forEach {
+                        it.value.responseHandler(false, null)
+                        this.incomingTransmissions.remove(it.key)
+
+
+                    }
                 }
-
-                // Handle failed messages
-                val failedTransmissions = this.incomingTransmissions.filter { it.value.failed }
-
-                failedTransmissions.forEach {
-                    it.value.responseHandler(false, null)
-                    this.incomingTransmissions.remove(it.key)
-
-
-                }
+            }catch (e:Exception){
+                e.printStackTrace()
             }
+
         }
     }
 
     private fun startSendLoop() {
         thread {
-            while (protocolAlive) {
-                // Handle acknowledgements
-                var ack = this.unhandledAcks.dequeue()
+            try{
+                while (protocolAlive) {
+                    // Handle acknowledgements
+                    var ack = this.unhandledAcks.dequeue()
 
-                while (ack != null) {
-                    this.onAirPackets.removeAll {
-                        this.samePacketSignature(ack!!, it.packet)
+                    while (ack != null) {
+                        this.onAirPackets.removeAll {
+                            this.samePacketSignature(ack!!, it.packet)
+                        }
+
+                        ack = this.unhandledAcks.dequeue()
                     }
 
-                    ack = this.unhandledAcks.dequeue()
-                }
+                    // Retransmit packets
+                    this.onAirPackets.forEach { info -> // TODO: Rename retransmission info
+                        if (info.lastAttemptTime + 10000 <= System.currentTimeMillis()) {
+                            if (info.attemptsCount < ATTEMPTS_COUNT) { // TODO: Rename to MAX_ATTEMPTS_COUNT
+                                try {
+                                    this.sendPacket(info.packet)
+                                } catch (ex: IOException) {
+                                    ex.printStackTrace()
+                                }
 
-                // Retransmit packets
-                this.onAirPackets.forEach { info -> // TODO: Rename retransmission info
-                    if (info.lastAttemptTime + 10000 <= System.currentTimeMillis()) {
-                        if (info.attemptsCount < ATTEMPTS_COUNT) { // TODO: Rename to MAX_ATTEMPTS_COUNT
+                                info.lastAttemptTime = System.currentTimeMillis()
+
+                                // debug
+                                println("-> -> { attempt: ${info.attemptsCount}, content type: ${info.packet.headers.contentType}, message number: ${info.packet.headers.messageNumber}, packet number: ${info.packet.headers.packetNumber} }")
+                            }
+
+                            info.attemptsCount++
+                        }
+                    }
+
+                    // Remove failed
+                    val failedPackets = this.onAirPackets.filter { it.attemptsCount > ATTEMPTS_COUNT }
+
+                    failedPackets.forEach { failedPacket ->
+                        val messageNumber = failedPacket.packet.headers.messageNumber
+
+                        this.packetsToSend.removeAll { it.headers.messageNumber == messageNumber }
+
+                        this.outcomingTransmissions[messageNumber]?.responseHandler?.invoke(false, null)
+                        this.outcomingTransmissions.remove(messageNumber)
+                    }
+
+                    this.onAirPackets.removeAll { it.attemptsCount > ATTEMPTS_COUNT }
+
+                    // Send
+                    val windowIsFull = this.onAirPackets.count() >= MAX_PACKETS_COUNT
+                    val nothingToSend = this.packetsToSend.count() == 0
+                    val syncTimeHasCome = this.lastRequestTime + 3000 <= System.currentTimeMillis() // 10s - (max RTT + interval)
+
+                    if (!nothingToSend && !windowIsFull) {
+                        val packet = this.packetsToSend.dequeue()
+
+                        if (packet != null) {
+                            if (packet.headers.contentType == ContentType.STRING || packet.headers.contentType == ContentType.BINARY) {
+                                this.onAirPackets.add(
+                                    RetransmissionInfo(
+                                        packet,
+                                        System.currentTimeMillis(),
+                                        1
+                                    )
+                                )
+                            }
+
                             try {
-                                this.sendPacket(info.packet)
+                                this.sendPacket(packet)
                             } catch (ex: IOException) {
                                 ex.printStackTrace()
                             }
 
-                            info.lastAttemptTime = System.currentTimeMillis()
-
-                            // debug
-                            println("-> -> { attempt: ${info.attemptsCount}, content type: ${info.packet.headers.contentType}, message number: ${info.packet.headers.messageNumber}, packet number: ${info.packet.headers.packetNumber} }")
-                        }
-
-                        info.attemptsCount++
-                    }
-                }
-
-                // Remove failed
-                val failedPackets = this.onAirPackets.filter { it.attemptsCount > ATTEMPTS_COUNT }
-
-                failedPackets.forEach { failedPacket ->
-                    val messageNumber = failedPacket.packet.headers.messageNumber
-
-                    this.packetsToSend.removeAll { it.headers.messageNumber == messageNumber }
-
-                    this.outcomingTransmissions[messageNumber]?.responseHandler?.invoke(false, null)
-                    this.outcomingTransmissions.remove(messageNumber)
-                }
-
-                this.onAirPackets.removeAll { it.attemptsCount > ATTEMPTS_COUNT }
-
-                // Send
-                val windowIsFull = this.onAirPackets.count() >= MAX_PACKETS_COUNT
-                val nothingToSend = this.packetsToSend.count() == 0
-                val syncTimeHasCome = this.lastRequestTime + 3000 <= System.currentTimeMillis() // 10s - (max RTT + interval)
-
-                if (!nothingToSend && !windowIsFull) {
-                    val packet = this.packetsToSend.dequeue()
-
-                    if (packet != null) {
-                        if (packet.headers.contentType == ContentType.STRING || packet.headers.contentType == ContentType.BINARY) {
-                            this.onAirPackets.add(
-                                RetransmissionInfo(
-                                packet,
-                                System.currentTimeMillis(),
-                                1
-                            )
-                            )
-                        }
-
-                        try {
-                            this.sendPacket(packet)
-                        } catch (ex: IOException) {
-                            ex.printStackTrace()
-                        }
-
-                        continue
-                    }
-                }
-
-                // Maintain connection
-                if (syncTimeHasCome) {
-                    val sessionId = this.delegate?.token
-
-                    if (this.isConnected) {
-                        val connectionPacket = ConnectionPacket(sessionId!!)
-
-                        try {
-                            this.sendPacket(connectionPacket)
-                        } catch (ex: IOException) {
-                            ex.printStackTrace()
+                            continue
                         }
                     }
-                }
 
-                if (nothingToSend)
-                    sleep(100) // interval
+                    // Maintain connection
+                    if (syncTimeHasCome) {
+                        val sessionId = this.delegate?.token
+
+                        if (this.isConnected) {
+                            val connectionPacket = ConnectionPacket(sessionId!!)
+
+                            try {
+                                this.sendPacket(connectionPacket)
+                            } catch (ex: IOException) {
+                                ex.printStackTrace()
+                            }
+                        }
+                    }
+
+                    if (nothingToSend)
+                        sleep(100) // interval
+                }
+            }catch (e:Exception){
+                e.printStackTrace()
             }
+
         }
     }
 

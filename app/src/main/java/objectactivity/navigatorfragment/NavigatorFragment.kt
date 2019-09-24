@@ -59,8 +59,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
         var arriveToObject = false
         var road: Road? = null
-        var arrived: FloatingActionButton? = null
-
     }
 
     override fun longPressHelper(p: GeoPoint?): Boolean {
@@ -96,7 +94,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
         val followMe: FloatingActionButton = rootView.findViewById(R.id.navigator_followMe)
         val myLocation: FloatingActionButton = rootView.findViewById(R.id.navigator_myLocation)
         val yandex: FloatingActionButton = rootView.findViewById(R.id.navigator_yandex)
-        arrived = rootView.findViewById(R.id.navigator_arrived)
 
         myLocation.setOnClickListener {
             try {
@@ -142,61 +139,6 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                     .show()
             }
         }
-
-        arrived!!.setOnClickListener {
-            ObjectDataStore.arrivedToObjectSend = true
-            when {
-                !ProtocolNetworkService.connectInternet -> {
-                    Toast.makeText(
-                        context,
-                        "Нет соединения с интернетом, невозможно отправить запрос на прибытие",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-                !ProtocolNetworkService.connectServer -> {
-                    Toast.makeText(
-                        context,
-                        "Нет соединения с сервером, невозможно отправить запрос на прибытие",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-                else -> {
-                    val message = JSONObject()
-                    message.put("\$c$", "gbrkobra")
-                    message.put("command", "alarmpr")
-                    message.put("number", alarmObjectInfo.number)
-                    ProtocolNetworkService.protocol?.send(message = message.toString()) {
-                        success: Boolean ->
-                            if (success) {
-                                activity!!.runOnUiThread {
-
-                                    arrived!!.visibility = View.GONE
-                                    if (road?.mRouteHigh!!.count() > 1) {
-                                        road?.mRouteHigh!!.clear()
-                                        mMapView!!.overlays.removeAt(
-                                            mMapView!!.overlays.count() - 1)
-                                        mMapView!!.invalidate()
-                                    }
-                                    ObjectActivity.proximityAlive = false
-                                    arriveToObject = true
-                                    Toast.makeText(
-                                        context,
-                                        "Прибытие подтверждено",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
-                        else
-                            {
-                                activity!!.runOnUiThread {
-                                    Toast.makeText(context,"Прибытие не подтверждено",Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        }
-                }
-            }
-        }
-
         return rootView
     }
 

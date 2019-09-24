@@ -11,18 +11,15 @@ import android.os.Bundle
 import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.View
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.arellomobile.mvp.MvpAppCompatActivity
 import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
 import com.google.firebase.iid.FirebaseInstanceId
-import kobramob.rubeg38.ru.gbrnavigation.R
 import commonactivity.CommonActivity
+import kobramob.rubeg38.ru.gbrnavigation.R
 import loginactivity.LoginActivity
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -30,12 +27,13 @@ import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
 import resource.ControlLifeCycleService
 import workservice.LocationService
-import workservice.RegistrationEvent
 import workservice.ProtocolNetworkService
+import workservice.RegistrationEvent
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
+import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : MvpAppCompatActivity() {
 
     companion object {
         var isAlive = false
@@ -54,14 +52,11 @@ class MainActivity : AppCompatActivity() {
         if (!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this)
 
-        val imageView: ImageView = findViewById(R.id.main_icon)
-        val progressBar: ProgressBar = findViewById(R.id.main_progressBar)
-        val textView: TextView = findViewById(R.id.main_text)
 
         if (savedInstanceState != null)
         {
-            progressBar.visibility = View.VISIBLE
-            textView.visibility = View.VISIBLE
+            main_progressBar.visibility = View.VISIBLE
+            main_text.visibility = View.VISIBLE
             if (!registration && !authorization) {
                 checkData()
             }
@@ -69,12 +64,12 @@ class MainActivity : AppCompatActivity() {
         {
             YoYo.with(Techniques.FadeIn)
                 .duration(2500)
-                .playOn(imageView)
+                .playOn(main_icon)
             thread {
                 sleep(2000)
                 runOnUiThread {
-                    progressBar.visibility = View.VISIBLE
-                    textView.visibility = View.VISIBLE
+                     main_progressBar.visibility = View.VISIBLE
+                    main_text.visibility = View.VISIBLE
 
                     checkData()
                 }
@@ -215,12 +210,11 @@ class MainActivity : AppCompatActivity() {
 
         val myLocation = LocationService()
         var longitude = 0.0
-        val mainText: TextView = findViewById(R.id.main_text)
 
         runOnUiThread {
 
             myLocation.initLocation(applicationContext)
-            mainText.text = getString(R.string.waitConnectToGPS)
+            main_text.text = getString(R.string.waitConnectToGPS)
 
             if(!LocationService.Enable){
                 myLocation.initLocation(applicationContext)
@@ -271,10 +265,10 @@ class MainActivity : AppCompatActivity() {
 
         runOnUiThread {
             if(authorization)
-                mainText.text = getString(R.string.authorization)
+                main_text.text = getString(R.string.authorization)
 
             if(registration)
-                mainText.text = getString(R.string.registration)
+                main_text.text = getString(R.string.registration)
         }
     }
 

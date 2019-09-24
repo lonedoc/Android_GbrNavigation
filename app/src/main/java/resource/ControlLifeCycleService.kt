@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import org.json.JSONObject
 import workservice.ProtocolNetworkService
+import java.lang.Exception
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 
@@ -50,11 +51,20 @@ object ControlLifeCycleService {
             service.putExtra("command", "stop")
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(service)
+                println("${Build.VERSION.SDK_INT}")
+                try {
+                    context.startForegroundService(service)
+                }catch (e:Exception){
+                    e.printStackTrace()
+                    context.startService(service)
+                }
+
             } else {
+                println("THis")
                 context.startService(service)
             }
         }
+        return
     }
 
     fun reconnectToServer(context:Context){

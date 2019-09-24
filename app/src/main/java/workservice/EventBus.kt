@@ -44,16 +44,20 @@ data class ImageEvent(
 
 class MessageEvent() {
 
+    lateinit var name:String
     lateinit var command: String
     lateinit var message: String
 
     lateinit var byteArray: ByteArray
 
     lateinit var status: String
-
-    lateinit var name: String
     lateinit var number: String
 
+    constructor(command: String, message: String,name: String) : this() {
+        this.command = command
+        this.message = message
+        this.name = name
+    }
     constructor(command: String, message: String) : this() {
         this.command = command
         this.message = message

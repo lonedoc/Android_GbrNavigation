@@ -30,14 +30,20 @@ class PCSInfoFragment:Fragment() {
 
         val pcsinfoList:ArrayList<Pair<String,String>> = ArrayList()
 
-        if(DataStore.cityCard.pcsinfo.operatorphone != "")
-        {
-            pcsinfoList.add(Pair("Дежурный оператор", DataStore.cityCard.pcsinfo.operatorphone))
+        try {
+            if (DataStore.cityCard.pcsinfo.operatorphone != "") {
+                pcsinfoList.add(Pair("Дежурный оператор", DataStore.cityCard.pcsinfo.operatorphone))
+            }
+        }catch (e:Exception){
+            e.printStackTrace()
         }
-
+        try {
         if(DataStore.cityCard.pcsinfo.servicecenterphone != ""){
             pcsinfoList.add(Pair("Сервисный центр", DataStore.cityCard.pcsinfo.servicecenterphone))
         }
+    }catch (e:Exception){
+        e.printStackTrace()
+    }
 
         if(pcsinfoList.count()>0)
         {

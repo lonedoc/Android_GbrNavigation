@@ -292,8 +292,6 @@ class ObjectActivity : AppCompatActivity() {
 
                     checkAlertState()
 
-                    enableForcedArrival(location,distance)
-
                     if (LocationService.imHere!!.distanceTo(location) < distance && !NavigatorFragment.arriveToObject && !ObjectDataStore.arrivedToObjectSend) {
 
                         runOnUiThread {
@@ -303,9 +301,6 @@ class ObjectActivity : AppCompatActivity() {
 
                             NavigatorFragment.arriveToObject = true
 
-                            if (NavigatorFragment.arrived != null) {
-                                NavigatorFragment.arrived!!.visibility = View.GONE
-                            }
 
                             when {
                                 !ProtocolNetworkService.connectInternet -> {
@@ -395,13 +390,6 @@ class ObjectActivity : AppCompatActivity() {
                         }
                         sleep(50000)
                     }
-
-                }
-
-                if (NavigatorFragment.arrived != null) {
-                    runOnUiThread {
-                        NavigatorFragment.arrived!!.visibility = View.GONE
-                    }
                 }
         }
     }
@@ -412,23 +400,6 @@ class ObjectActivity : AppCompatActivity() {
             NavigatorFragment.arriveToObject = true
         }
     }
-
-    private fun enableForcedArrival(location: Location, distance: Int) {
-        if (LocationService.imHere!!.distanceTo(location)> distance) {
-            if (NavigatorFragment.arrived != null) {
-                runOnUiThread {
-                    NavigatorFragment.arrived!!.visibility = View.GONE
-                }
-            }
-        } else {
-            if (NavigatorFragment.arrived != null && !NavigatorFragment.arriveToObject) {
-                runOnUiThread {
-                    NavigatorFragment.arrived!!.visibility = View.VISIBLE
-                }
-            }
-        }
-    }
-
 
     override fun onStop() {
         super.onStop()
@@ -454,40 +425,48 @@ class ObjectActivity : AppCompatActivity() {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, priority = 1, sticky = true)
+    fun onAlarmEvent(event:AlarmEvent){
+            EventBus.getDefault().removeAllStickyEvents()
+            EventBus.getDefault().unregister(this)
+            val commonActivity = Intent(this, CommonActivity::class.java)
+            startActivity(commonActivity)
+            finish()
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN, priority = 1, sticky = true)
     fun onMessageEvent(event: MessageEvent) {
         when (event.command) {
             "notalarm" -> {
 
-                EventBus.getDefault().unregister(this)
+                val objectInfo = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
+                if(objectInfo.name == event.name){
 
-                Toast.makeText(this, "Тревога завершена/отменена", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Тревога завершена/отменена", Toast.LENGTH_SHORT).show()
+                    thread{
+                        sleep(500)
 
-                EventBus.getDefault().removeAllStickyEvents()
+                        runOnUiThread {
 
-                thread{
-                    sleep(500)
+                            NavigatorFragment.arriveToObject = true
+                            alertCanceled = true
 
-                    runOnUiThread {
+                            if (NavigatorFragment.road != null) {
+                                if (NavigatorFragment.road?.mRouteHigh!!.count()> 1)
+                                    NavigatorFragment.road?.mRouteHigh!!.clear()
+                            }
 
-                        NavigatorFragment.arriveToObject = true
-                        alertCanceled = true
+                            saveAlarm!!.clear()
 
-                        if (NavigatorFragment.road != null) {
-                            if (NavigatorFragment.road?.mRouteHigh!!.count()> 1)
-                                NavigatorFragment.road?.mRouteHigh!!.clear()
+                            DataStore.status = event.message
+                            ObjectDataStore.clearAllAlarmData()
+                            EventBus.getDefault().unregister(this)
+                            EventBus.getDefault().removeAllStickyEvents()
+                            val commonActivity = Intent(this, CommonActivity::class.java)
+                            startActivity(commonActivity)
+                            finish()
                         }
-
-                        saveAlarm!!.clear()
-
-                        DataStore.status = event.message
-                        ObjectDataStore.clearAllAlarmData()
-
-                        val commonActivity = Intent(this, CommonActivity::class.java)
-                        startActivity(commonActivity)
-                        finish()
                     }
                 }
-
             }
             "gbrstatus" -> {
                 if (event.message != "На тревоге") {
@@ -526,6 +505,7 @@ class ObjectActivity : AppCompatActivity() {
 
                 }
             }
+
         }
     }
 

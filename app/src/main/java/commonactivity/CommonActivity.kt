@@ -69,18 +69,23 @@ class CommonActivity : AppCompatActivity() {
     private var alertAccept:Boolean = false
     private var timer:CountDownTimer? = null
 
-    var dialog:AlertDialog? = null
-    private var exit = false
+    var dialogStatus:AlertDialog? = null
+    var dialogAlarm:AlertDialog? = null
+
     var alertSound: MediaPlayer = MediaPlayer()
 
     companion object {
         var isAlive = false
+        var exit = false
     }
 
     @SuppressLint("InflateParams")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_common)
+
+        val soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ applicationContext.packageName + "/" + raw.alarm_sound)
+        alertSound = MediaPlayer.create(this,soundUri)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -196,8 +201,7 @@ class CommonActivity : AppCompatActivity() {
                     DataStore.reports
                 )
 
-                val soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ applicationContext.packageName + "/" + raw.alarm_sound)
-                alertSound = MediaPlayer.create(this,soundUri)
+
                 alertSound.start()
 
                 val alertDialog = AlertDialog.Builder(this@CommonActivity)
@@ -205,9 +209,9 @@ class CommonActivity : AppCompatActivity() {
                 alertDialog.setView(view)
 
                 try{
-                    val dialog = alertDialog.create()
-                    dialog.setCancelable(false)
-                    dialog.show()
+                    dialogAlarm =  alertDialog.create()
+                    dialogAlarm?.setCancelable(false)
+                    dialogAlarm?.show()
                 }catch (e:java.lang.Exception){
                     e.printStackTrace()
                 }
@@ -231,12 +235,14 @@ class CommonActivity : AppCompatActivity() {
                     when {
                         !ProtocolNetworkService.connectInternet -> {
                             Toast.makeText(this, "Нет соединения с интернетом, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
+                            EventBus.getDefault().removeAllStickyEvents()
                             val objectActivity = Intent(this, ObjectActivity::class.java)
                             objectActivity.putExtra("objectInfo", alarmObjectInfo)
                             startActivity(objectActivity)
                         }
                         !ProtocolNetworkService.connectServer -> {
                             Toast.makeText(this, "Нет соединения с сервером, невозможно отправить подтверждение тревоги", Toast.LENGTH_LONG).show()
+                            EventBus.getDefault().removeAllStickyEvents()
                             val objectActivity = Intent(this, ObjectActivity::class.java)
                             objectActivity.putExtra("objectInfo", alarmObjectInfo)
                             startActivity(objectActivity)
@@ -270,13 +276,14 @@ class CommonActivity : AppCompatActivity() {
 
                                         }
                                     }
+                                EventBus.getDefault().removeAllStickyEvents()
                                 val objectActivity = Intent(this, ObjectActivity::class.java)
                                 objectActivity.putExtra("objectInfo", alarmObjectInfo)
                                 startActivity(objectActivity)
                             }
                         }
                     }
-                    dialog?.cancel()
+                    dialogAlarm?.cancel()
                 }
             }
         }
@@ -321,6 +328,15 @@ class CommonActivity : AppCompatActivity() {
                                                 }
                                             }
                                         }
+
+                                        try{
+                                            if(dialogStatus?.isShowing!!){
+                                                dialogStatus?.cancel()
+                                            }
+                                        }catch (e:java.lang.Exception){
+                                            e.printStackTrace()
+                                        }
+
                                         val statusTimerDialog = AlertDialog.Builder(this@CommonActivity)
                                         val view = layoutInflater.inflate(R.layout.status_timer_dialog,null,false)
                                         statusTimerDialog.setView(view)
@@ -330,9 +346,9 @@ class CommonActivity : AppCompatActivity() {
                                             stopStatus()
                                         }
 
-                                        dialog = statusTimerDialog.create()
-                                        dialog?.setCancelable(false)
-                                        dialog?.show()
+                                        dialogStatus = statusTimerDialog.create()
+                                        dialogStatus?.setCancelable(false)
+                                        dialogStatus?.show()
 
                                         val statusTimer:TextView = view.findViewById(status_timer)
 
@@ -341,7 +357,7 @@ class CommonActivity : AppCompatActivity() {
                                         this.timer = object : CountDownTimer(DataStore.statusList[i].time.toLong() * 60000, 1000)
                                         {
                                             override fun onFinish() {
-                                                dialog?.cancel()
+                                                dialogStatus?.cancel()
                                                 stopStatus()
                                             }
 
@@ -362,16 +378,15 @@ class CommonActivity : AppCompatActivity() {
                                         }
 
                                         this.timer?.start()
-
-
                                     }
                                 }
                                 if(event.message == "Свободен")
                                 {
                                     this.timer?.cancel()
-                                    dialog?.cancel()
+                                    dialogStatus?.cancel()
                                 }
 
+                                fillFabMenu()
                             }
                         }
                         catch (e:java.lang.Exception){
@@ -390,9 +405,11 @@ class CommonActivity : AppCompatActivity() {
             alertSound.stop()
             alertSound.reset()
         }
+
         isAlive = true
 
-        if (!ProtocolNetworkService.isServiceStarted) {
+        if (!ProtocolNetworkService.isServiceStarted)
+        {
             ControlLifeCycleService.reconnectToServer(this)
             thread{
                 while (!ProtocolNetworkService.isServiceStarted){
@@ -419,6 +436,14 @@ class CommonActivity : AppCompatActivity() {
         }
         else
         {
+
+            try{
+                if(dialogAlarm?.isShowing!!){
+                    dialogAlarm?.cancel()
+                }
+            }catch (e:java.lang.Exception){
+                e.printStackTrace()
+            }
 
                 val message = JSONObject()
                 message.put("\$c$","getalarm")
@@ -530,27 +555,33 @@ class CommonActivity : AppCompatActivity() {
         }
         else
         {
+
             try {
-                mMapView?.controller?.animateTo(GeoPoint(LocationService.imHere!!.latitude, LocationService.imHere!!.longitude))
-            }catch (e:java.lang.Exception){
+                mMapView?.controller?.animateTo(
+                    GeoPoint(
+                        LocationService.imHere!!.latitude,
+                        LocationService.imHere!!.longitude
+                    )
+                )
+            }catch (e:Exception){
+                e.printStackTrace()
+            }
+            try {
+                mMapView?.overlays?.add(locationOverlay())
+            }catch (e:Exception){
+                e.printStackTrace()
+            }
+            try {
+                mMapView?.overlays?.add(initRotationGestureOverlay())
+            }catch (e:Exception){
+                e.printStackTrace()
+            }
+            try {
+                mMapView?.overlays?.add(initScaleBarOverlay())
+            }catch (e:Exception){
                 e.printStackTrace()
             }
 
-            try{
-                mMapView?.overlays?.add(locationOverlay())
-            }catch (e:java.lang.Exception){
-                e.printStackTrace()
-            }
-            try{
-                mMapView?.overlays?.add(initRotationGestureOverlay())
-            }catch (e:java.lang.Exception){
-                e.printStackTrace()
-            }
-            try{
-                mMapView?.overlays?.add(initScaleBarOverlay())
-            }catch (e:java.lang.Exception){
-                e.printStackTrace()
-            }
         }
 
     }
@@ -641,8 +672,11 @@ class CommonActivity : AppCompatActivity() {
 
         val fabMenu: FloatingActionMenu = findViewById(common_fab_menu)
 
+        if(fabMenu.childCount>0)
+        fabMenu.removeAllMenuButtons()
+
         for (i in 0 until  DataStore.statusList.count()) {
-            if( DataStore.statusList[i].name != "На тревоге"){
+            if( DataStore.statusList[i].name != "На тревоге" && DataStore.statusList[i].name != DataStore.status){
                 val actionButton = com.github.clans.fab.FloatingActionButton(this)
                 actionButton.labelText =  DataStore.statusList[i].name
                 actionButton.colorNormal = ContextCompat.getColor(this, color.colorPrimary)
@@ -713,11 +747,14 @@ class CommonActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        if(!exit)
-            ControlLifeCycleService.stopService(this)
+        if(isFinishing){
+            if(!exit)
+                ControlLifeCycleService.stopService(this)
 
-        finish()
-        exitProcess(0)
+            finish()
+            exitProcess(0)
+        }
+
     }
 
     override fun onBackPressed() {

@@ -7,12 +7,14 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.iid.FirebaseInstanceId
 import com.redmadrobot.inputmask.MaskedTextChangedListener
 import kobramob.rubeg38.ru.gbrnavigation.R
 import commonactivity.CommonActivity
+import kobramob.rubeg38.ru.networkprotocol.RubegProtocol
 import resource.SPGbrNavigation
 import resource.ControlLifeCycleService
 import resource.DataStore
@@ -33,7 +35,7 @@ class LoginActivity : AppCompatActivity() {
 
     private var registration: Boolean = false
     private var exit = false
-
+    lateinit var dialog:AlertDialog
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -80,6 +82,8 @@ class LoginActivity : AppCompatActivity() {
 
                 else ->{
 
+
+
                     if(!EventBus.getDefault().isRegistered(this)){
                         EventBus.getDefault().register(this)
                     }
@@ -90,7 +94,7 @@ class LoginActivity : AppCompatActivity() {
                     thread {
 
                         runOnUiThread {
-                            //ControlLifeCycleService.startService(this,ipText.text.toString(),portText.text.toString().toInt())
+                           /* ControlLifeCycleService.startService(this,ipText.text.toString(),portText.text.toString().toInt())*/
                             val service = Intent(this, ProtocolNetworkService::class.java)
 
                             service.putExtra("command", "start")
@@ -102,9 +106,19 @@ class LoginActivity : AppCompatActivity() {
                             } else {
                                 startService(service)
                             }
+                            val accessLogin = AlertDialog.Builder(this@LoginActivity)
+                            val view = layoutInflater.inflate(R.layout.progress_bar, null, false)
+                            accessLogin.setView(view)
+                            dialog = accessLogin.create()
+                            try{
+
+                                dialog.setCancelable(false)
+                                dialog.show()
+                            }catch (e:java.lang.Exception){
+                                e.printStackTrace()
+                            }
 
                         }
-
 
                         println("Hello")
 
@@ -123,21 +137,19 @@ class LoginActivity : AppCompatActivity() {
                                 access: Boolean ->
                             if (access) {
                                 runOnUiThread {
-
                                     SPGbrNavigation.init(this)
                                     SPGbrNavigation.addPropertyString("ip", ipText.text.toString())
                                     SPGbrNavigation.addPropertyInt("port", portText.text.toString().toInt())
                                     SPGbrNavigation.addPropertyString("imei", intent.getStringExtra("imei")!!)
                                     SPGbrNavigation.addPropertyString("fcmtoken", fcmToken)
-
                                 }
                             } else {
                                 runOnUiThread {
-
+                                    if(dialog.isShowing){
+                                        dialog.cancel()
+                                    }
                                     Toast.makeText(this, "Приложение не смогло зарегистрироваться на сервере", Toast.LENGTH_LONG).show()
-
                                     ControlLifeCycleService.stopService(applicationContext)
-
                                 }
                             }
                         }
@@ -150,17 +162,14 @@ class LoginActivity : AppCompatActivity() {
 
     private fun initFCMToken(): String {
 
-        println("Hello 2")
         var token = ""
 
         if(!getSharedPreferences("gbrStorage",Context.MODE_PRIVATE).contains("fcmtoken")){
-            println("Hello 3")
             FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
                 token = it.token
             }
         }
         else{
-            println("Hello 4")
             token = getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken","").toString()
         }
 
@@ -179,6 +188,10 @@ class LoginActivity : AppCompatActivity() {
         when (event.command) {
             "regok" -> {
 
+                if(dialog.isShowing){
+                    dialog.cancel()
+                }
+
                 Toast.makeText(this, "Регистрация прошла успешно", Toast.LENGTH_SHORT).show()
 
                 val intent = Intent(this@LoginActivity, CommonActivity::class.java)
@@ -188,6 +201,9 @@ class LoginActivity : AppCompatActivity() {
             }
             "accessdenied"->{
 
+                if(dialog.isShowing){
+                    dialog.cancel()
+                }
                 Toast.makeText(this,"Данного пользователя не существует в базе",Toast.LENGTH_SHORT).show()
 
                 ControlLifeCycleService.stopService(applicationContext)

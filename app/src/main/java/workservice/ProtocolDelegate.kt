@@ -166,7 +166,6 @@ class ProtocolDelegate:RubegProtocolDelegate {
                     when (JSONObject(message).getString("command")) {
 
                         "regok" -> {
-
                             val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
                                 .addData("command", "connectServer")
                                 .build()
@@ -264,10 +263,12 @@ class ProtocolDelegate:RubegProtocolDelegate {
                         }
 
                         "notalarm" -> {
+                            val notalarm = gson.fromJson(message,NotAlarmGson::class.java)
                             EventBus.getDefault().postSticky(
                                 MessageEvent(
                                     command = "notalarm",
-                                    message = "Свободен"
+                                    message = "Свободен",
+                                    name = notalarm.name
                                 )
                             )
                         }

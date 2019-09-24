@@ -16,7 +16,10 @@ data class AlarmGson(
     val plan: ArrayList<String> = ArrayList(),
     val photo: ArrayList<String> = ArrayList()
 )
-
+data class NotAlarmGson(
+    val command:String,
+    val name: String
+)
 data class StatusGson(
     val command: String,
     val number: String,

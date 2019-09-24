@@ -10,12 +10,16 @@ import android.provider.Settings.Secure
 import android.util.Log
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.extensions.jsonBody
+import commonactivity.CommonActivity
 import workservice.NotificationService.createNotification
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocol
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import loginactivity.LoginActivity
+import mainactivity.MainActivity
+import objectactivity.ObjectActivity
 import org.json.JSONObject
 import org.osmdroid.util.GeoPoint
 import java.lang.Thread.sleep
@@ -55,7 +59,6 @@ class ProtocolNetworkService : Service(){
 
                 }
                 "stop" -> {
-
                     stopService()
                 }
             }
@@ -313,9 +316,12 @@ class ProtocolNetworkService : Service(){
     }
 
     override fun onDestroy() {
+        //TODO Закрывает приложение когда это не надо!!!
+        if(CommonActivity.exit){
+            Log.d("Service","Destroy")
+            System.exit(0)
+        }
         isServiceStarted = false
-        Log.d("Service","Destroy")
-        System.exit(0)
         super.onDestroy()
 
     }

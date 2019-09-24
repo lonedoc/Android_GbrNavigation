@@ -75,7 +75,7 @@ class Coder {
         headersBuffer.put(sessionIdBytes)
         insertKeys(headersBuffer)
 
-        var headersArray = headersBuffer.array()
+        val headersArray = headersBuffer.array()
         code(headersArray, VECTOR)
 
         if (data == null) return headersArray
@@ -87,14 +87,14 @@ class Coder {
         dataBuffer.put(data)
         insertKeys(dataBuffer)
 
-        var dataArray = dataBuffer.array()
+        val dataArray = dataBuffer.array()
         code(dataArray, VECTOR)
 
         return headersArray + dataArray
     }
 
     fun decode(data: ByteArray): Pair<Headers, ByteArray?> {
-        var headersArray: ByteArray = data.sliceArray(0 until HEADERS_SIZE + 2)
+        val headersArray: ByteArray = data.sliceArray(0 until HEADERS_SIZE + 2)
         code(headersArray, VECTOR)
 
         val headersBuffer = ByteBuffer.allocate(headersArray.count())

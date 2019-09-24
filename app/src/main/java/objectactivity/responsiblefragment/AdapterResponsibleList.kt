@@ -79,10 +79,14 @@ class AdapterResponsibleList internal constructor(
         }
 
         holder.parentContainer.setOnClickListener {
-            if (holder.additionalContainer.visibility == View.VISIBLE)
-                holder.additionalContainer.visibility = View.GONE
+
+            holder.additionalContainer.visibility = if(holder.additionalContainer.visibility == View.VISIBLE){
+              View.GONE
+            }
             else
-                holder.additionalContainer.visibility = View.VISIBLE
+            {
+                View.VISIBLE
+            }
         }
     }
 
