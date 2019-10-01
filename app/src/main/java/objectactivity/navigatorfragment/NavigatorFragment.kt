@@ -52,6 +52,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
     private lateinit var scaleBarOverlay: ScaleBarOverlay
     private lateinit var locationOverlay: MyLocationNewOverlay
 
+    private var isAlive = false
     private var enableWhileResume = false
     private var countTry = 0
     companion object {
@@ -78,6 +79,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
     @SuppressLint("InflateParams")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
+        isAlive = true
         println("onCreateView")
         val rootView = inflater.inflate(R.layout.navigator_fragment, container, false)
 
@@ -157,14 +159,33 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                 roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
 
                 val waypoints = ArrayList<GeoPoint>()
-                val startPoint = GeoPoint(
-                    LocationService.imHere!!.latitude,
-                    LocationService.imHere!!.longitude
-                )
-                val endPoint = GeoPoint(
-                    alarmObjectInfo.lat!!,
-                    alarmObjectInfo.lon!!
-                )
+                var startPoint:GeoPoint = GeoPoint(0,0)
+                var endPoint:GeoPoint = GeoPoint(0,0)
+                try{
+                    startPoint = GeoPoint(
+                        LocationService.imHere!!.latitude,
+                        LocationService.imHere!!.longitude
+                    )
+                    endPoint = GeoPoint(
+                        alarmObjectInfo.lat!!,
+                        alarmObjectInfo.lon!!
+                    )
+                }catch (e:java.lang.Exception){
+                    e.printStackTrace()
+
+                        Toast.makeText(activity!!,"Невозможно проложить путь так как не определены ваши координаты",Toast.LENGTH_SHORT).show()
+
+                    thread{
+                        sleep(10000)
+                        activity!!.runOnUiThread {
+                            if(isAlive)
+                        paveTheWay()
+                        }
+                    }
+                    return
+
+                }
+
 
                 Log.d("endPoint", endPoint.toString())
                 waypoints.add(startPoint)
@@ -337,8 +358,14 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
             }
             else
             {
-                mMapView!!.controller.animateTo(GeoPoint(
-                    LocationService.imHere!!.latitude, LocationService.imHere!!.longitude))
+                try {
+                    mMapView!!.controller.animateTo(GeoPoint(
+                        LocationService.imHere!!.latitude, LocationService.imHere!!.longitude))
+                }catch (e:java.lang.Exception){
+                    e.printStackTrace()
+                    Toast.makeText(activity!!,"Ваше месторасположение не определено",Toast.LENGTH_SHORT).show()
+                }
+
                 mMapView!!.overlays.add(locationOverlay())
                 mMapView!!.overlays.add(initRotationGestureOverlay())
                 mMapView!!.overlays.add(initScaleBarOverlay())
@@ -362,7 +389,12 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
     private fun locationOverlay(): MyLocationNewOverlay {
         val gpsMyLocationProvider = GpsMyLocationProvider(activity)
-        gpsMyLocationProvider.addLocationSource(LocationService.imHere!!.provider)
+        try{
+            gpsMyLocationProvider.addLocationSource(LocationService.imHere!!.provider)
+        }catch (e:java.lang.Exception){
+            e.printStackTrace()
+        }
+
         locationOverlay = MyLocationNewOverlay(gpsMyLocationProvider,
             mMapView
         )
@@ -441,6 +473,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
     override fun onStop() {
         super.onStop()
+        isAlive = false
         println("onStop")
     }
 

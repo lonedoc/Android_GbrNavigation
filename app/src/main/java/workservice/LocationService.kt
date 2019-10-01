@@ -22,8 +22,8 @@ class LocationService : LocationListener {
         try {
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
-                1000,
-                0.toFloat(),
+                2000,
+                50.toFloat(),
                 this)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -31,8 +31,8 @@ class LocationService : LocationListener {
         try {
             locationManager.requestLocationUpdates(
                 LocationManager.PASSIVE_PROVIDER,
-                1000,
-                0.toFloat(),
+                2000,
+                50.toFloat(),
                 this)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -40,8 +40,8 @@ class LocationService : LocationListener {
         try {
             locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER,
-                1000,
-                0.toFloat(),
+                2000,
+                50.toFloat(),
                 this
             )
         } catch (e: Exception) {

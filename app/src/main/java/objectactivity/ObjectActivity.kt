@@ -268,11 +268,9 @@ class ObjectActivity : AppCompatActivity() {
     @SuppressLint("InflateParams")
     private fun proximityCheck(alarmObjectInfo: AlarmObjectInfo) {
         thread {
-
                 val location = Location("point A")
                 location.latitude = alarmObjectInfo.lat!!
                 location.longitude = alarmObjectInfo.lon!!
-
             val distance = try {
                 if(DataStore.cityCard.pcsinfo.dist == "")
                     50
@@ -285,112 +283,114 @@ class ObjectActivity : AppCompatActivity() {
             }
 
                 while (!NavigatorFragment.arriveToObject) {
+                    try{
+                        sleep(1000)
 
-                    sleep(1000)
+                        proximityAlive = true
 
-                    proximityAlive = true
+                        checkAlertState()
 
-                    checkAlertState()
+                        if (LocationService.imHere!!.distanceTo(location) < distance && !NavigatorFragment.arriveToObject && !ObjectDataStore.arrivedToObjectSend) {
 
-                    if (LocationService.imHere!!.distanceTo(location) < distance && !NavigatorFragment.arriveToObject && !ObjectDataStore.arrivedToObjectSend) {
+                            runOnUiThread {
+                                proximityAlive = false
 
-                        runOnUiThread {
+                                NavigatorFragment.arriveToObject = true
+                                when {
+                                    !ProtocolNetworkService.connectInternet -> {
 
-
-                            proximityAlive = false
-
-                            NavigatorFragment.arriveToObject = true
-
-
-                            when {
-                                !ProtocolNetworkService.connectInternet -> {
-
-                                    Toast.makeText(
-                                        this,
-                                        "Нет соединения с интернетом, невозможно отправить запрос на прибытие",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                                !ProtocolNetworkService.connectServer -> {
-                                    Toast.makeText(
-                                        this,
-                                        "Нет соединения с сервером, невозможно отправить запрос на прибытие",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                                !isAlive ->{
-
-                                    NavigatorFragment.arriveToObject = true
-
-                                    alertCanceled = true
-
-                                    proximityAlive = false
-
-                                    if (NavigatorFragment.road != null) {
-                                        if (NavigatorFragment.road?.mRouteHigh!!.count()> 1)
-                                            NavigatorFragment.road?.mRouteHigh!!.clear()
+                                        Toast.makeText(
+                                            this,
+                                            "Нет соединения с интернетом, невозможно отправить запрос на прибытие",
+                                            Toast.LENGTH_LONG
+                                        ).show()
                                     }
+                                    !ProtocolNetworkService.connectServer -> {
+                                        Toast.makeText(
+                                            this,
+                                            "Нет соединения с сервером, невозможно отправить запрос на прибытие",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                    !isAlive ->{
 
-                                    val intent = Intent(this, ObjectActivity::class.java)
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    intent.putExtra("objectInfo",
-                                        saveAlarm
-                                    )
-                                    startActivity(intent)
+                                        NavigatorFragment.arriveToObject = true
 
-                                }
-                                else -> {
+                                        alertCanceled = true
 
-                                    val arrivedDialog = AlertDialog.Builder(this)
-                                    arrivedDialog.setTitle("Прибытие")
-                                        .setCancelable(false)
-                                        .setMessage("Вы прибыли на место")
-                                        .setPositiveButton("Подтвердить") {
-                                                _, _ ->
-                                            ObjectDataStore.arrivedToObjectSend = true
-                                            val message = JSONObject()
-                                            message.put("\$c$", "gbrkobra")
-                                            message.put("command", "alarmpr")
-                                            message.put("number", alarmObjectInfo.number)
-                                            ProtocolNetworkService.protocol?.send(message = message.toString()) {
-                                                    success: Boolean ->
-                                                if (success) {
-                                                    runOnUiThread {
-                                                        if (NavigatorFragment.road != null) {
-                                                            if (NavigatorFragment.road?.mRouteHigh!!.count() > 1) {
-                                                                if (mMapView != null) {
-                                                                    NavigatorFragment.road?.mRouteHigh!!.clear()
-                                                                    mMapView!!.overlays.removeAt(
-                                                                        mMapView!!.overlays.count() - 1
-                                                                    )
-                                                                    mMapView!!.invalidate()
+                                        proximityAlive = false
+
+                                        if (NavigatorFragment.road != null) {
+                                            if (NavigatorFragment.road?.mRouteHigh!!.count()> 1)
+                                                NavigatorFragment.road?.mRouteHigh!!.clear()
+                                        }
+
+                                        val intent = Intent(this, ObjectActivity::class.java)
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        intent.putExtra("objectInfo",
+                                            saveAlarm
+                                        )
+                                        startActivity(intent)
+
+                                    }
+                                    else -> {
+
+                                        val arrivedDialog = AlertDialog.Builder(this)
+                                        arrivedDialog.setTitle("Прибытие")
+                                            .setCancelable(false)
+                                            .setMessage("Вы прибыли на место")
+                                            .setPositiveButton("Подтвердить") {
+                                                    _, _ ->
+                                                ObjectDataStore.arrivedToObjectSend = true
+                                                val message = JSONObject()
+                                                message.put("\$c$", "gbrkobra")
+                                                message.put("command", "alarmpr")
+                                                message.put("number", alarmObjectInfo.number)
+                                                ProtocolNetworkService.protocol?.send(message = message.toString()) {
+                                                        success: Boolean ->
+                                                    if (success) {
+                                                        runOnUiThread {
+                                                            if (NavigatorFragment.road != null) {
+                                                                if (NavigatorFragment.road?.mRouteHigh!!.count() > 1) {
+                                                                    if (mMapView != null) {
+                                                                        NavigatorFragment.road?.mRouteHigh!!.clear()
+                                                                        mMapView!!.overlays.removeAt(
+                                                                            mMapView!!.overlays.count() - 1
+                                                                        )
+                                                                        mMapView!!.invalidate()
+                                                                    }
                                                                 }
                                                             }
-                                                        }
 
-                                                        Toast.makeText(this, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
+                                                            Toast.makeText(this, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
+                                                        }
                                                     }
-                                                }
-                                                else
-                                                {
-                                                    runOnUiThread {
-                                                        Toast.makeText(this, "Прибытие не подтверждено", Toast.LENGTH_LONG).show()
+                                                    else
+                                                    {
+                                                        runOnUiThread {
+                                                            Toast.makeText(this, "Прибытие не подтверждено", Toast.LENGTH_LONG).show()
+                                                        }
                                                     }
                                                 }
                                             }
-                                        }
-                                        .setNeutralButton("Отложить"){
-                                            dialogInterface, i ->
-                                            dialogInterface.cancel()
-                                            ObjectDataStore.putOffArrivedToObjectSend = true
-                                        }
-                                        .show()
+                                            .setNeutralButton("Отложить"){
+                                                    dialogInterface, i ->
+                                                dialogInterface.cancel()
+                                                ObjectDataStore.putOffArrivedToObjectSend = true
+                                            }
+                                            .show()
+                                    }
                                 }
                             }
+
+                            sleep(50000)
                         }
-                        sleep(50000)
+                    }catch (e:Exception){
+                        e.printStackTrace()
                     }
+
                 }
+            sleep(5000)
         }
     }
 
