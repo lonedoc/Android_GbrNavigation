@@ -1,4 +1,4 @@
-package mainactivity
+package oldVersion.mainactivity
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
@@ -18,17 +18,17 @@ import com.arellomobile.mvp.MvpAppCompatActivity
 import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
 import com.google.firebase.iid.FirebaseInstanceId
-import commonactivity.CommonActivity
+import oldVersion.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.gbrnavigation.R
-import loginactivity.LoginActivity
+import oldVersion.loginactivity.LoginActivity
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
-import resource.ControlLifeCycleService
-import workservice.LocationService
-import workservice.ProtocolNetworkService
-import workservice.RegistrationEvent
+import oldVersion.resource.ControlLifeCycleService
+import oldVersion.workservice.LocationService
+import oldVersion.workservice.ProtocolNetworkService
+import oldVersion.workservice.RegistrationEvent
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_main.*
@@ -56,7 +56,7 @@ class MainActivity : MvpAppCompatActivity() {
         if (savedInstanceState != null)
         {
             main_progressBar.visibility = View.VISIBLE
-            main_text.visibility = View.VISIBLE
+            textView.visibility = View.VISIBLE
             if (!registration && !authorization) {
                 checkData()
             }
@@ -69,7 +69,7 @@ class MainActivity : MvpAppCompatActivity() {
                 sleep(2000)
                 runOnUiThread {
                      main_progressBar.visibility = View.VISIBLE
-                    main_text.visibility = View.VISIBLE
+                    textView.visibility = View.VISIBLE
 
                     checkData()
                 }
@@ -128,7 +128,7 @@ class MainActivity : MvpAppCompatActivity() {
                         telephonyMgr.deviceId
                     }
 
-                    val loginActivity = Intent(this, LoginActivity::class.java)
+                    val loginActivity = Intent(this,newVersion.login.LoginActivity::class.java)
                     loginActivity.putExtra("imei", deviceID)
 
                     startActivity(loginActivity)
@@ -214,7 +214,7 @@ class MainActivity : MvpAppCompatActivity() {
         runOnUiThread {
 
             myLocation.initLocation(applicationContext)
-            main_text.text = getString(R.string.waitConnectToGPS)
+            textView.text = getString(R.string.waitConnectToGPS)
 
             if(!LocationService.Enable){
                 myLocation.initLocation(applicationContext)
@@ -265,10 +265,10 @@ class MainActivity : MvpAppCompatActivity() {
 
         runOnUiThread {
             if(authorization)
-                main_text.text = getString(R.string.authorization)
+                textView.text = getString(R.string.authorization)
 
             if(registration)
-                main_text.text = getString(R.string.registration)
+                textView.text = getString(R.string.registration)
         }
     }
 

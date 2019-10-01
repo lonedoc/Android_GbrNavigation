@@ -1,4 +1,4 @@
-package loginactivity
+package oldVersion.loginactivity
 
 import android.content.Context
 import android.content.Intent
@@ -13,13 +13,12 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.iid.FirebaseInstanceId
 import com.redmadrobot.inputmask.MaskedTextChangedListener
 import kobramob.rubeg38.ru.gbrnavigation.R
-import commonactivity.CommonActivity
-import kobramob.rubeg38.ru.networkprotocol.RubegProtocol
-import resource.SPGbrNavigation
-import resource.ControlLifeCycleService
-import resource.DataStore
-import workservice.RegistrationEvent
-import workservice.ProtocolNetworkService
+import oldVersion.commonactivity.CommonActivity
+import oldVersion.resource.SPGbrNavigation
+import oldVersion.resource.ControlLifeCycleService
+import oldVersion.resource.DataStore
+import oldVersion.workservice.RegistrationEvent
+import oldVersion.workservice.ProtocolNetworkService
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -40,8 +39,8 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        val ipText: TextInputEditText = findViewById(R.id.login_ip)
-        val portText: TextInputEditText = findViewById(R.id.login_port)
+        val ipText: TextInputEditText = findViewById(R.id.ipAddressTextView)
+        val portText: TextInputEditText = findViewById(R.id.portTextView)
 
         val listener = MaskedTextChangedListener("[099]{.}[099]{.}[099]{.}[099]", ipText)
         ipText.addTextChangedListener(listener)

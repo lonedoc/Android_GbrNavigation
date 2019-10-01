@@ -1,4 +1,4 @@
-package objectactivity.responsiblefragment
+package oldVersion.objectactivity.responsiblefragment
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -15,7 +15,7 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import java.lang.Exception
 import kobramob.rubeg38.ru.gbrnavigation.R
-import workservice.OtvlList
+import oldVersion.workservice.OtvlList
 
 class AdapterResponsibleList internal constructor(
     private val otvlList: ArrayList<OtvlList>,

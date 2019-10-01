@@ -1,4 +1,4 @@
-package workservice
+package oldVersion.workservice
 
 import android.annotation.SuppressLint
 import android.app.Service
@@ -10,16 +10,13 @@ import android.provider.Settings.Secure
 import android.util.Log
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.extensions.jsonBody
-import commonactivity.CommonActivity
-import workservice.NotificationService.createNotification
+import oldVersion.commonactivity.CommonActivity
+import oldVersion.workservice.NotificationService.createNotification
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocol
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import loginactivity.LoginActivity
-import mainactivity.MainActivity
-import objectactivity.ObjectActivity
 import org.json.JSONObject
 import org.osmdroid.util.GeoPoint
 import java.lang.Thread.sleep

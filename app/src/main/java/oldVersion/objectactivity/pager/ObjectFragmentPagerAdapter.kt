@@ -1,12 +1,12 @@
-package objectactivity.pager
+package oldVersion.objectactivity.pager
 
 import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
-import objectactivity.fragment.ObjectFragment
-import objectactivity.planfragment.PlanFragment
-import objectactivity.responsiblefragment.ResponsibleFragment
+import oldVersion.objectactivity.fragment.ObjectFragment
+import oldVersion.objectactivity.planfragment.PlanFragment
+import oldVersion.objectactivity.responsiblefragment.ResponsibleFragment
 
 class ObjectFragmentPagerAdapter(fm: FragmentManager?, private val context: Context) : FragmentPagerAdapter(fm!!, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 

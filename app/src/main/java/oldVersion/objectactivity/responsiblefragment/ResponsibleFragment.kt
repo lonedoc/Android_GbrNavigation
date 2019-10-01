@@ -1,4 +1,4 @@
-package objectactivity.responsiblefragment
+package oldVersion.objectactivity.responsiblefragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kobramob.rubeg38.ru.gbrnavigation.R
-import commonactivity.AlarmObjectInfo
+import oldVersion.commonactivity.AlarmObjectInfo
 
 class ResponsibleFragment : androidx.fragment.app.Fragment() {
     private var rootView: View? = null

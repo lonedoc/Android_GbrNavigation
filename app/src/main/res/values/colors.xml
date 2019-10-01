@@ -4,6 +4,7 @@
     <color name="colorPrimary">#8F2B25</color>
     <color name="colorPrimaryDark">#6B140D</color>
     <color name="colorAccent">#D13124</color>
+    <color name="errorColor">#FF5722</color>
 
     <color name="arriveToObject">#478D15</color>
     <color name="viewBackground">#FFFFFF</color>

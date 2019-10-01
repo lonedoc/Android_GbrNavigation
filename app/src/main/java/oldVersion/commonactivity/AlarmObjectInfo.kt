@@ -1,8 +1,8 @@
-package commonactivity
+package oldVersion.commonactivity
 
 import android.util.Log
 import java.io.Serializable
-import workservice.OtvlList
+import oldVersion.workservice.OtvlList
 
 class AlarmObjectInfo() : Serializable {
     var name: String? = null

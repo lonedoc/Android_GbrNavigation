@@ -1,4 +1,4 @@
-package commonactivity
+package oldVersion.commonactivity
 
 import android.annotation.SuppressLint
 import android.content.ContentResolver
@@ -32,10 +32,10 @@ import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.R.*
 import kobramob.rubeg38.ru.gbrnavigation.R.id.*
-import referenceactivity.ReferenceActivity
-import loginactivity.LoginActivity
-import objectactivity.ObjectActivity
-import objectactivity.data.ObjectDataStore
+import oldVersion.referenceactivity.ReferenceActivity
+import oldVersion.loginactivity.LoginActivity
+import oldVersion.objectactivity.ObjectActivity
+import oldVersion.objectactivity.data.ObjectDataStore
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -47,9 +47,9 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import resource.ControlLifeCycleService
-import resource.DataStore
-import workservice.*
+import oldVersion.resource.ControlLifeCycleService
+import oldVersion.resource.DataStore
+import oldVersion.workservice.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList

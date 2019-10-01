@@ -1,10 +1,10 @@
-package resource
+package oldVersion.resource
 
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import org.json.JSONObject
-import workservice.ProtocolNetworkService
+import oldVersion.workservice.ProtocolNetworkService
 import java.lang.Exception
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread

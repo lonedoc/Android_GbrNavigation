@@ -10,7 +10,6 @@
     <string name="listFeed">Лента событий</string>
     <string name="responsible">Отвественные</string>
     <string name="plan_schem">План-схема</string>
-    <string name="enterToApp">войти в приложение</string>
     <string name="inputPort">Введите PORT сервера</string>
     <string name="inputIP">Введите IP адрес сервера</string>
     <string name="inputGroupName">Введите наименование группы</string>
@@ -47,5 +46,8 @@
     <string name="sendReports">Отправить рапорт</string>
     <string name="sendArrived">Отправить прибытие</string>
     <string name="reference">Справочник</string>
+    <string name="enterToApp">Войти в приложение</string>
+    <string name="addobject">addObject</string>
+    <string name="removeobject">removeObject</string>
 
 </resources>

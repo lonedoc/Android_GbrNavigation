@@ -1,4 +1,4 @@
-package resource
+package oldVersion.resource
 
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.XYTileSource

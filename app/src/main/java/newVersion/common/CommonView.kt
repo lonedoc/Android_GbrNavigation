@@ -1,4 +1,6 @@
 package newVersion.common
 
-interface CommonView {
+import com.arellomobile.mvp.MvpView
+
+interface CommonView:MvpView {
 }

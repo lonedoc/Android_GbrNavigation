@@ -1,4 +1,4 @@
-package workservice
+package oldVersion.workservice
 
 data class AlarmEvent(
     val command: String,

@@ -1,4 +1,4 @@
-package objectactivity.planfragment
+package oldVersion.objectactivity.planfragment
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -16,10 +16,10 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kobramob.rubeg38.ru.gbrnavigation.R
-import commonactivity.AlarmObjectInfo
-import objectactivity.data.ObjectDataStore
-import workservice.ImageEvent
-import workservice.ProtocolNetworkService
+import oldVersion.commonactivity.AlarmObjectInfo
+import oldVersion.objectactivity.data.ObjectDataStore
+import oldVersion.workservice.ImageEvent
+import oldVersion.workservice.ProtocolNetworkService
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode

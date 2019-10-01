@@ -1,7 +1,9 @@
-package newVersion.network
+package newVersion.models
+
+import java.io.Serializable
 
 data class Credentials(
-    var username: String,
-    var password: String
+    var imei: String,
+    var fcmtoken: String
 ) : Serializable
 

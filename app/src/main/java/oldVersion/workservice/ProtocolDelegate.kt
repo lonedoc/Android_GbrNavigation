@@ -1,4 +1,4 @@
-package workservice
+package oldVersion.workservice
 
 import android.content.Context
 import android.content.Intent
@@ -7,16 +7,16 @@ import android.net.NetworkInfo
 import android.util.Log
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
-import commonactivity.CommonActivity
+import oldVersion.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocol
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocolDelegate
-import loginactivity.LoginActivity
-import mainactivity.MainActivity
-import objectactivity.ObjectActivity
+import oldVersion.loginactivity.LoginActivity
+import oldVersion.mainactivity.MainActivity
+import oldVersion.objectactivity.ObjectActivity
 import org.greenrobot.eventbus.EventBus
 import org.json.JSONObject
-import resource.ControlLifeCycleService.startService
-import resource.DataStore
+import oldVersion.resource.ControlLifeCycleService.startService
+import oldVersion.resource.DataStore
 import java.util.*
 
 class ProtocolDelegate:RubegProtocolDelegate {

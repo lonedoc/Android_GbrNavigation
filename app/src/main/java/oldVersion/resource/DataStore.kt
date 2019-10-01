@@ -1,11 +1,9 @@
-package resource
+package oldVersion.resource
 
-import workservice.CityCard
-import workservice.GpsStatus
+import oldVersion.workservice.CityCard
+import oldVersion.workservice.GpsStatus
 
 object DataStore {
-
-    var appClosed = false
 
     var reports:ArrayList<String> = ArrayList()
 

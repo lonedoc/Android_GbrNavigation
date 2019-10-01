@@ -1,4 +1,4 @@
-package objectactivity
+package oldVersion.objectactivity
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -19,20 +19,20 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kobramob.rubeg38.ru.gbrnavigation.R
-import referenceactivity.ReferenceActivity
-import commonactivity.AlarmObjectInfo
-import commonactivity.CommonActivity
-import objectactivity.data.ObjectDataStore
-import objectactivity.navigatorfragment.NavigatorFragment
-import objectactivity.navigatorfragment.NavigatorFragment.Companion.mMapView
-import objectactivity.pager.ObjectTabFragment
+import oldVersion.referenceactivity.ReferenceActivity
+import oldVersion.commonactivity.AlarmObjectInfo
+import oldVersion.commonactivity.CommonActivity
+import oldVersion.objectactivity.data.ObjectDataStore
+import oldVersion.objectactivity.navigatorfragment.NavigatorFragment
+import oldVersion.objectactivity.navigatorfragment.NavigatorFragment.Companion.mMapView
+import oldVersion.objectactivity.pager.ObjectTabFragment
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
-import resource.ControlLifeCycleService
-import resource.DataStore
-import workservice.*
+import oldVersion.resource.ControlLifeCycleService
+import oldVersion.resource.DataStore
+import oldVersion.workservice.*
 import java.lang.Exception
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread

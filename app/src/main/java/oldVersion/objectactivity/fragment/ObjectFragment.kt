@@ -1,4 +1,4 @@
-package objectactivity.fragment
+package oldVersion.objectactivity.fragment
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
@@ -11,11 +11,11 @@ import android.view.ViewGroup
 import android.widget.*
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kobramob.rubeg38.ru.gbrnavigation.R
-import commonactivity.AlarmObjectInfo
-import objectactivity.data.ObjectDataStore
-import objectactivity.navigatorfragment.NavigatorFragment
-import resource.DataStore
-import workservice.ProtocolNetworkService
+import oldVersion.commonactivity.AlarmObjectInfo
+import oldVersion.objectactivity.data.ObjectDataStore
+import oldVersion.objectactivity.navigatorfragment.NavigatorFragment
+import oldVersion.resource.DataStore
+import oldVersion.workservice.ProtocolNetworkService
 import org.json.JSONObject
 import java.lang.Exception
 import kotlin.concurrent.thread

@@ -1,4 +1,4 @@
-package objectactivity.pager
+package oldVersion.objectactivity.pager
 
 import android.os.Bundle
 import android.view.LayoutInflater

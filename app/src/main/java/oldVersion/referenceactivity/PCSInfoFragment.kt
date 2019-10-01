@@ -1,4 +1,4 @@
-package referenceactivity
+package oldVersion.referenceactivity
 
 import android.content.Context
 import android.content.Intent
@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kobramob.rubeg38.ru.gbrnavigation.R
-import resource.DataStore
+import oldVersion.resource.DataStore
 import java.lang.Exception
 
 class PCSInfoFragment:Fragment() {

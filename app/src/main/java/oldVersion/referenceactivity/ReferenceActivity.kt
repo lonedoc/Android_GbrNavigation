@@ -1,4 +1,4 @@
-package referenceactivity
+package oldVersion.referenceactivity
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -14,11 +14,11 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
-import commonactivity.AlarmObjectInfo
-import commonactivity.CommonActivity
+import oldVersion.commonactivity.AlarmObjectInfo
+import oldVersion.commonactivity.CommonActivity
 import kobramob.rubeg38.ru.gbrnavigation.R
-import objectactivity.ObjectActivity
-import resource.DataStore
+import oldVersion.objectactivity.ObjectActivity
+import oldVersion.resource.DataStore
 import java.lang.Exception
 
 class ReferenceActivity : AppCompatActivity() {

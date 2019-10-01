@@ -39,7 +39,7 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="n">
 
-        <activity android:name="referenceactivity.ReferenceActivity" />
+        <activity android:name="oldVersion.referenceactivity.ReferenceActivity" />
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
@@ -50,35 +50,49 @@
             android:value="default" />
 
         <activity
-            android:name="loginactivity.LoginActivity"
+            android:name="oldVersion.loginactivity.LoginActivity"
             android:keepScreenOn="true"
             android:noHistory="true"
             />
         <activity
-            android:name="mainactivity.MainActivity"
+            android:name="oldVersion.mainactivity.MainActivity"
             android:keepScreenOn="true"
             android:noHistory="true"
             >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
 
         <activity
-            android:name="commonactivity.CommonActivity"
+            android:name="oldVersion.commonactivity.CommonActivity"
             android:keepScreenOn="true" />
 
         <service
-            android:name="workservice.ProtocolNetworkService"
+            android:name="oldVersion.workservice.ProtocolNetworkService"
+            android:enabled="true"
+            android:exported="false" />
+        <service
+            android:name="newVersion.NetworkService"
             android:enabled="true"
             android:exported="false" />
 
         <activity
-            android:name="objectactivity.ObjectActivity"
+            android:name="oldVersion.objectactivity.ObjectActivity"
             android:keepScreenOn="true" />
 
+        <activity android:name="newVersion.login.LoginActivity"
+            android:keepScreenOn="true">
+        </activity>
+        <activity android:name="newVersion.main.MainActivity"
+            android:keepScreenOn="true"
+            >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="newVersion.common.CommonActivity"
+            android:keepScreenOn="true"/>
         <!--<service
             android:name="mad.location.manager.lib.Services.KalmanLocationService"
             android:enabled="true"

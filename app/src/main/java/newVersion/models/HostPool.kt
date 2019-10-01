@@ -1,4 +1,8 @@
 package newVersion.models
 
-class HostPool {
-}
+import java.io.Serializable
+
+data class HostPool(
+    var addresses: ArrayList<String>,
+    var port: Int
+) : Serializable

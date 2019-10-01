@@ -1,91 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="oldVersion.loginactivity.LoginActivity"
+    android:id="@+id/linearLayout"
+    android:fillViewport="true"
+    android:background="@color/textWhite"
+    >
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context="loginactivity.LoginActivity"
+        android:layout_height="0dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:gravity="center"
-        android:id="@+id/linearLayout">
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:id="@+id/relativeLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintBottom_toTopOf="@+id/portInputLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </RelativeLayout>
 
 
-    <ScrollView android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:ignore="UselessParent">
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/portInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="32dp"
+            android:hint="@string/inputPort"
+            app:errorEnabled="true"
+            app:errorTextColor="@color/errorColor"
+            app:layout_constraintBottom_toTopOf="@+id/login_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent">
 
-        <LinearLayout
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/portTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:gravity="center">
-            <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/landscape_large_icon"
-                    android:scaleType="fitXY"
-                    android:id="@+id/imageView"
-                    android:contentDescription="@string/landscape_icon"
-                    android:layout_marginBottom="8dp"
-                    android:layout_marginTop="8dp"
-            />
+                android:inputType="number"
+                android:singleLine="true"
+                android:textSize="18sp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/login_ip_layout"
+        <Button
+            android:id="@+id/login_button"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:layout_marginBottom="64dp"
+            android:background="@color/colorAccent"
+            android:text="@string/enterToApp"
+            android:textColor="@color/textWhite"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+        <ImageButton
+            android:id="@+id/remove"
+            android:src="@drawable/ic_remove"
+            android:backgroundTint="@android:color/transparent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            app:layout_constraintBottom_toTopOf="@+id/relativeLayout"
+            app:layout_constraintEnd_toStartOf="@+id/add"
+            android:contentDescription="@string/removeobject" />
 
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginTop="24dp">
-                <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/login_ip"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:singleLine="true"
-                        android:textSize="18sp"
-                        android:digits="1234567890."
-                        android:hint="@string/inputIP"
-                />
-            </com.google.android.material.textfield.TextInputLayout>
+        <ImageButton
+            android:id="@+id/add"
+            android:src="@drawable/ic_add"
+            android:backgroundTint="@android:color/transparent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/relativeLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:contentDescription="@string/addobject" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/login_port_layout"
-
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginBottom="32dp"
-                    android:layout_marginTop="24dp"
-                    android:layout_marginStart="8dp"
-
-            >
-                <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/login_port"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:singleLine="true"
-                        android:textSize="18sp"
-                        android:inputType="number"
-                        android:hint="@string/inputPort"
-                />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <Button
-                    android:text="@string/enterToApp"
-                    android:textSize="18sp"
-                    android:background="@color/colorAccent"
-                    android:textColor="@color/textWhite"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/login_button"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="16dp" android:layout_marginBottom="32dp"
-            />
-        </LinearLayout>
-    </ScrollView>
-
-
-</LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

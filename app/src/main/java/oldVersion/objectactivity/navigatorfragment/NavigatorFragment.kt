@@ -1,4 +1,4 @@
-package objectactivity.navigatorfragment
+package oldVersion.objectactivity.navigatorfragment
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -19,13 +19,9 @@ import android.widget.*
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kobramob.rubeg38.ru.gbrnavigation.R
-import commonactivity.AlarmObjectInfo
-import objectactivity.ObjectActivity
-import objectactivity.data.ObjectDataStore
-import resource.DataStore
-import workservice.LocationService
-import workservice.ProtocolNetworkService
-import org.json.JSONObject
+import oldVersion.commonactivity.AlarmObjectInfo
+import oldVersion.resource.DataStore
+import oldVersion.workservice.LocationService
 import org.osmdroid.bonuspack.BuildConfig
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.Road

@@ -1,4 +1,4 @@
-package resource
+package oldVersion.resource
 
 import android.annotation.SuppressLint
 import android.content.Context
