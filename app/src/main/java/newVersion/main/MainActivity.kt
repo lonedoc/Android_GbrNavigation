@@ -32,10 +32,6 @@ import oldVersion.workservice.NotificationService
 import kotlin.concurrent.thread
 
 class MainActivity: MvpAppCompatActivity(), MainView {
-
-
-
-
     @InjectPresenter
     lateinit var presenter: MainPresenter
 
