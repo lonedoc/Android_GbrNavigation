@@ -4,16 +4,16 @@ import android.content.Context
 import android.content.SharedPreferences
 import newVersion.models.Preferences
 
-class PrefsUtil(context:Context):Preferences {
+class PrefsUtil(context: Context) : Preferences {
     private val prefsId = "ru.rubeg38.gbrNavigation"
     private val prefs: SharedPreferences = context.getSharedPreferences(prefsId, Context.MODE_PRIVATE)
 
     override var serverAddress: ArrayList<String>
         get() {
-            val arrayList:ArrayList<String> = ArrayList()
+            val arrayList: ArrayList<String> = ArrayList()
             val string = prefs.getString("ip", "")
-            for(w in string?.trim(',')?.split(" ")!!){
-                if(w.isNotEmpty()){
+            for (w in string?.trim(',')?.split(" ")!!) {
+                if (w.isNotEmpty()) {
                     arrayList.add(w)
                 }
             }
@@ -67,5 +67,4 @@ class PrefsUtil(context:Context):Preferences {
 
     override val containsLastLunchTime: Boolean
         get() = prefs.contains("lastLunchTime")
-
 }

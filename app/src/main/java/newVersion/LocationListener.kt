@@ -6,10 +6,10 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 
-class LocationListener @SuppressLint("MissingPermission") constructor(locationManager: LocationManager) :LocationListener {
+class LocationListener @SuppressLint("MissingPermission") constructor(locationManager: LocationManager) : LocationListener {
 
-    companion object{
-        var imHere:Location? = null
+    companion object {
+        var imHere: Location? = null
     }
 
     init {
@@ -19,6 +19,7 @@ class LocationListener @SuppressLint("MissingPermission") constructor(locationMa
             50.toFloat(),
             this
         )
+        imHere = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
     }
     override fun onLocationChanged(myLocation: Location?) {
         imHere = myLocation
@@ -26,14 +27,14 @@ class LocationListener @SuppressLint("MissingPermission") constructor(locationMa
     }
 
     override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {
-       //Изменение статуса GPS
+        // Изменение статуса GPS
     }
 
     override fun onProviderEnabled(p0: String?) {
-        //Провайдер включен
+        // Провайдер включен
     }
 
     override fun onProviderDisabled(p0: String?) {
-        //Провайдер выключен
+        // Провайдер выключен
     }
 }

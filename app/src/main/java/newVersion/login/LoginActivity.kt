@@ -8,38 +8,35 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.arellomobile.mvp.MvpAppCompatActivity
 import com.arellomobile.mvp.presenter.InjectPresenter
-import com.arellomobile.mvp.viewstate.strategy.SkipStrategy
-import com.arellomobile.mvp.viewstate.strategy.StateStrategyType
-import com.google.android.material.circularreveal.CircularRevealHelper
 import com.google.firebase.messaging.RemoteMessage
+import java.lang.Exception
 import kobramob.rubeg38.ru.gbrnavigation.R
+import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_login.*
 import newVersion.NetworkService
 import newVersion.Utils.PrefsUtil
+import newVersion.common.CommonActivity
 import newVersion.models.HostPool
 import newVersion.models.Preferences
 import oldVersion.workservice.NotificationService
 import ru.rubeg38.technicianmobile.utils.setOnTextChanged
-import java.lang.Exception
-import kotlin.concurrent.thread
 
-class LoginActivity:MvpAppCompatActivity(),LoginView {
+class LoginActivity : MvpAppCompatActivity(), LoginView {
 
     @InjectPresenter
-    lateinit var presenter:LoginPresenter
+    lateinit var presenter: LoginPresenter
 
     private val progressDialog = ProgressDialog()
-    lateinit var adapter:AdapterIpAddress
+    lateinit var adapter: AdapterIpAddress
 
-    companion object{
+    companion object {
         var isAlive = false
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        portTextView.setOnTextChanged{ str-> presenter.validatePort(str?.toString()) }
-
+        portTextView.setOnTextChanged { str -> presenter.validatePort(str?.toString()) }
 
         portTextView.setOnFocusChangeListener { _, hasFocus ->
             val port = portTextView.text.toString()
@@ -57,23 +54,21 @@ class LoginActivity:MvpAppCompatActivity(),LoginView {
             adapter.removeItem()
         }
 
-        if(!presenter.isInit()){
-            val preferences:Preferences = PrefsUtil(this)
+        if (!presenter.isInit()) {
+            val preferences: Preferences = PrefsUtil(this)
             presenter.init(preferences)
         }
     }
 
-    private fun onClickLoginButton(){
+    private fun onClickLoginButton() {
         thread {
-            if(adapter.getAddresses()!=null)
-            {
+            if (adapter.getAddresses() != null) {
                 val address = adapter.getAddresses()
                 val port = portTextView.text.toString()
                 val imei = intent.getStringExtra("imei")
-                presenter.submit(address,port,imei)
-            }
-            else {
-                Log.d("ActivityLogin","Enter return")
+                presenter.submit(address, port, imei)
+            } else {
+                Log.d("ActivityLogin", "Enter return")
                 return@thread
             }
         }
@@ -82,23 +77,21 @@ class LoginActivity:MvpAppCompatActivity(),LoginView {
     override fun onResume() {
         super.onResume()
         isAlive = true
-
     }
 
     override fun addItem(address: java.util.ArrayList<String>) {
         address.add("")
-        adapter.notifyItemInserted(address.size-1)
+        adapter.notifyItemInserted(address.size - 1)
     }
 
     override fun removeItem(indexItem: Int, size: Int) {
-        try{
+        try {
             recyclerView?.removeViewAt(indexItem)
             adapter.notifyItemRemoved(indexItem)
-            adapter.notifyItemRangeRemoved(indexItem,size)
-        }catch (e:Exception){
+            adapter.notifyItemRangeRemoved(indexItem, size)
+        } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
     override fun onStop() {
@@ -106,20 +99,18 @@ class LoginActivity:MvpAppCompatActivity(),LoginView {
         isAlive = false
     }
 
-    override fun setAddress(address:ArrayList<String>?) {
-        if(address?.count()!!<1)
-        {
+    override fun setAddress(address: ArrayList<String>?) {
+        if (address?.count()!! <1) {
             address.add("")
         }
 
-        if(address.count() <2){
+        if (address.count() <2) {
             visibilityRemoveButton(View.GONE)
         }
 
-        adapter = AdapterIpAddress(presenter,address)
+        adapter = AdapterIpAddress(presenter, address)
         recyclerView?.layoutManager = LinearLayoutManager(this)
         recyclerView?.adapter = adapter
-
     }
 
     override fun setPort(port: String?) {
@@ -142,25 +133,24 @@ class LoginActivity:MvpAppCompatActivity(),LoginView {
 
     override fun showToastMessage(message: String?) {
         runOnUiThread {
-            Toast.makeText(this,message,Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         }
     }
 
     override fun startService(credentials: newVersion.models.Credentials, hostPool: HostPool) {
         runOnUiThread {
-            if(NetworkService.isServiceStarted) return@runOnUiThread
+            if (NetworkService.isServiceStarted) return@runOnUiThread
 
-            val intent = Intent(this,NetworkService::class.java)
+            val intent = Intent(this, NetworkService::class.java)
 
             val bundle = Bundle()
-            bundle.putSerializable("credentials",credentials)
-            bundle.putSerializable("hostPool",hostPool)
-            bundle.putString("command","start")
+            bundle.putSerializable("credentials", credentials)
+            bundle.putSerializable("hostPool", hostPool)
+            bundle.putString("command", "start")
             intent.putExtras(bundle)
 
             startService(intent)
         }
-
     }
 
     override fun disconnectServer() {
@@ -172,9 +162,8 @@ class LoginActivity:MvpAppCompatActivity(),LoginView {
 
     override fun showDialog() {
         runOnUiThread {
-            progressDialog.show(supportFragmentManager,"ProgressDialog")
+            progressDialog.show(supportFragmentManager, "ProgressDialog")
         }
-
     }
 
     override fun closeDialog() {
@@ -191,14 +180,11 @@ class LoginActivity:MvpAppCompatActivity(),LoginView {
         NotificationService.createNotification(remoteMessage1, applicationContext)
 
         runOnUiThread {
-            /*val intent = Intent(this, CommonActivity::class.java)
-         val bundle = Bundle()
-         bundle.putSerializable("credentials", credentials)
-         intent.putExtras(bundle)
+            val intent = Intent(this, CommonActivity::class.java)
          presenter.onDestroy()
-         startActivity(intent)*/
+         startActivity(intent)
 
-            Log.d("LoginActivity","RegisterSuccess")
+            Log.d("LoginActivity", "RegisterSuccess")
         }
     }
 

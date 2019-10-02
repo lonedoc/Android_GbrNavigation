@@ -14,20 +14,20 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.lang.Exception
+import java.util.ArrayList
 import kobramob.rubeg38.ru.gbrnavigation.R
 import oldVersion.resource.DataStore
 import oldVersion.workservice.UsInfo
-import java.lang.Exception
-import java.util.ArrayList
 
-class USInfoFragment: Fragment() {
+class USInfoFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val rootView = inflater.inflate(R.layout.usinfo_fragment,container,false)
+        val rootView = inflater.inflate(R.layout.usinfo_fragment, container, false)
 
         val usInfoRecyclerView: RecyclerView = rootView.findViewById(R.id.usinfo_recyclerView)
 
@@ -43,14 +43,13 @@ class USInfoFragment: Fragment() {
 
         return rootView
     }
-
 }
 
 class AdapterUsInfo(val usinfo: ArrayList<UsInfo>, val context: Context) :
     RecyclerView.Adapter<AdapterUsInfo.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_usinfo,parent,false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_usinfo, parent, false)
         return ViewHolder(view)
     }
 
@@ -64,16 +63,14 @@ class AdapterUsInfo(val usinfo: ArrayList<UsInfo>, val context: Context) :
             try {
                 val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + usinfo[position].phone))
                 context.startActivity(intent)
-            }catch (e: Exception){
-                Toast.makeText(context,"Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-
-    class ViewHolder(itemView:View):RecyclerView.ViewHolder(itemView){
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val nameTextView: TextView = itemView.findViewById(R.id.usinfo_name)
         val button: Button = itemView.findViewById(R.id.usinfo_phone_button)
     }
-
 }

@@ -18,7 +18,10 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import java.lang.Thread.sleep
+import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.R
+import kotlin.concurrent.thread
 import oldVersion.commonactivity.AlarmObjectInfo
 import oldVersion.resource.DataStore
 import oldVersion.workservice.LocationService
@@ -36,9 +39,6 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import java.lang.Thread.sleep
-import java.util.*
-import kotlin.concurrent.thread
 
 class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
@@ -79,8 +79,7 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
         mMapView = rootView.findViewById(R.id.navigator_mapview)
 
-        while(mMapView == null)
-        {
+        while (mMapView == null) {
         }
 
         initMapView()
@@ -98,8 +97,11 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                     followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.viewBackground))
                     followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.colorPrimary))
                 }
-                mMapView!!.controller.animateTo(GeoPoint(
-                    LocationService.imHere))
+                mMapView!!.controller.animateTo(
+                    GeoPoint(
+                        LocationService.imHere
+                    )
+                )
             } catch (e: java.lang.Exception) {
                 e.printStackTrace()
                 Toast.makeText(context, "Ваше месторасположение не определено", Toast.LENGTH_SHORT).show()
@@ -117,18 +119,16 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                 followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.viewBackground))
             }
         }
-        
+
         yandex.setOnClickListener {
             try {
-                if(alarmObjectInfo.lat!=0.0 && alarmObjectInfo.lon!=0.0){
+                if (alarmObjectInfo.lat != 0.0 && alarmObjectInfo.lon != 0.0) {
                     val uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=${alarmObjectInfo.lat}&lon_to=${alarmObjectInfo.lon}")
                     val intent = Intent(Intent.ACTION_VIEW, uri)
                     intent.setPackage("ru.yandex.yandexnavi")
                     startActivity(intent)
-                }
-               else
-                {
-                    Toast.makeText(activity!!,"Не заданы координаты для объекта",Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(activity!!, "Не заданы координаты для объекта", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "На данном устройстве не установлен Яндекс.Навигатор", Toast.LENGTH_SHORT)
@@ -142,13 +142,12 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
         val alarmObjectInfo = activity!!.intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
-        if(alarmObjectInfo.lat!=0.0 && alarmObjectInfo.lon!=0.0){
+        if (alarmObjectInfo.lat != 0.0 && alarmObjectInfo.lon != 0.0) {
             Log.d("PaveTheWay", "create")
 
             val roadManager = OSRMRoadManager(context)
 
-            if (DataStore.routeServer.count()>0)
-            {
+            if (DataStore.routeServer.count()> 0) {
                 roadManager.setService("http:" + DataStore.routeServer[0] + "/route/v1/driving/")
                 roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
 
@@ -199,21 +198,16 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                         }
                     }
                 }
-            }
-            else
-            {
+            } else {
                 activity!!.runOnUiThread {
                     Toast.makeText(context, "Нет данных о сервере проложение пути", Toast.LENGTH_SHORT).show()
                 }
             }
-        }
-        else
-        {
+        } else {
             activity!!.runOnUiThread {
                 Toast.makeText(context, "Не заданы координаты для объекта", Toast.LENGTH_SHORT).show()
             }
         }
-
     }
 
     private fun tracking(roadOverlay: Polyline) {
@@ -289,16 +283,18 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                 val builder = android.app.AlertDialog.Builder(context)
                 builder.setMessage("GPS отключен, хотите ли вы его включить? (Приложение не работает без GPS)")
                     .setCancelable(false)
-                    .setPositiveButton("Да"){_,_ ->
+                    .setPositiveButton("Да") { _, _ ->
                         startActivity(Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                         thread {
-                            while(!manager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-                            {
+                            while (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                                 println("isProviderDisable")
                             }
                             activity!!.runOnUiThread {
-                                mMapView!!.controller.animateTo(GeoPoint(
-                                    LocationService.imHere!!.latitude, LocationService.imHere!!.longitude))
+                                mMapView!!.controller.animateTo(
+                                    GeoPoint(
+                                        LocationService.imHere!!.latitude, LocationService.imHere!!.longitude
+                                    )
+                                )
                                 mMapView!!.overlays.add(locationOverlay())
                                 mMapView!!.overlays.add(initRotationGestureOverlay())
                                 mMapView!!.overlays.add(initScaleBarOverlay())
@@ -320,21 +316,21 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
                         }
                     }
                     .setNegativeButton("No") {
-                            dialog,_->
-                        dialog.cancel()
-
-                    }
+                        dialog, _ ->
+                            dialog.cancel()
+                        }
                 val alert = builder.create()
                 alert.show()
             }
 
             if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 buildAlertMessageNoGps()
-            }
-            else
-            {
-                mMapView!!.controller.animateTo(GeoPoint(
-                    LocationService.imHere!!.latitude, LocationService.imHere!!.longitude))
+            } else {
+                mMapView!!.controller.animateTo(
+                    GeoPoint(
+                        LocationService.imHere!!.latitude, LocationService.imHere!!.longitude
+                    )
+                )
                 mMapView!!.overlays.add(locationOverlay())
                 mMapView!!.overlays.add(initRotationGestureOverlay())
                 mMapView!!.overlays.add(initScaleBarOverlay())
@@ -359,7 +355,8 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
     private fun locationOverlay(): MyLocationNewOverlay {
         val gpsMyLocationProvider = GpsMyLocationProvider(activity)
         gpsMyLocationProvider.addLocationSource(LocationService.imHere!!.provider)
-        locationOverlay = MyLocationNewOverlay(gpsMyLocationProvider,
+        locationOverlay = MyLocationNewOverlay(
+            gpsMyLocationProvider,
             mMapView
         )
         locationOverlay.setDirectionArrow(customIcon(R.drawable.ic_navigator_icon), customIcon(R.drawable.ic_navigator_active_icon))
@@ -419,7 +416,8 @@ class NavigatorFragment : androidx.fragment.app.Fragment(), MapEventsReceiver {
 
         if (mMapView!!.overlays.count()> 3)
             mMapView!!.overlays.removeAt(
-                mMapView!!.overlays.count() - 1)
+                mMapView!!.overlays.count() - 1
+            )
 
         if (road != null) {
             if (road?.mRouteHigh!!.count()> 1)

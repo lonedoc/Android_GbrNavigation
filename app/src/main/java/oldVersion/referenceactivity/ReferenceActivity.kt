@@ -14,12 +14,12 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
+import java.lang.Exception
+import kobramob.rubeg38.ru.gbrnavigation.R
 import oldVersion.commonactivity.AlarmObjectInfo
 import oldVersion.commonactivity.CommonActivity
-import kobramob.rubeg38.ru.gbrnavigation.R
 import oldVersion.objectactivity.ObjectActivity
 import oldVersion.resource.DataStore
-import java.lang.Exception
 
 class ReferenceActivity : AppCompatActivity() {
 
@@ -37,56 +37,58 @@ class ReferenceActivity : AppCompatActivity() {
 
         var title = " "
 
-        try{
+        try {
             title = DataStore.cityCard.pcsinfo.name
-        }catch (e:Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
         }
 
         supportActionBar?.title = title
 
         openFragment(referenceTabFragment)
-
     }
 
-    private fun openFragment(fragment:Fragment){
+    private fun openFragment(fragment: Fragment) {
         val transaction = supportFragmentManager.beginTransaction()
-        transaction.replace(R.id.reference_fragment_container,fragment)
+        transaction.replace(R.id.reference_fragment_container, fragment)
         transaction.addToBackStack(null)
         transaction.commit()
     }
 
     override fun onBackPressed() {
-        if(!intent.getBooleanExtra("objectActivity",false)){
+        if (!intent.getBooleanExtra("objectActivity", false)) {
             val commonActivity = Intent(this, CommonActivity::class.java)
             startActivity(commonActivity)
-        }
-        else
-        {
+        } else {
             val objectInfo: AlarmObjectInfo = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
             val objectActivity = Intent(this, ObjectActivity::class.java)
-            objectActivity.putExtra("objectInfo",objectInfo)
+            objectActivity.putExtra("objectInfo", objectInfo)
             startActivity(objectActivity)
         }
-
     }
 }
 
 @SuppressLint("WrongConstant")
-class ReferenceFragmentPagerAdapter(fm: FragmentManager?):
+class ReferenceFragmentPagerAdapter(fm: FragmentManager?) :
     FragmentPagerAdapter(fm!!, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
     private val tabTitles = arrayOf("Дежурная часть", "Экстренные службы", "Коммунальные службы")
 
     override fun getItem(position: Int): Fragment {
-        var fragment:Fragment? = null
-        when(position){
-            0->{fragment = PCSInfoFragment()
-            }
-            1->{fragment = ESInfoFragment()
-            }
-            2->{fragment = USInfoFragment()
-            }
+        var fragment: Fragment? = null
+        when (position) {
+            0 ->
+                 {
+                    fragment = PCSInfoFragment()
+                }
+            1 ->
+                 {
+                    fragment = ESInfoFragment()
+                }
+            2 ->
+                 {
+                    fragment = USInfoFragment()
+                }
         }
         return fragment!!
     }
@@ -100,7 +102,7 @@ class ReferenceFragmentPagerAdapter(fm: FragmentManager?):
     }
 }
 
-class ReferenceTabFragment: Fragment() {
+class ReferenceTabFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView: View = inflater.inflate(R.layout.reference_tab_fragment, container, false)
 

@@ -18,25 +18,24 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import java.lang.Exception
+import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
-import oldVersion.referenceactivity.ReferenceActivity
+import kotlin.concurrent.thread
 import oldVersion.commonactivity.AlarmObjectInfo
 import oldVersion.commonactivity.CommonActivity
 import oldVersion.objectactivity.data.ObjectDataStore
 import oldVersion.objectactivity.navigatorfragment.NavigatorFragment
 import oldVersion.objectactivity.navigatorfragment.NavigatorFragment.Companion.mMapView
 import oldVersion.objectactivity.pager.ObjectTabFragment
+import oldVersion.referenceactivity.ReferenceActivity
+import oldVersion.resource.ControlLifeCycleService
+import oldVersion.resource.DataStore
+import oldVersion.workservice.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
-import oldVersion.resource.ControlLifeCycleService
-import oldVersion.resource.DataStore
-import oldVersion.workservice.*
-import java.lang.Exception
-import java.lang.Thread.sleep
-import kotlin.concurrent.thread
-
 
 class ObjectActivity : AppCompatActivity() {
 
@@ -61,8 +60,7 @@ class ObjectActivity : AppCompatActivity() {
         alertCanceled = false
         proximityAlive = false
 
-        if(savedInstanceState != null)
-        {
+        if (savedInstanceState != null) {
 
             saveAlarm = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
@@ -82,63 +80,61 @@ class ObjectActivity : AppCompatActivity() {
             supportActionBar!!.title = "Карточка объекта"
 
             bnv.setOnNavigationItemSelectedListener {
-                    item ->
+                item ->
 
-                when (item.itemId) {
-                    R.id.cardObject -> {
-                        openFragment(objectTabFragment)
-                        supportActionBar!!.title = "Карточка объекта"
-                    }
+                    when (item.itemId) {
+                        R.id.cardObject -> {
+                            openFragment(objectTabFragment)
+                            supportActionBar!!.title = "Карточка объекта"
+                        }
 
-                    R.id.navigator -> {
-                        openFragment(navigatorFragment)
-                        supportActionBar!!.title = "Навигатор"
+                        R.id.navigator -> {
+                            openFragment(navigatorFragment)
+                            supportActionBar!!.title = "Навигатор"
+                        }
                     }
+                    true
                 }
-                true
-            }
 
-            try{
-                val commonTimer:Chronometer = findViewById(R.id.common_timer)
+            try {
+                val commonTimer: Chronometer = findViewById(R.id.common_timer)
                 commonTimer.base = SystemClock.elapsedRealtime() - ObjectDataStore.timeAlarmApplyLong!!
-                commonTimer.setBackgroundColor(ContextCompat.getColor(this,R.color.colorPrimaryDark))
-                commonTimer.setTextColor(ContextCompat.getColor(this,R.color.textWhite))
+                commonTimer.setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimaryDark))
+                commonTimer.setTextColor(ContextCompat.getColor(this, R.color.textWhite))
                 commonTimer.setOnChronometerTickListener {
                 }
                 commonTimer.start()
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
 
-            try{
-                val travelTimer:Chronometer = findViewById(R.id.travel_timer)
+            try {
+                val travelTimer: Chronometer = findViewById(R.id.travel_timer)
                 travelTimer.base = SystemClock.elapsedRealtime() - ObjectDataStore.timeAlarmApplyLong!!
-                travelTimer.setBackgroundColor(ContextCompat.getColor(this,R.color.colorPrimaryDark))
-                travelTimer.setTextColor(ContextCompat.getColor(this,R.color.textWhite))
+                travelTimer.setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimaryDark))
+                travelTimer.setTextColor(ContextCompat.getColor(this, R.color.textWhite))
                 travelTimer.setOnChronometerTickListener {
 
-                    val elapsedMillis: Long = (SystemClock.elapsedRealtime()
-                            - it.base)
+                    val elapsedMillis: Long = (
+                        SystemClock.elapsedRealtime() -
+                            it.base
+                        )
 
                     ObjectDataStore.timeAlarmApplyLong = elapsedMillis
 
-                    if(NavigatorFragment.arriveToObject){
-                        val parentCommonTimer:LinearLayout = findViewById(R.id.parent_common_timer)
+                    if (NavigatorFragment.arriveToObject) {
+                        val parentCommonTimer: LinearLayout = findViewById(R.id.parent_common_timer)
                         parentCommonTimer.visibility = View.VISIBLE
                         ObjectDataStore.saveToTimeToArrived((elapsedMillis / 1000).toInt())
-                        it.setBackgroundColor(ContextCompat.getColor(this,R.color.arriveToObject))
+                        it.setBackgroundColor(ContextCompat.getColor(this, R.color.arriveToObject))
                         it.stop()
                     }
-
                 }
                 travelTimer.start()
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
-
-        }
-        else
-        {
+        } else {
             saveAlarm = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
             if (!EventBus.getDefault().isRegistered(this))
@@ -157,67 +153,65 @@ class ObjectActivity : AppCompatActivity() {
             supportActionBar!!.title = "Карточка объекта"
 
             bnv.setOnNavigationItemSelectedListener {
-                    item ->
+                item ->
 
-                when (item.itemId) {
-                    R.id.cardObject -> {
-                        openFragment(objectTabFragment)
-                        supportActionBar!!.title = "Карточка объекта"
-                    }
+                    when (item.itemId) {
+                        R.id.cardObject -> {
+                            openFragment(objectTabFragment)
+                            supportActionBar!!.title = "Карточка объекта"
+                        }
 
-                    R.id.navigator -> {
-                        openFragment(navigatorFragment)
-                        supportActionBar!!.title = "Навигатор"
+                        R.id.navigator -> {
+                            openFragment(navigatorFragment)
+                            supportActionBar!!.title = "Навигатор"
+                        }
                     }
+                    true
                 }
-                true
-            }
-            Log.d("Debug","SystemClock.elapsedRealtime() = ${SystemClock.elapsedRealtime()}")
-            val commonTimer:Chronometer = findViewById(R.id.common_timer)
+            Log.d("Debug", "SystemClock.elapsedRealtime() = ${SystemClock.elapsedRealtime()}")
+            val commonTimer: Chronometer = findViewById(R.id.common_timer)
             commonTimer.base = SystemClock.elapsedRealtime()
-            commonTimer.setBackgroundColor(ContextCompat.getColor(this,R.color.colorPrimaryDark))
-            commonTimer.setTextColor(ContextCompat.getColor(this,R.color.textWhite))
+            commonTimer.setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimaryDark))
+            commonTimer.setTextColor(ContextCompat.getColor(this, R.color.textWhite))
             commonTimer.setOnChronometerTickListener {
-
             }
             commonTimer.start()
 
-            val travelTimer:Chronometer = findViewById(R.id.travel_timer)
+            val travelTimer: Chronometer = findViewById(R.id.travel_timer)
             travelTimer.base = SystemClock.elapsedRealtime()
-            travelTimer.setBackgroundColor(ContextCompat.getColor(this,R.color.colorPrimaryDark))
-            travelTimer.setTextColor(ContextCompat.getColor(this,R.color.textWhite))
+            travelTimer.setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimaryDark))
+            travelTimer.setTextColor(ContextCompat.getColor(this, R.color.textWhite))
             travelTimer.setOnChronometerTickListener {
 
                 val elapsedMillis: Long = (SystemClock.elapsedRealtime() - it.base)
                 ObjectDataStore.timeAlarmApplyLong = elapsedMillis
 
-                if(NavigatorFragment.arriveToObject){
-                    val parentCommonTimer:LinearLayout = findViewById(R.id.parent_common_timer)
+                if (NavigatorFragment.arriveToObject) {
+                    val parentCommonTimer: LinearLayout = findViewById(R.id.parent_common_timer)
                     parentCommonTimer.visibility = View.VISIBLE
                     ObjectDataStore.saveToTimeToArrived((elapsedMillis / 1000).toInt())
-                    it.setBackgroundColor(ContextCompat.getColor(this,R.color.arriveToObject))
+                    it.setBackgroundColor(ContextCompat.getColor(this, R.color.arriveToObject))
                     it.stop()
                 }
-
             }
             travelTimer.start()
         }
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.object_menu,menu)
+        menuInflater.inflate(R.menu.object_menu, menu)
         return true
     }
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.reference ->{
-                ///Вызов справочника
+            R.id.reference -> {
+                // /Вызов справочника
                 val referenceActivity = Intent(this, ReferenceActivity::class.java)
-                referenceActivity.putExtra("objectInfo",
+                referenceActivity.putExtra(
+                    "objectInfo",
                     saveAlarm
                 )
-                referenceActivity.putExtra("objectActivity",true)
+                referenceActivity.putExtra("objectActivity", true)
                 startActivity(referenceActivity)
             }
         }
@@ -249,148 +243,142 @@ class ObjectActivity : AppCompatActivity() {
 
         isAlive = true
 
-
         if (!ProtocolNetworkService.isServiceStarted) {
             ControlLifeCycleService.reconnectToServer(this)
         }
 
         val alarmObjectInfo = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
-        if (!proximityAlive && alarmObjectInfo.lat!=0.0 && alarmObjectInfo.lon!=0.0 && !ObjectDataStore.arrivedToObjectSend)
+        if (!proximityAlive && alarmObjectInfo.lat != 0.0 && alarmObjectInfo.lon != 0.0 && !ObjectDataStore.arrivedToObjectSend)
             proximityCheck(alarmObjectInfo)
 
         Log.d("ObjectActivity", "onStart")
         if (!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this)
-
     }
 
     @SuppressLint("InflateParams")
     private fun proximityCheck(alarmObjectInfo: AlarmObjectInfo) {
         thread {
 
-                val location = Location("point A")
-                location.latitude = alarmObjectInfo.lat!!
-                location.longitude = alarmObjectInfo.lon!!
+            val location = Location("point A")
+            location.latitude = alarmObjectInfo.lat!!
+            location.longitude = alarmObjectInfo.lon!!
 
             val distance = try {
-                if(DataStore.cityCard.pcsinfo.dist == "")
+                if (DataStore.cityCard.pcsinfo.dist == "")
                     50
                 else {
                     DataStore.cityCard.pcsinfo.dist.toInt()
                 }
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
                 50
             }
 
-                while (!NavigatorFragment.arriveToObject) {
+            while (!NavigatorFragment.arriveToObject) {
 
-                    sleep(1000)
+                sleep(1000)
 
-                    proximityAlive = true
+                proximityAlive = true
 
-                    checkAlertState()
+                checkAlertState()
 
-                    if (LocationService.imHere!!.distanceTo(location) < distance && !NavigatorFragment.arriveToObject && !ObjectDataStore.arrivedToObjectSend) {
+                if (LocationService.imHere!!.distanceTo(location) < distance && !NavigatorFragment.arriveToObject && !ObjectDataStore.arrivedToObjectSend) {
 
-                        runOnUiThread {
+                    runOnUiThread {
 
+                        proximityAlive = false
 
-                            proximityAlive = false
+                        NavigatorFragment.arriveToObject = true
 
-                            NavigatorFragment.arriveToObject = true
+                        when {
+                            !ProtocolNetworkService.connectInternet -> {
 
+                                Toast.makeText(
+                                    this,
+                                    "Нет соединения с интернетом, невозможно отправить запрос на прибытие",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                            !ProtocolNetworkService.connectServer -> {
+                                Toast.makeText(
+                                    this,
+                                    "Нет соединения с сервером, невозможно отправить запрос на прибытие",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                            !isAlive -> {
 
-                            when {
-                                !ProtocolNetworkService.connectInternet -> {
+                                NavigatorFragment.arriveToObject = true
 
-                                    Toast.makeText(
-                                        this,
-                                        "Нет соединения с интернетом, невозможно отправить запрос на прибытие",
-                                        Toast.LENGTH_LONG
-                                    ).show()
+                                alertCanceled = true
+
+                                proximityAlive = false
+
+                                if (NavigatorFragment.road != null) {
+                                    if (NavigatorFragment.road?.mRouteHigh!!.count()> 1)
+                                        NavigatorFragment.road?.mRouteHigh!!.clear()
                                 }
-                                !ProtocolNetworkService.connectServer -> {
-                                    Toast.makeText(
-                                        this,
-                                        "Нет соединения с сервером, невозможно отправить запрос на прибытие",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                                !isAlive ->{
 
-                                    NavigatorFragment.arriveToObject = true
+                                val intent = Intent(this, ObjectActivity::class.java)
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                intent.putExtra(
+                                    "objectInfo",
+                                    saveAlarm
+                                )
+                                startActivity(intent)
+                            }
+                            else -> {
 
-                                    alertCanceled = true
-
-                                    proximityAlive = false
-
-                                    if (NavigatorFragment.road != null) {
-                                        if (NavigatorFragment.road?.mRouteHigh!!.count()> 1)
-                                            NavigatorFragment.road?.mRouteHigh!!.clear()
-                                    }
-
-                                    val intent = Intent(this, ObjectActivity::class.java)
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    intent.putExtra("objectInfo",
-                                        saveAlarm
-                                    )
-                                    startActivity(intent)
-
-                                }
-                                else -> {
-
-                                    val arrivedDialog = AlertDialog.Builder(this)
-                                    arrivedDialog.setTitle("Прибытие")
-                                        .setCancelable(false)
-                                        .setMessage("Вы прибыли на место")
-                                        .setPositiveButton("Подтвердить") {
-                                                _, _ ->
+                                val arrivedDialog = AlertDialog.Builder(this)
+                                arrivedDialog.setTitle("Прибытие")
+                                    .setCancelable(false)
+                                    .setMessage("Вы прибыли на место")
+                                    .setPositiveButton("Подтвердить") {
+                                        _, _ ->
                                             ObjectDataStore.arrivedToObjectSend = true
                                             val message = JSONObject()
                                             message.put("\$c$", "gbrkobra")
                                             message.put("command", "alarmpr")
                                             message.put("number", alarmObjectInfo.number)
                                             ProtocolNetworkService.protocol?.send(message = message.toString()) {
-                                                    success: Boolean ->
-                                                if (success) {
-                                                    runOnUiThread {
-                                                        if (NavigatorFragment.road != null) {
-                                                            if (NavigatorFragment.road?.mRouteHigh!!.count() > 1) {
-                                                                if (mMapView != null) {
-                                                                    NavigatorFragment.road?.mRouteHigh!!.clear()
-                                                                    mMapView!!.overlays.removeAt(
-                                                                        mMapView!!.overlays.count() - 1
-                                                                    )
-                                                                    mMapView!!.invalidate()
+                                                success: Boolean ->
+                                                    if (success) {
+                                                        runOnUiThread {
+                                                            if (NavigatorFragment.road != null) {
+                                                                if (NavigatorFragment.road?.mRouteHigh!!.count() > 1) {
+                                                                    if (mMapView != null) {
+                                                                        NavigatorFragment.road?.mRouteHigh!!.clear()
+                                                                        mMapView!!.overlays.removeAt(
+                                                                            mMapView!!.overlays.count() - 1
+                                                                        )
+                                                                        mMapView!!.invalidate()
+                                                                    }
                                                                 }
                                                             }
-                                                        }
 
-                                                        Toast.makeText(this, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
+                                                            Toast.makeText(this, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
+                                                        }
+                                                    } else {
+                                                        runOnUiThread {
+                                                            Toast.makeText(this, "Прибытие не подтверждено", Toast.LENGTH_LONG).show()
+                                                        }
                                                     }
                                                 }
-                                                else
-                                                {
-                                                    runOnUiThread {
-                                                        Toast.makeText(this, "Прибытие не подтверждено", Toast.LENGTH_LONG).show()
-                                                    }
-                                                }
-                                            }
                                         }
-                                        .setNeutralButton("Отложить"){
-                                            dialogInterface, i ->
+                                    .setNeutralButton("Отложить") {
+                                        dialogInterface, i ->
                                             dialogInterface.cancel()
                                             ObjectDataStore.putOffArrivedToObjectSend = true
                                         }
-                                        .show()
-                                }
+                                    .show()
                             }
                         }
-                        sleep(50000)
                     }
+                    sleep(50000)
                 }
+            }
         }
     }
 
@@ -409,7 +397,6 @@ class ObjectActivity : AppCompatActivity() {
 
         if (EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().unregister(this)
-
     }
 
     override fun onDestroy() {
@@ -421,16 +408,16 @@ class ObjectActivity : AppCompatActivity() {
             if (NavigatorFragment.road?.mRouteHigh!!.count()> 1)
                 NavigatorFragment.road?.mRouteHigh!!.clear()
         }
-       // AppWatcher.objectWatcher.watch(this)
+        // AppWatcher.objectWatcher.watch(this)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, priority = 1, sticky = true)
-    fun onAlarmEvent(event:AlarmEvent){
-            EventBus.getDefault().removeAllStickyEvents()
-            EventBus.getDefault().unregister(this)
-            val commonActivity = Intent(this, CommonActivity::class.java)
-            startActivity(commonActivity)
-            finish()
+    fun onAlarmEvent(event: AlarmEvent) {
+        EventBus.getDefault().removeAllStickyEvents()
+        EventBus.getDefault().unregister(this)
+        val commonActivity = Intent(this, CommonActivity::class.java)
+        startActivity(commonActivity)
+        finish()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, priority = 1, sticky = true)
@@ -439,10 +426,10 @@ class ObjectActivity : AppCompatActivity() {
             "notalarm" -> {
 
                 val objectInfo = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
-                if(objectInfo.name == event.name){
+                if (objectInfo.name == event.name) {
 
                     Toast.makeText(this, "Тревога завершена/отменена", Toast.LENGTH_SHORT).show()
-                    thread{
+                    thread {
                         sleep(500)
 
                         runOnUiThread {
@@ -475,10 +462,10 @@ class ObjectActivity : AppCompatActivity() {
 
                     EventBus.getDefault().removeAllStickyEvents()
 
-                    if(EventBus.getDefault().isRegistered(this))
-                    EventBus.getDefault().unregister(this)
+                    if (EventBus.getDefault().isRegistered(this))
+                        EventBus.getDefault().unregister(this)
 
-                    thread{
+                    thread {
                         sleep(500)
                         runOnUiThread {
 
@@ -502,11 +489,8 @@ class ObjectActivity : AppCompatActivity() {
                             finish()
                         }
                     }
-
                 }
             }
-
         }
     }
-
 }

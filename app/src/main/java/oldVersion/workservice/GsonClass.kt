@@ -6,9 +6,9 @@ data class AlarmGson(
     val command: String,
     val name: String,
     val number: String,
-    var lon: String=" ",
-    var lat: String=" ",
-    var inn: String=" ",
+    var lon: String = " ",
+    var lat: String = " ",
+    var inn: String = " ",
     var zakaz: String? = null,
     val address: String,
     val area: AreaInfo,
@@ -17,7 +17,7 @@ data class AlarmGson(
     val photo: ArrayList<String> = ArrayList()
 )
 data class NotAlarmGson(
-    val command:String,
+    val command: String,
     val name: String
 )
 data class StatusGson(
@@ -38,19 +38,19 @@ data class RegistrationGson(
     val gpsstatus: ArrayList<GpsStatus> = ArrayList(),
     val routeserver: ArrayList<String> = ArrayList(),
     val reports: ArrayList<String> = ArrayList(),
-    val namegbr:String,
+    val namegbr: String,
     val citycard: CityCard
 )
 
-data class GpsStatus(val name:String,val time:String)
+data class GpsStatus(val name: String, val time: String)
 
-data class CityCard(val pcsinfo: PscInfo, val esinfo:ArrayList<EsInfo>, val usinfo:ArrayList<UsInfo>)
+data class CityCard(val pcsinfo: PscInfo, val esinfo: ArrayList<EsInfo>, val usinfo: ArrayList<UsInfo>)
 
-data class PscInfo(val name:String,val operatorphone:String,val servicecenterphone:String,val dist:String)
+data class PscInfo(val name: String, val operatorphone: String, val servicecenterphone: String, val dist: String)
 
-data class EsInfo(val name:String,val phone:String) : Serializable
+data class EsInfo(val name: String, val phone: String) : Serializable
 
-data class UsInfo(val name:String,val phone:String) : Serializable
+data class UsInfo(val name: String, val phone: String) : Serializable
 
 data class AreaInfo(val name: String, val alarmtime: String)
 

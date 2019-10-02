@@ -6,4 +6,3 @@ data class Credentials(
     var imei: String,
     var fcmtoken: String
 ) : Serializable
-

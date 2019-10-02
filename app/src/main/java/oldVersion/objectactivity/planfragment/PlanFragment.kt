@@ -15,7 +15,9 @@ import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
+import kotlin.concurrent.thread
 import oldVersion.commonactivity.AlarmObjectInfo
 import oldVersion.objectactivity.data.ObjectDataStore
 import oldVersion.workservice.ImageEvent
@@ -24,13 +26,10 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.json.JSONObject
-import java.lang.Thread.sleep
-import kotlin.concurrent.thread
-
 
 class PlanFragment : androidx.fragment.app.Fragment() {
 
-    companion object{
+    companion object {
         var countInQueue: Int = 0
     }
 
@@ -43,14 +42,14 @@ class PlanFragment : androidx.fragment.app.Fragment() {
 
     @Subscribe(threadMode = ThreadMode.MAIN, priority = 2)
     fun onMessageEvent(event: ImageEvent) {
-        try{
+        try {
             if (event.byteArray.count()> 0 && event.command == "getfile") {
                 val image: Bitmap = BitmapFactory.decodeByteArray(event.byteArray, 0, event.byteArray.count())
 
                 if (!ObjectDataStore.bitmapList.contains(image))
                     ObjectDataStore.bitmapList.add(image)
             }
-        }catch (e:Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
             ObjectDataStore.bitmapList.clear()
             countInQueue = 0
@@ -67,7 +66,7 @@ class PlanFragment : androidx.fragment.app.Fragment() {
         downloadImage()
     }
 
-    private fun downloadImage(){
+    private fun downloadImage() {
         val downloadProgressBar: ProgressBar = rootView!!.findViewById(R.id.plan_download)
         val planDownloadTextView: TextView = rootView!!.findViewById(R.id.plan_download_text)
         val planListRecyclerView: RecyclerView = rootView!!.findViewById(R.id.imageRecyclerView)
@@ -76,12 +75,11 @@ class PlanFragment : androidx.fragment.app.Fragment() {
 
         val requestDownloadList = alarmObjectInfo.planAndPhotoList
 
-        if(requestDownloadList.count()>0){
-            Log.d("PlanFragment","Download")
+        if (requestDownloadList.count()> 0) {
+            Log.d("PlanFragment", "Download")
             downloadProgressBar.visibility = View.VISIBLE
-            if(ObjectDataStore.bitmapList.count() == 0 && countInQueue != requestDownloadList.count())
-            {
-                when{
+            if (ObjectDataStore.bitmapList.count() == 0 && countInQueue != requestDownloadList.count()) {
+                when {
                     !ProtocolNetworkService.connectInternet -> {
                         Toast.makeText(
                             context,
@@ -97,76 +95,69 @@ class PlanFragment : androidx.fragment.app.Fragment() {
                         ).show()
                     }
                     else ->
-                    {
-                        for( i in 0 until requestDownloadList.count()){
-                            countInQueue = i
-                            val downloadImage = JSONObject()
-                            downloadImage.put("\$c$", "getfile")
-                            downloadImage.put("nameinserv", requestDownloadList[i])
-                            downloadImage.put("name", requestDownloadList[i])
-                            ProtocolNetworkService.protocol?.send(downloadImage.toString()) { success: Boolean ->
-                                if (success) {
-                                    Log.d("PlanFragment","WaitReceiver")
-                                } else {
-                                    activity!!.runOnUiThread {
-                                        Toast.makeText(
-                                            activity!!,
-                                            "Не удалось загрузить изображение ${alarmObjectInfo.planAndPhotoList[countInQueue -1]}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                        {
+                            for (i in 0 until requestDownloadList.count()) {
+                                countInQueue = i
+                                val downloadImage = JSONObject()
+                                downloadImage.put("\$c$", "getfile")
+                                downloadImage.put("nameinserv", requestDownloadList[i])
+                                downloadImage.put("name", requestDownloadList[i])
+                                ProtocolNetworkService.protocol?.send(downloadImage.toString()) { success: Boolean ->
+                                    if (success) {
+                                        Log.d("PlanFragment", "WaitReceiver")
+                                    } else {
+                                        activity!!.runOnUiThread {
+                                            Toast.makeText(
+                                                activity!!,
+                                                "Не удалось загрузить изображение ${alarmObjectInfo.planAndPhotoList[countInQueue - 1]}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
                                     }
                                 }
                             }
-                        }
-                        val handler = Handler()
-                        thread{
-                            Log.d("PlanFragment","ThreadStart")
-                            while(ObjectDataStore.bitmapList.count() != requestDownloadList.count())
-                            {
-                                handler.post {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                        downloadProgressBar.setProgress(ProtocolNetworkService.protocol?.percent!!,true)
+                            val handler = Handler()
+                            thread {
+                                Log.d("PlanFragment", "ThreadStart")
+                                while (ObjectDataStore.bitmapList.count() != requestDownloadList.count()) {
+                                    handler.post {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                            downloadProgressBar.setProgress(ProtocolNetworkService.protocol?.percent!!, true)
+                                        } else {
+                                            downloadProgressBar.progress =
+                                                ProtocolNetworkService.protocol?.percent!!
+                                        }
+                                        planDownloadTextView.text = "Скачано изображений ${ObjectDataStore.bitmapList.count()}"
                                     }
-                                    else
-                                    {
-                                        downloadProgressBar.progress =
-                                            ProtocolNetworkService.protocol?.percent!!
-                                    }
-                                    planDownloadTextView.text = "Скачано изображений ${ObjectDataStore.bitmapList.count()}"
+                                    sleep(100)
                                 }
-                                sleep(100)
-                            }
-                            Log.d("PlanFragment","ThreadStop")
-                            try {
-                                initRecyclerView(
-                                    downloadProgressBar = downloadProgressBar,
-                                    planListRecyclerView = planListRecyclerView,
-                                    planDownloadTextView = planDownloadTextView
-                                )
-                            }catch (e:java.lang.Exception){
-                                e.printStackTrace()
+                                Log.d("PlanFragment", "ThreadStop")
+                                try {
+                                    initRecyclerView(
+                                        downloadProgressBar = downloadProgressBar,
+                                        planListRecyclerView = planListRecyclerView,
+                                        planDownloadTextView = planDownloadTextView
+                                    )
+                                } catch (e: java.lang.Exception) {
+                                    e.printStackTrace()
+                                }
                             }
                         }
-                    }
                 }
-            }
-            else
-            {
+            } else {
                 initRecyclerView(
                     downloadProgressBar = downloadProgressBar,
                     planListRecyclerView = planListRecyclerView,
                     planDownloadTextView = planDownloadTextView
                 )
             }
-        }
-        else
-        {
+        } else {
             Toast.makeText(activity, "Список план-схем и изображений пуст", Toast.LENGTH_SHORT).show()
             EventBus.getDefault().unregister(this)
         }
     }
 
-    private fun initRecyclerView(downloadProgressBar:ProgressBar, planListRecyclerView:RecyclerView, planDownloadTextView:TextView){
+    private fun initRecyclerView(downloadProgressBar: ProgressBar, planListRecyclerView: RecyclerView, planDownloadTextView: TextView) {
         activity!!.runOnUiThread {
             downloadProgressBar.visibility = View.GONE
             planDownloadTextView.visibility = View.GONE

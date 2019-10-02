@@ -19,12 +19,18 @@ class ObjectFragmentPagerAdapter(fm: FragmentManager?, private val context: Cont
     override fun getItem(position: Int): Fragment {
         var fragment: Fragment? = null
         when (position) {
-            0 -> { fragment = ObjectFragment()
-            }
-            1 -> { fragment = ResponsibleFragment()
-            }
-            2 -> { fragment = PlanFragment()
-            }
+            0 ->
+                {
+                    fragment = ObjectFragment()
+                }
+            1 ->
+                {
+                    fragment = ResponsibleFragment()
+                }
+            2 ->
+                {
+                    fragment = PlanFragment()
+                }
         }
         return fragment!!
     }

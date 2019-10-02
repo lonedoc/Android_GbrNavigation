@@ -3,15 +3,14 @@ package oldVersion.resource
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import org.json.JSONObject
-import oldVersion.workservice.ProtocolNetworkService
 import java.lang.Exception
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
-
+import oldVersion.workservice.ProtocolNetworkService
+import org.json.JSONObject
 
 object ControlLifeCycleService {
-    fun startService(context:Context){
+    fun startService(context: Context) {
         println("Service start")
         val ip: ArrayList<String> = ArrayList()
         ip.add(context.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!)
@@ -28,7 +27,7 @@ object ControlLifeCycleService {
         }
     }
 
-    fun startService(context:Context,ip:String,port:Int){
+    fun startService(context: Context, ip: String, port: Int) {
 
         println("ReconnectService")
         val service = Intent(context, ProtocolNetworkService::class.java)
@@ -44,9 +43,8 @@ object ControlLifeCycleService {
         }
     }
 
-    fun stopService(context:Context){
-        if (ProtocolNetworkService.isServiceStarted)
-        {
+    fun stopService(context: Context) {
+        if (ProtocolNetworkService.isServiceStarted) {
             val service = Intent(context, ProtocolNetworkService::class.java)
             service.putExtra("command", "stop")
 
@@ -54,11 +52,10 @@ object ControlLifeCycleService {
                 println("${Build.VERSION.SDK_INT}")
                 try {
                     context.startForegroundService(service)
-                }catch (e:Exception){
+                } catch (e: Exception) {
                     e.printStackTrace()
                     context.startService(service)
                 }
-
             } else {
                 println("THis")
                 context.startService(service)
@@ -67,7 +64,7 @@ object ControlLifeCycleService {
         return
     }
 
-    fun reconnectToServer(context:Context){
+    fun reconnectToServer(context: Context) {
         startService(
             context,
             context.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("ip", "")!!,
@@ -86,18 +83,17 @@ object ControlLifeCycleService {
                 "token",
                 context.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken", "")
             )
-            authorizationMessage.put("keepalive","10")
+            authorizationMessage.put("keepalive", "10")
 
             ProtocolNetworkService.protocol?.send(authorizationMessage.toString()) { success: Boolean ->
                 if (success) {
-                    //reconnect
+                    // reconnect
                 } else {
-                    //disconnect
+                    // disconnect
                     stopService(context)
                     reconnectToServer(context)
                 }
             }
         }
     }
-
 }

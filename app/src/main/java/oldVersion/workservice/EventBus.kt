@@ -20,8 +20,8 @@ data class RegistrationEvent(
 )
 
 data class ImageEvent(
-    val command:String,
-    val byteArray:ByteArray
+    val command: String,
+    val byteArray: ByteArray
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -44,7 +44,7 @@ data class ImageEvent(
 
 class MessageEvent() {
 
-    lateinit var name:String
+    lateinit var name: String
     lateinit var command: String
     lateinit var message: String
 
@@ -53,7 +53,7 @@ class MessageEvent() {
     lateinit var status: String
     lateinit var number: String
 
-    constructor(command: String, message: String,name: String) : this() {
+    constructor(command: String, message: String, name: String) : this() {
         this.command = command
         this.message = message
         this.name = name

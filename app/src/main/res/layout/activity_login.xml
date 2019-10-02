@@ -61,18 +61,24 @@
 
         <Button
             android:id="@+id/login_button"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+
+
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center"
             android:layout_marginBottom="64dp"
-            android:background="@color/colorAccent"
+
             android:text="@string/enterToApp"
             android:textColor="@color/textWhite"
-            android:textSize="18sp"
+            android:textSize="14sp"
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:background="@color/colorPrimary"
+
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            />
         <ImageButton
             android:id="@+id/remove"
             android:src="@drawable/ic_remove"

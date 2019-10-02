@@ -12,20 +12,19 @@ import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.google.firebase.messaging.RemoteMessage
-import kobramob.rubeg38.ru.gbrnavigation.R
-import oldVersion.commonactivity.CommonActivity
-import oldVersion.loginactivity.LoginActivity
-import oldVersion.objectactivity.ObjectActivity
 import java.lang.Thread.sleep
+import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlin.concurrent.thread
+import newVersion.login.LoginActivity
+import oldVersion.commonactivity.CommonActivity
+import oldVersion.objectactivity.ObjectActivity
 
 object NotificationService {
 
-    fun createNotification(remoteMessage:RemoteMessage,context:Context){
+    fun createNotification(remoteMessage: RemoteMessage, context: Context) {
         val builder: NotificationCompat.Builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) NotificationCompat.Builder(
             context,
             channelID(context)
@@ -72,8 +71,8 @@ object NotificationService {
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.notify(6, notification)
             }
-            "alarm"->{
-                val soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ context.packageName + "/" + R.raw.alarm_sound)
+            "alarm" -> {
+                val soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.packageName + "/" + R.raw.alarm_sound)
                 alarmBuilder.setContentTitle("Тревога")
                     .setContentIntent(pendingIntent)
                     .setContentText("Тревога на : ${remoteMessage.data["name"]}")
@@ -90,20 +89,20 @@ object NotificationService {
             "disconnectServer" -> {
                 thread {
                     sleep(3000)
-                val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                builder.setContentTitle("Соединение с сервером")
-                    .setContentText("Соединение с сервером потеряно")
-                    .setContentIntent(pendingIntent)
-                    .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
-                    .setCategory(NotificationCompat.CATEGORY_ALARM)
-                    .setAutoCancel(true)
-                    .setSound(alarmSound)
-                    .setSmallIcon(R.drawable.ic_disconnect).color = ContextCompat.getColor(context, R.color.colorPrimary)
-                builder.build().flags = Notification.FLAG_AUTO_CANCEL
-                val notification = builder.build()
+                    val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                    builder.setContentTitle("Соединение с сервером")
+                        .setContentText("Соединение с сервером потеряно")
+                        .setContentIntent(pendingIntent)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
+                        .setCategory(NotificationCompat.CATEGORY_ALARM)
+                        .setAutoCancel(true)
+                        .setSound(alarmSound)
+                        .setSmallIcon(R.drawable.ic_disconnect).color = ContextCompat.getColor(context, R.color.colorPrimary)
+                    builder.build().flags = Notification.FLAG_AUTO_CANCEL
+                    val notification = builder.build()
 
-                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                notificationManager.notify(2, notification)
+                    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    notificationManager.notify(2, notification)
                 }
             }
             "reconnectServer" -> {
@@ -137,7 +136,7 @@ object NotificationService {
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.notify(2, notification)
             }
-            "serverNotResponse"->{
+            "serverNotResponse" -> {
                 val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                 builder.setContentTitle("Соединение с сервером")
                     .setContentIntent(pendingIntent)
@@ -193,10 +192,10 @@ object NotificationService {
         }
     }
 
-    private fun alarmChannelID(context:Context):String{
+    private fun alarmChannelID(context: Context): String {
         val notificationChannelId = "Alarm channel"
 
-        val soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ context.packageName + "/" + R.raw.alarm_sound)
+        val soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.packageName + "/" + R.raw.alarm_sound)
         val audioAttributes = AudioAttributes.Builder()
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .setUsage(AudioAttributes.USAGE_NOTIFICATION)
@@ -213,7 +212,7 @@ object NotificationService {
                 it.lightColor = Color.RED
                 it.enableVibration(true)
                 it.vibrationPattern = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
-                it.setSound(soundUri,audioAttributes)
+                it.setSound(soundUri, audioAttributes)
                 it
             }
             notificationManager.createNotificationChannel(channel)
@@ -221,7 +220,7 @@ object NotificationService {
         return notificationChannelId
     }
 
-    private fun channelID(context:Context): String {
+    private fun channelID(context: Context): String {
         val notificationChannelId = "Notifications channel"
 
         val audioAttributes = AudioAttributes.Builder()
@@ -241,7 +240,7 @@ object NotificationService {
                 it.enableLights(true)
                 it.lightColor = Color.RED
                 it.enableVibration(true)
-                it.setSound(statusSound,audioAttributes)
+                it.setSound(statusSound, audioAttributes)
                 it
             }
             notificationManager.createNotificationChannel(channel)
@@ -289,5 +288,4 @@ object NotificationService {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .build()
     }
-
 }

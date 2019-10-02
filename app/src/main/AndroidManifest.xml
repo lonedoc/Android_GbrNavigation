@@ -50,19 +50,6 @@
             android:value="default" />
 
         <activity
-            android:name="oldVersion.loginactivity.LoginActivity"
-            android:keepScreenOn="true"
-            android:noHistory="true"
-            />
-        <activity
-            android:name="oldVersion.mainactivity.MainActivity"
-            android:keepScreenOn="true"
-            android:noHistory="true"
-            >
-
-        </activity>
-
-        <activity
             android:name="oldVersion.commonactivity.CommonActivity"
             android:keepScreenOn="true" />
 
@@ -82,6 +69,7 @@
         <activity android:name="newVersion.login.LoginActivity"
             android:keepScreenOn="true">
         </activity>
+
         <activity android:name="newVersion.main.MainActivity"
             android:keepScreenOn="true"
             >
@@ -93,6 +81,7 @@
 
         <activity android:name="newVersion.common.CommonActivity"
             android:keepScreenOn="true"/>
+
         <!--<service
             android:name="mad.location.manager.lib.Services.KalmanLocationService"
             android:enabled="true"

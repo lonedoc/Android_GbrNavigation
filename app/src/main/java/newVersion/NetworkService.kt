@@ -13,11 +13,14 @@ import android.util.Log
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.extensions.jsonBody
 import com.google.firebase.messaging.RemoteMessage
-import com.google.gson.JsonObject
+import java.lang.Thread.sleep
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import newVersion.Utils.newCredetials
 import newVersion.login.LoginActivity
 import newVersion.models.Auth
 import newVersion.models.Credentials
@@ -25,22 +28,18 @@ import newVersion.models.HostPool
 import newVersion.network.auth.AuthAPI
 import newVersion.network.auth.OnAuthListener
 import newVersion.network.auth.RPAuthAPI
-import oldVersion.commonactivity.CommonActivity
 import oldVersion.workservice.NotificationService.createNotification
 import oldVersion.workservice.ProtocolNetworkService
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import ru.rubeg38.rubegprotocol.ConnectionWatcher
 import ru.rubeg38.rubegprotocol.RubegProtocol
-import java.lang.Thread.sleep
-import java.text.SimpleDateFormat
-import java.util.*
 
-class NetworkService: Service(), ConnectionWatcher, OnAuthListener {
+class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
-
-    private lateinit var unsubscribe:() -> Unit
-    companion object{
+    private lateinit var unsubscribe: () -> Unit
+    companion object {
         var isServiceStarted = false
     }
 
@@ -61,19 +60,18 @@ class NetworkService: Service(), ConnectionWatcher, OnAuthListener {
     private var connectionLost = false
 
     override fun onConnectionLost() {
-        Log.d("Service","Connection lost")
+        Log.d("Service", "Connection lost")
 
-        if(!connectionLost && protocol.isStarted && !LoginActivity.isAlive)
-        {
+        if (!connectionLost && protocol.isStarted && !LoginActivity.isAlive) {
             connectionLost = true
-            when{
-                isConnected(applicationContext)->{
+            when {
+                isConnected(applicationContext) -> {
                     val remoteMessage1 = RemoteMessage.Builder("Status")
                         .addData("command", "disconnectServer")
                         .build()
                     createNotification(remoteMessage1, applicationContext)
                 }
-                else->{
+                else -> {
 
                     val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
                         .addData("command", "disconnectInternet")
@@ -90,19 +88,17 @@ class NetworkService: Service(), ConnectionWatcher, OnAuthListener {
             }
         }
 
-        while(!isConnected(applicationContext)){
-
+        while (!isConnected(applicationContext)) {
         }
 
         authAPI.sendAuthRequest {
         }
-
     }
 
     override fun onConnectionEstablished() {
-        Log.d("Service","Connection establish")
+        Log.d("Service", "Connection establish")
 
-        if(connectionLost){
+        if (connectionLost) {
             val authorization: RemoteMessage = RemoteMessage.Builder("Status")
                 .addData("command", "reconnectServer")
                 .build()
@@ -118,24 +114,21 @@ class NetworkService: Service(), ConnectionWatcher, OnAuthListener {
     override fun onAuthDataReceived(auth: Auth) {
 
         println("Service Auth")
-        if (auth.authorized){
+        if (auth.authorized) {
             protocol.token = auth.authInfo?.token
-        }
-        else
-        {
-                val protocol = RubegProtocol.sharedInstance
-            if(protocol.isStarted)
+        } else {
+            val protocol = RubegProtocol.sharedInstance
+            if (protocol.isStarted)
                 protocol.stop()
         }
+    }
 
-        }
-
-    @Subscribe
-    fun onCredentialsChanged(credentials: Credentials){
-        Log.d("Service","credentials received $credentials")
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onCredentialsChanged(event: newCredetials) {
+        Log.d("Service", "credentials received ${event.credetials}")
 
         authAPI.onDestroy()
-        authAPI = RPAuthAPI(protocol,credentials)
+        authAPI = RPAuthAPI(protocol, event.credetials)
 
         authAPI.onAuthListener = this
     }
@@ -148,27 +141,26 @@ class NetworkService: Service(), ConnectionWatcher, OnAuthListener {
         assert(intent.hasExtra("hostPool"))
         assert(intent.hasExtra("command"))
 
-        when(intent.getStringExtra("command")){
-            "start"->{
+        when (intent.getStringExtra("command")) {
+            "start" -> {
 
                 val notification = createNotification(context = applicationContext)
-                startForeground(1,notification)
+                startForeground(1, notification)
 
                 val credentials = intent.getSerializableExtra("credentials") as Credentials
                 hostPool = intent.getSerializableExtra("hostPool") as HostPool
 
-                startService(credentials,hostPool)
-
+                startService(credentials, hostPool)
             }
-            "stop"->{
+            "stop" -> {
                 stopService()
             }
         }
         return START_STICKY
     }
 
-    private fun startService(credentials: Credentials, hostPool:HostPool){
-        if(isServiceStarted) return
+    private fun startService(credentials: Credentials, hostPool: HostPool) {
+        if (isServiceStarted) return
 
         EventBus.getDefault().register(this)
         isServiceStarted = true
@@ -180,8 +172,8 @@ class NetworkService: Service(), ConnectionWatcher, OnAuthListener {
 
         authAPI.onAuthListener = this
 
-        wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager).run{
-            newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"EndlessService:lock").apply{
+        wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+            newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService:lock").apply {
                 acquire()
             }
         }
@@ -189,7 +181,7 @@ class NetworkService: Service(), ConnectionWatcher, OnAuthListener {
         GlobalScope.launch(Dispatchers.IO) {
             while (ProtocolNetworkService.isServiceStarted) {
                 launch(Dispatchers.IO) {
-                    Log.d("Service","process")
+                    Log.d("Service", "process")
                     pingFakeServer()
                 }
                 delay(1 * 60 * 1000)
@@ -197,11 +189,11 @@ class NetworkService: Service(), ConnectionWatcher, OnAuthListener {
         }
     }
 
-    private fun stopService(){
-        try{
+    private fun stopService() {
+        try {
 
             wakeLock?.let {
-                if(it.isHeld){
+                if (it.isHeld) {
                     it.release()
                 }
             }
@@ -215,10 +207,9 @@ class NetworkService: Service(), ConnectionWatcher, OnAuthListener {
             EventBus.getDefault().unregister(this)
             stopForeground(true)
             stopSelf()
-
-        }catch (e:java.lang.Exception){
+        } catch (e: java.lang.Exception) {
             e.printStackTrace()
-            Log.d("Service","Service stopped without being starter: ${e.message}")
+            Log.d("Service", "Service stopped without being starter: ${e.message}")
         }
         isServiceStarted = false
     }
@@ -237,18 +228,16 @@ class NetworkService: Service(), ConnectionWatcher, OnAuthListener {
                 }
             """
         try {
-            Log.d("PinkFakeService","true")
+            Log.d("PinkFakeService", "true")
             Fuel.post("https://jsonplaceholder.typicode.com/posts")
                 .jsonBody(json)
                 .response { _, _, result ->
 
                     val (bytes, error) = result
                     if (bytes != null) {
-                        //faik
-                    }
-                    else
-                    {
-                        //faik
+                        // faik
+                    } else {
+                        // faik
                     }
                 }
         } catch (e: Exception) {
@@ -259,6 +248,5 @@ class NetworkService: Service(), ConnectionWatcher, OnAuthListener {
         stopService()
         ProtocolNetworkService.isServiceStarted = false
         super.onDestroy()
-
     }
 }

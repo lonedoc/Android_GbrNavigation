@@ -14,20 +14,20 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.R
 import oldVersion.resource.DataStore
 import oldVersion.workservice.EsInfo
-import java.util.*
 
-class ESInfoFragment: Fragment() {
+class ESInfoFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val rootView:View = inflater.inflate(R.layout.esinfo_fragment,container,false)
+        val rootView: View = inflater.inflate(R.layout.esinfo_fragment, container, false)
 
-        val esInfoRecyclerView:RecyclerView = rootView.findViewById(R.id.esinfo_recyclerView)
+        val esInfoRecyclerView: RecyclerView = rootView.findViewById(R.id.esinfo_recyclerView)
 
         println(DataStore.cityCard.esinfo)
         esInfoRecyclerView.layoutManager = LinearLayoutManager(activity)
@@ -46,7 +46,7 @@ class ESInfoFragment: Fragment() {
 
 class AdapterEsInfo(val esinfo: ArrayList<EsInfo>, val context: Context) : RecyclerView.Adapter<AdapterEsInfo.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_esinfo,parent,false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.recyclerview_esinfo, parent, false)
         return ViewHolder(view)
     }
 
@@ -60,15 +60,14 @@ class AdapterEsInfo(val esinfo: ArrayList<EsInfo>, val context: Context) : Recyc
             try {
                 val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + esinfo[position].phone))
                 context.startActivity(intent)
-            }catch (e: Exception){
-                Toast.makeText(context,"Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Ваше устройство не поддерживает функцию звонка или не установлена сим-карта", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    class ViewHolder(itemView:View):RecyclerView.ViewHolder(itemView){
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val nameTextView: TextView = itemView.findViewById(R.id.esinfo_name)
         val button: Button = itemView.findViewById(R.id.esinfo_phone_button)
     }
-
 }

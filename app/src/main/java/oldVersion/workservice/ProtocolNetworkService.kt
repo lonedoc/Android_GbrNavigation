@@ -10,26 +10,25 @@ import android.provider.Settings.Secure
 import android.util.Log
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.extensions.jsonBody
-import oldVersion.commonactivity.CommonActivity
-import oldVersion.workservice.NotificationService.createNotification
+import java.lang.Thread.sleep
+import java.text.SimpleDateFormat
+import java.util.*
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocol
+import kotlin.collections.ArrayList
+import kotlin.concurrent.thread
+import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import oldVersion.commonactivity.CommonActivity
+import oldVersion.workservice.NotificationService.createNotification
 import org.json.JSONObject
 import org.osmdroid.util.GeoPoint
-import java.lang.Thread.sleep
-import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.concurrent.thread
-import kotlin.math.abs
 
+class ProtocolNetworkService : Service() {
 
-class ProtocolNetworkService : Service(){
-
-    private val coordinateList:ArrayList<Pair<GeoPoint,Int>> = ArrayList()
+    private val coordinateList: ArrayList<Pair<GeoPoint, Int>> = ArrayList()
     private var wakeLock: PowerManager.WakeLock? = null
 
     companion object {
@@ -53,7 +52,6 @@ class ProtocolNetworkService : Service(){
                     )
 
                     startService()
-
                 }
                 "stop" -> {
                     stopService()
@@ -67,7 +65,7 @@ class ProtocolNetworkService : Service(){
     private fun coordinateLoop() {
         thread {
             var rewritePosition = 0
-            var oldLocation:GeoPoint? = null
+            var oldLocation: GeoPoint? = null
 
             var oldSpeed = 0
             var newSpeed = 0
@@ -75,10 +73,9 @@ class ProtocolNetworkService : Service(){
             var firstSend = true
 
             while (isServiceStarted) {
-                if(protocol?.isConnected!! && connectServer && connectInternet){
-                    if(coordinateList.count()>0)
-                    {
-                        while(coordinateList.count()>0){
+                if (protocol?.isConnected!! && connectServer && connectInternet) {
+                    if (coordinateList.count()> 0) {
+                        while (coordinateList.count()> 0) {
                             val data = coordinateList.removeAt(0)
 
                             val coordinateMessage = JSONObject()
@@ -90,42 +87,38 @@ class ProtocolNetworkService : Service(){
                             coordinateMessage.put("speed", data.second)
 
                             protocol?.send(coordinateMessage.toString()) {
-                                if(it) {
+                                if (it) {
                                     Log.d("Coordinate", "Server receiver")
-                                }
-                                else
-                                {
+                                } else {
                                     Log.d("Coordinate", "Server not receiver")
                                 }
                             }
-
                         }
-
                     }
 
-                    if(LocationService.Enable){
+                    if (LocationService.Enable) {
                         try {
                             val newLocation = GeoPoint(
                                 LocationService.imHere?.latitude!!,
-                                LocationService.imHere?.longitude!!)
+                                LocationService.imHere?.longitude!!
+                            )
 
-                            if(oldLocation != null )
-                            {
+                            if (oldLocation != null) {
                                 oldSpeed = newSpeed
-                                newSpeed = ((newLocation.distanceToAsDouble(oldLocation)/2)*3.6).toInt()
-                                Log.d("CoordinateLoop","oldSpeed $oldSpeed")
-                                Log.d("CoordinateLoop","newSpeed $newSpeed")
+                                newSpeed = ((newLocation.distanceToAsDouble(oldLocation) / 2)*3.6).toInt()
+                                Log.d("CoordinateLoop", "oldSpeed $oldSpeed")
+                                Log.d("CoordinateLoop", "newSpeed $newSpeed")
                             }
 
-                            if (newSpeed in 1..249 && abs(newSpeed - oldSpeed) < 40 && newLocation.distanceToAsDouble(oldLocation)>5 && newLocation.distanceToAsDouble(oldLocation)<120|| firstSend  ) {
+                            if (newSpeed in 1..249 && abs(newSpeed - oldSpeed) < 40 && newLocation.distanceToAsDouble(oldLocation)> 5 && newLocation.distanceToAsDouble(oldLocation) <120 || firstSend) {
                                 oldLocation = newLocation
 
-                                if(firstSend){
+                                if (firstSend) {
                                     oldSpeed = newSpeed
                                     oldLocation = newLocation
                                 }
 
-                                Log.d("CoordinateLoop","SendMyLocation")
+                                Log.d("CoordinateLoop", "SendMyLocation")
 
                                 firstSend = false
 
@@ -138,18 +131,14 @@ class ProtocolNetworkService : Service(){
                                 coordinateMessage.put("speed", newSpeed)
 
                                 protocol?.send(coordinateMessage.toString()) {
-                                    if(it) {
+                                    if (it) {
                                         Log.d("Coordinate", "Server receiver")
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         Log.d("Coordinate", "Server not receiver")
                                     }
                                 }
-
                             }
-                        }catch (e:Exception)
-                        {
+                        } catch (e: Exception) {
                             e.printStackTrace()
                         }
                         connectServer = true
@@ -157,61 +146,58 @@ class ProtocolNetworkService : Service(){
 
                         sleep(2000)
                     }
-                }
-                else
-                {
-                    if(LocationService.Enable){
-                        if(coordinateList.count()<1000)
-                        {
-                            rewritePosition =0
-                            if(coordinateList.count()>0){
+                } else {
+                    if (LocationService.Enable) {
+                        if (coordinateList.count() <1000) {
+                            rewritePosition = 0
+                            if (coordinateList.count()> 0) {
                                 val oldPosition = coordinateList[coordinateList.lastIndex].first
                                 val newPosition = GeoPoint(
                                     LocationService.imHere?.latitude!!,
-                                    LocationService.imHere?.longitude!!)
-                                val speed = ((newPosition.distanceToAsDouble(oldPosition)/2)*3.6).toInt()
-                                if(speed>0)
-                                    coordinateList.add(Pair(newPosition,speed))
+                                    LocationService.imHere?.longitude!!
+                                )
+                                val speed = ((newPosition.distanceToAsDouble(oldPosition) / 2)*3.6).toInt()
+                                if (speed> 0)
+                                    coordinateList.add(Pair(newPosition, speed))
+                            } else {
+                                coordinateList.add(
+                                    Pair(
+                                        GeoPoint(
+                                            LocationService.imHere?.latitude!!,
+                                            LocationService.imHere?.longitude!!
+                                        ),
+                                        0
+                                    )
+                                )
                             }
-                            else
-                            {
-                                coordinateList.add(Pair(GeoPoint(
-                                    LocationService.imHere?.latitude!!,
-                                    LocationService.imHere?.longitude!!),0))
-                            }
-
-                        }
-                        else
-                        {
-                            if(rewritePosition>0)
-                            {
-                                val oldPosition = coordinateList[rewritePosition-1].first
+                        } else {
+                            if (rewritePosition> 0) {
+                                val oldPosition = coordinateList[rewritePosition - 1].first
                                 val newPosition = GeoPoint(
                                     LocationService.imHere?.latitude!!,
-                                    LocationService.imHere?.longitude!!)
-                                val speed = ((newPosition.distanceToAsDouble(oldPosition)/2)*3.6).toInt()
-                                if(speed>0)
-                                    coordinateList.add(Pair(newPosition,speed))
-                            }
-                            else
-                            {
+                                    LocationService.imHere?.longitude!!
+                                )
+                                val speed = ((newPosition.distanceToAsDouble(oldPosition) / 2)*3.6).toInt()
+                                if (speed> 0)
+                                    coordinateList.add(Pair(newPosition, speed))
+                            } else {
                                 val oldPosition = coordinateList[coordinateList.lastIndex].first
                                 val newPosition = GeoPoint(
                                     LocationService.imHere?.latitude!!,
-                                    LocationService.imHere?.longitude!!)
-                                val speed = ((newPosition.distanceToAsDouble(oldPosition)/2)*3.6).toInt()
-                                if(speed>0)
-                                    coordinateList.add(Pair(newPosition,speed))
+                                    LocationService.imHere?.longitude!!
+                                )
+                                val speed = ((newPosition.distanceToAsDouble(oldPosition) / 2)*3.6).toInt()
+                                if (speed> 0)
+                                    coordinateList.add(Pair(newPosition, speed))
                             }
                             rewritePosition++
-                            if(rewritePosition >1000){
+                            if (rewritePosition > 1000) {
                                 rewritePosition = 0
                             }
                         }
                         sleep(3000)
                     }
                 }
-
             }
         }
     }
@@ -229,15 +215,14 @@ class ProtocolNetworkService : Service(){
                 }
             }
 
-
-        ProtocolDelegate(protocol,applicationContext)
+        ProtocolDelegate(protocol, applicationContext)
 
         protocol?.start()
 
         GlobalScope.launch(Dispatchers.IO) {
             while (isServiceStarted) {
                 launch(Dispatchers.IO) {
-                    Log.d("Service","process")
+                    Log.d("Service", "process")
                     pingFakeServer()
                 }
                 delay(1 * 60 * 1000)
@@ -250,9 +235,7 @@ class ProtocolNetworkService : Service(){
             }
 
             coordinateLoop()
-
         }
-
     }
 
     @SuppressLint("HardwareIds", "SimpleDateFormat")
@@ -270,18 +253,16 @@ class ProtocolNetworkService : Service(){
                 }
             """
         try {
-            Log.d("PinkFakeService","true")
+            Log.d("PinkFakeService", "true")
             Fuel.post("https://jsonplaceholder.typicode.com/posts")
                 .jsonBody(json)
                 .response { _, _, result ->
 
                     val (bytes, error) = result
                     if (bytes != null) {
-                        //faik
-                    }
-                    else
-                    {
-                        //faik
+                        // faik
+                    } else {
+                        // faik
                     }
                 }
         } catch (e: Exception) {
@@ -302,9 +283,8 @@ class ProtocolNetworkService : Service(){
 
             ProtocolDelegate(null, protocol)
 
-            if(protocol !=null)
-            protocol?.stop()
-
+            if (protocol != null)
+                protocol?.stop()
         } catch (e: Exception) {
             Log.d("Service", "Service stopped without being started: ${e.message}")
         }
@@ -313,14 +293,13 @@ class ProtocolNetworkService : Service(){
     }
 
     override fun onDestroy() {
-        //TODO Закрывает приложение когда это не надо!!!
-        if(CommonActivity.exit){
-            Log.d("Service","Destroy")
+        // TODO Закрывает приложение когда это не надо!!!
+        if (CommonActivity.exit) {
+            Log.d("Service", "Destroy")
             System.exit(0)
         }
         isServiceStarted = false
         super.onDestroy()
-
     }
 
     override fun onBind(p0: Intent?): IBinder? {

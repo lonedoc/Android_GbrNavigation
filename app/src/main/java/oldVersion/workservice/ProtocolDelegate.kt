@@ -7,35 +7,32 @@ import android.net.NetworkInfo
 import android.util.Log
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
-import oldVersion.commonactivity.CommonActivity
+import java.util.*
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocol
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocolDelegate
-import oldVersion.loginactivity.LoginActivity
-import oldVersion.mainactivity.MainActivity
+import oldVersion.commonactivity.CommonActivity
 import oldVersion.objectactivity.ObjectActivity
-import org.greenrobot.eventbus.EventBus
-import org.json.JSONObject
 import oldVersion.resource.ControlLifeCycleService.startService
 import oldVersion.resource.DataStore
-import java.util.*
+import org.greenrobot.eventbus.EventBus
+import org.json.JSONObject
 
-class ProtocolDelegate:RubegProtocolDelegate {
+class ProtocolDelegate : RubegProtocolDelegate {
 
     override var token: String? = null
 
-    lateinit var context:Context
+    lateinit var context: Context
 
-    constructor(protocol: RubegProtocol?,applicationContext:Context)
-    {
+    constructor(protocol: RubegProtocol?, applicationContext: Context) {
         protocol?.delegate = this
         context = applicationContext
     }
-    constructor(sessionID:String?,protocol: RubegProtocol?){
+    constructor(sessionID: String?, protocol: RubegProtocol?) {
         protocol?.delegate = null
         this.token = sessionID
     }
 
-    private var connectionLost:Boolean = false
+    private var connectionLost: Boolean = false
 
     override fun connectionLost() {
 
@@ -64,7 +61,7 @@ class ProtocolDelegate:RubegProtocolDelegate {
                 }
 
                 while (!isConnected(context)) {
-                    //wait connect internet
+                    // wait connect internet
                 }
 
                 val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
@@ -95,7 +92,7 @@ class ProtocolDelegate:RubegProtocolDelegate {
         }
     }
 
-    private fun reconnect(){
+    private fun reconnect() {
         val authorizationMessage = JSONObject()
         authorizationMessage.put("\$c$", "reg")
         authorizationMessage.put("id", "0D82F04B-5C16-405B-A75A-E820D62DF911")
@@ -107,7 +104,7 @@ class ProtocolDelegate:RubegProtocolDelegate {
             "token",
             context.getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("fcmtoken", "")
         )
-        authorizationMessage.put("keepalive","10")
+        authorizationMessage.put("keepalive", "10")
         ProtocolNetworkService.protocol?.request(authorizationMessage.toString()) { success: Boolean, data: ByteArray? ->
             if (success && data != null) {
                 val regGson = Gson()
@@ -119,11 +116,11 @@ class ProtocolDelegate:RubegProtocolDelegate {
                     .build()
                 NotificationService.createNotification(authorization, context)
 
-                if(CommonActivity.isAlive){
+                if (CommonActivity.isAlive) {
                     val message = JSONObject()
-                    message.put("\$c$","getalarm")
+                    message.put("\$c$", "getalarm")
                     message.put("namegbr", DataStore.namegbr)
-                    ProtocolNetworkService.protocol?.send(message = message.toString()){
+                    ProtocolNetworkService.protocol?.send(message = message.toString()) {
                     }
                 }
 
@@ -132,7 +129,6 @@ class ProtocolDelegate:RubegProtocolDelegate {
                 connectionLost = false
             } else {
                 Log.d("InternetReconnected", "false")
-
             }
         }
     }
@@ -159,7 +155,7 @@ class ProtocolDelegate:RubegProtocolDelegate {
 
     override fun messageReceived(message: String) {
         Log.d("String", "Message: $message")
-        try{
+        try {
             val gson = Gson()
             when {
                 JSONObject(message).has("command") -> {
@@ -169,7 +165,7 @@ class ProtocolDelegate:RubegProtocolDelegate {
                             val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
                                 .addData("command", "connectServer")
                                 .build()
-                            NotificationService.createNotification(remoteMessage,context)
+                            NotificationService.createNotification(remoteMessage, context)
 
                             val registration = gson.fromJson(message, RegistrationGson::class.java)
 
@@ -185,23 +181,21 @@ class ProtocolDelegate:RubegProtocolDelegate {
                                 cityCard = registration.citycard
                             )
 
-                            if (MainActivity.isAlive || LoginActivity.isAlive) {
+                            /*if (MainActivity.isAlive || LoginActivity.isAlive) {
                                 EventBus.getDefault().postSticky(
                                     RegistrationEvent(
                                         command = registration.command
                                     )
                                 )
-                            }
-
+                            }*/
                         }
 
                         "gbrstatus" -> {
 
                             val status = gson.fromJson(message, StatusGson::class.java)
 
-                            if(status.status != "")
-                            {
-                                if(CommonActivity.isAlive && status.status!="На тревоге"){
+                            if (status.status != "") {
+                                if (CommonActivity.isAlive && status.status != "На тревоге") {
                                     val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
                                         .addData("command", status.command)
                                         .addData("status", status.status)
@@ -215,27 +209,24 @@ class ProtocolDelegate:RubegProtocolDelegate {
                                     )
                                 )
                             }
-
                         }
 
                         "alarm" -> {
-                            try{
+                            try {
                                 val alarm = gson.fromJson(message, AlarmGson::class.java)
 
                                 if (!CommonActivity.isAlive && !ObjectActivity.isAlive) {
                                     val ptk = Intent(context, CommonActivity::class.java)
                                     ptk.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                     context.startActivity(ptk)
-                                }
-                                else
-                                {
-                                    if(alarm.lon == "")
+                                } else {
+                                    if (alarm.lon == "")
                                         alarm.lon = "0.0"
 
-                                    if(alarm.lat  == "")
+                                    if (alarm.lat == "")
                                         alarm.lat = "0.0"
 
-                                    if(alarm.zakaz == null)
+                                    if (alarm.zakaz == null)
                                         alarm.zakaz = " "
 
                                     EventBus.getDefault().postSticky(
@@ -255,15 +246,13 @@ class ProtocolDelegate:RubegProtocolDelegate {
                                         )
                                     )
                                 }
-
-                            }catch (e:java.lang.Exception){
+                            } catch (e: java.lang.Exception) {
                                 e.printStackTrace()
                             }
-
                         }
 
                         "notalarm" -> {
-                            val notalarm = gson.fromJson(message,NotAlarmGson::class.java)
+                            val notalarm = gson.fromJson(message, NotAlarmGson::class.java)
                             EventBus.getDefault().postSticky(
                                 MessageEvent(
                                     command = "notalarm",
@@ -272,7 +261,6 @@ class ProtocolDelegate:RubegProtocolDelegate {
                                 )
                             )
                         }
-
                     }
                 }
                 JSONObject(message).has("\$c$") -> {
@@ -288,26 +276,23 @@ class ProtocolDelegate:RubegProtocolDelegate {
                             }
                         }
 
-                        "accessdenied"->{
-                            if (MainActivity.isAlive || LoginActivity.isAlive) {
+                        "accessdenied" -> {
+                         /*   if (MainActivity.isAlive || LoginActivity.isAlive) {
                                 EventBus.getDefault().post(
                                     RegistrationEvent(
                                         command = "accessdenied"
                                     )
                                 )
-                            }
+                            }*/
                         }
-
                     }
                 }
                 else -> {
                     Log.d("StringMessage", "UnknownMessage")
                 }
             }
-
-        }catch (e:java.lang.Exception){
+        } catch (e: java.lang.Exception) {
             e.printStackTrace()
         }
     }
-
 }

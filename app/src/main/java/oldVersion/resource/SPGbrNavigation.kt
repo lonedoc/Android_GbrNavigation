@@ -33,7 +33,6 @@ object SPGbrNavigation {
         editor!!.apply()
     }
 
-
     fun addPropertyFloat(name: String, value: Float) {
         if (settings == null) {
             init()
@@ -56,4 +55,3 @@ object SPGbrNavigation {
         editor!!.apply()
     }
 }
-

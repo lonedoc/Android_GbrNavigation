@@ -20,18 +20,19 @@ import com.daimajia.androidanimations.library.Techniques
 import com.daimajia.androidanimations.library.YoYo
 import com.google.firebase.messaging.RemoteMessage
 import kobramob.rubeg38.ru.gbrnavigation.R
+import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_main.*
 import newVersion.LocationListener
 import newVersion.NetworkService
 import newVersion.Utils.PrefsUtil
+import newVersion.common.CommonActivity
 import newVersion.login.LoginActivity
 import newVersion.models.Credentials
 import newVersion.models.HostPool
 import newVersion.models.Preferences
 import oldVersion.workservice.NotificationService
-import kotlin.concurrent.thread
 
-class MainActivity: MvpAppCompatActivity(), MainView {
+class MainActivity : MvpAppCompatActivity(), MainView {
     @InjectPresenter
     lateinit var presenter: MainPresenter
 
@@ -43,27 +44,23 @@ class MainActivity: MvpAppCompatActivity(), MainView {
 
         if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != permissionGranted &&
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.READ_PHONE_STATE) != permissionGranted
-        )
-        {
+        ) {
             checkPermission()
-        }
-        else{
+        } else {
             run()
         }
-
     }
 
-    private fun run(){
-        if(!presenter.isInit()){
-            Log.d("MainActivity","Init")
+    private fun run() {
+        if (!presenter.isInit()) {
+            Log.d("MainActivity", "Init")
             val preferences: Preferences = PrefsUtil(this)
             presenter.init(preferences)
         }
     }
 
-    override fun startAnimation(){
+    override fun startAnimation() {
         runOnUiThread {
-
             main_icon.visibility = View.VISIBLE
 
             YoYo.with(Techniques.FadeIn)
@@ -75,7 +72,6 @@ class MainActivity: MvpAppCompatActivity(), MainView {
                 runOnUiThread {
                     main_progressBar.visibility = View.VISIBLE
                     textView.visibility = View.VISIBLE
-
                 }
             }
         }
@@ -83,7 +79,7 @@ class MainActivity: MvpAppCompatActivity(), MainView {
 
     override fun showToastMessage(message: String) {
         runOnUiThread {
-            Toast.makeText(applicationContext,message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -97,15 +93,13 @@ class MainActivity: MvpAppCompatActivity(), MainView {
         requestCode: Int,
         permissions: Array<out String>,
         grantResults: IntArray
-    )
-    {
+    ) {
         when {
-            grantResults.isNotEmpty() && grantResults[1] == permissionGranted  -> {
+            grantResults.isNotEmpty() && grantResults[1] == permissionGranted -> {
                 run()
             }
         }
     }
-
 
     override fun checkPermission() {
         if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.ACCESS_FINE_LOCATION) != permissionGranted ||
@@ -119,9 +113,9 @@ class MainActivity: MvpAppCompatActivity(), MainView {
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.WAKE_LOCK) != permissionGranted ||
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.READ_PHONE_STATE) != permissionGranted ||
             ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.FOREGROUND_SERVICE) != permissionGranted ||
-            ContextCompat.checkSelfPermission(applicationContext,android.Manifest.permission.SYSTEM_ALERT_WINDOW) != permissionGranted ||
-            ContextCompat.checkSelfPermission(applicationContext,android.Manifest.permission.SYSTEM_ALERT_WINDOW) != permissionGranted ||
-            ContextCompat.checkSelfPermission(applicationContext,android.Manifest.permission.SYSTEM_ALERT_WINDOW) != permissionGranted
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.SYSTEM_ALERT_WINDOW) != permissionGranted ||
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.SYSTEM_ALERT_WINDOW) != permissionGranted ||
+            ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.SYSTEM_ALERT_WINDOW) != permissionGranted
         ) {
             ActivityCompat.requestPermissions(
                 this,
@@ -153,7 +147,7 @@ class MainActivity: MvpAppCompatActivity(), MainView {
     }
 
     @SuppressLint("MissingPermission")
-    fun getImei(): String? {
+    private fun getImei(): String? {
         val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
 
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -167,26 +161,23 @@ class MainActivity: MvpAppCompatActivity(), MainView {
         runOnUiThread {
             val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-            if(!locationManager.isProviderEnabled((LocationManager.GPS_PROVIDER)))
-            {
+            if (!locationManager.isProviderEnabled((LocationManager.GPS_PROVIDER))) {
                 val builder = AlertDialog.Builder(this)
                 builder.setMessage("GPS отключен (Приложение не работает без GPS)")
                     .setCancelable(false)
-                    .setPositiveButton("Включить"){_,_ ->
+                    .setPositiveButton("Включить") { _, _ ->
                         startActivity(Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                     }
                 val alert = builder.create()
                 alert.show()
                 thread {
-                    while(!locationManager.isProviderEnabled((LocationManager.GPS_PROVIDER))){
-                        //Wait while
+                    while (!locationManager.isProviderEnabled((LocationManager.GPS_PROVIDER))) {
+                        // Wait while
                     }
                     LocationListener(locationManager)
                     presenter.checkData()
                 }
-            }
-            else
-            {
+            } else {
                 LocationListener(locationManager)
                 presenter.checkData()
             }
@@ -195,14 +186,14 @@ class MainActivity: MvpAppCompatActivity(), MainView {
 
     override fun startService(credentials: Credentials, hostPool: HostPool) {
         runOnUiThread {
-            if(NetworkService.isServiceStarted) return@runOnUiThread
+            if (NetworkService.isServiceStarted) return@runOnUiThread
 
             val intent = Intent(this, NetworkService::class.java)
 
             val bundle = Bundle()
-            bundle.putSerializable("credentials",credentials)
-            bundle.putSerializable("hostPool",hostPool)
-            bundle.putString("command","start")
+            bundle.putSerializable("credentials", credentials)
+            bundle.putSerializable("hostPool", hostPool)
+            bundle.putString("command", "start")
             intent.putExtras(bundle)
 
             startService(intent)
@@ -233,20 +224,17 @@ class MainActivity: MvpAppCompatActivity(), MainView {
         NotificationService.createNotification(remoteMessage1, applicationContext)
 
         runOnUiThread {
-            /*val intent = Intent(this, CommonActivity::class.java)
-         val bundle = Bundle()
-         bundle.putSerializable("credentials", credentials)
-         intent.putExtras(bundle)
-         presenter.onDestroy()
-         startActivity(intent)*/
-
-            Log.d("LoginActivity","RegisterSuccess")
+            val intent = Intent(this, CommonActivity::class.java)
+            presenter.onDestroy()
+            startActivity(intent)
+            Log.d("LoginActivity", "RegisterSuccess")
         }
     }
 
     override fun onDestroy() {
-        val stopServiceIntent = Intent(applicationContext,NetworkService::class.java)
+        val stopServiceIntent = Intent(applicationContext, NetworkService::class.java)
         stopService(stopServiceIntent)
+        System.exit(0)
         super.onDestroy()
     }
 }

@@ -28,14 +28,21 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import com.github.clans.fab.FloatingActionMenu
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import java.text.SimpleDateFormat
+import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.R.*
 import kobramob.rubeg38.ru.gbrnavigation.R.id.*
-import oldVersion.referenceactivity.ReferenceActivity
-import oldVersion.loginactivity.LoginActivity
+import kotlin.collections.ArrayList
+import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 import oldVersion.objectactivity.ObjectActivity
 import oldVersion.objectactivity.data.ObjectDataStore
+import oldVersion.referenceactivity.ReferenceActivity
+import oldVersion.resource.ControlLifeCycleService
+import oldVersion.resource.DataStore
+import oldVersion.workservice.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -47,30 +54,22 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import oldVersion.resource.ControlLifeCycleService
-import oldVersion.resource.DataStore
-import oldVersion.workservice.*
-import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.concurrent.thread
-import kotlin.system.exitProcess
 
 class CommonActivity : AppCompatActivity() {
 
     private val sizeNormal = 0
     private val sizeMini = 1
-    private var mMapView: MapView? =null
+    private var mMapView: MapView? = null
 
     private lateinit var rotationGestureOverlay: RotationGestureOverlay
     private lateinit var locationOverlay: MyLocationNewOverlay
     private lateinit var scaleBarOverlay: ScaleBarOverlay
 
-    private var alertAccept:Boolean = false
-    private var timer:CountDownTimer? = null
+    private var alertAccept: Boolean = false
+    private var timer: CountDownTimer? = null
 
-    var dialogStatus:AlertDialog? = null
-    var dialogAlarm:AlertDialog? = null
+    var dialogStatus: AlertDialog? = null
+    var dialogAlarm: AlertDialog? = null
 
     var alertSound: MediaPlayer = MediaPlayer()
 
@@ -84,14 +83,12 @@ class CommonActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_common)
 
-        val soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ applicationContext.packageName + "/" + raw.alarm_sound)
-        alertSound = MediaPlayer.create(this,soundUri)
+        val soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + applicationContext.packageName + "/" + raw.alarm_sound)
+        alertSound = MediaPlayer.create(this, soundUri)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-
         mMapView = findViewById(common_mapView)
-
 
         val toolbar: Toolbar = findViewById(common_toolbar)
         setSupportActionBar(toolbar)
@@ -123,16 +120,16 @@ class CommonActivity : AppCompatActivity() {
 
                         DataStore.clearAllData()
 
-                        val loginActivity = Intent(this, LoginActivity::class.java)
+                       /* val loginActivity = Intent(this, LoginActivity::class.java)
                         loginActivity.putExtra("imei", getSharedPreferences("gbrStorage", Context.MODE_PRIVATE).getString("imei", ""))
-                        startActivity(loginActivity)
+                        startActivity(loginActivity)*/
                     }
                     .setNegativeButton("Нет") { dialog, _ ->
                         dialog.cancel()
                     }.show()
             }
-            reference->{
-                ///Вызов справочника
+            reference -> {
+                // /Вызов справочника
                 val referenceActivity = Intent(this, ReferenceActivity::class.java)
                 startActivity(referenceActivity)
             }
@@ -150,12 +147,11 @@ class CommonActivity : AppCompatActivity() {
                         followFab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, color.viewBackground))
                         followFab.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, color.colorPrimary))
                     }
-                    try{
+                    try {
                         mMapView?.controller?.animateTo(GeoPoint(LocationService.imHere))
-                    }catch (e:java.lang.Exception){
+                    } catch (e: java.lang.Exception) {
                         e.printStackTrace()
                     }
-
                 } catch (e: Exception) {
                     e.printStackTrace()
                     Toast.makeText(this, "Ваше месторасположение не определено", Toast.LENGTH_SHORT).show()
@@ -201,21 +197,19 @@ class CommonActivity : AppCompatActivity() {
                     DataStore.reports
                 )
 
-
                 alertSound.start()
 
                 val alertDialog = AlertDialog.Builder(this@CommonActivity)
                 val view = layoutInflater.inflate(R.layout.dialog_alarm, null, false)
                 alertDialog.setView(view)
 
-                try{
-                    dialogAlarm =  alertDialog.create()
+                try {
+                    dialogAlarm = alertDialog.create()
                     dialogAlarm?.setCancelable(false)
                     dialogAlarm?.show()
-                }catch (e:java.lang.Exception){
+                } catch (e: java.lang.Exception) {
                     e.printStackTrace()
                 }
-
 
                 val acceptAlertButton: Button = view!!.findViewById(AcceptAlert)
                 val dialogObjectName: TextView = view.findViewById(dialog_objectName)
@@ -267,13 +261,11 @@ class CommonActivity : AppCompatActivity() {
                                                 ObjectDataStore.timeAlarmApply(currentTime)
 
                                                 Toast.makeText(this, "Тревога подтверждена в $currentTime", Toast.LENGTH_SHORT).show()
-
                                             }
                                         } else {
                                             runOnUiThread {
                                                 Toast.makeText(this, "Тревога не подтверждена", Toast.LENGTH_SHORT).show()
                                             }
-
                                         }
                                     }
                                 EventBus.getDefault().removeAllStickyEvents()
@@ -295,16 +287,13 @@ class CommonActivity : AppCompatActivity() {
             event.command.isNotEmpty() -> {
                 when (event.command) {
                     "gbrstatus" -> {
-                        try
-                        {
+                        try {
                             runOnUiThread {
-                                DataStore.status =  event.message
+                                DataStore.status = event.message
                                 val title: String = DataStore.call + " ( " + event.message + " ) "
                                 supportActionBar?.title = title
-                                for(i in 0 until DataStore.statusList.count())
-                                {
-                                    if(DataStore.statusList[i].name == event.message && DataStore.statusList[i].time!= "0")
-                                    {
+                                for (i in 0 until DataStore.statusList.count()) {
+                                    if (DataStore.statusList[i].name == event.message && DataStore.statusList[i].time != "0") {
                                         val stopStatus = {
                                             thread {
                                                 this.timer?.cancel()
@@ -313,49 +302,48 @@ class CommonActivity : AppCompatActivity() {
                                                 statusChangeMessage.put("command", "status")
                                                 statusChangeMessage.put("newstatus", "Свободен")
                                                 ProtocolNetworkService.protocol?.request(statusChangeMessage.toString()) {
-                                                        access: Boolean, data: ByteArray? ->
-                                                    if (access && data != null) {
-                                                        runOnUiThread {
-                                                            DataStore.status = JSONObject(String(data)).getString("status")
-                                                            val title: String = DataStore.call + " ( " + DataStore.status + " ) "
-                                                            supportActionBar?.title = title
-                                                        }
-                                                    } else {
-                                                        runOnUiThread {
-                                                            Toast.makeText(this, "Смена статуса невозможно, сервер не отвечает", Toast.LENGTH_SHORT).show()
+                                                    access: Boolean, data: ByteArray? ->
+                                                        if (access && data != null) {
+                                                            runOnUiThread {
+                                                                DataStore.status = JSONObject(String(data)).getString("status")
+                                                                val title: String = DataStore.call + " ( " + DataStore.status + " ) "
+                                                                supportActionBar?.title = title
+                                                            }
+                                                        } else {
+                                                            runOnUiThread {
+                                                                Toast.makeText(this, "Смена статуса невозможно, сервер не отвечает", Toast.LENGTH_SHORT).show()
+                                                            }
                                                         }
                                                     }
-                                                }
                                             }
                                         }
 
-                                        try{
-                                            if(dialogStatus?.isShowing!!){
+                                        try {
+                                            if (dialogStatus?.isShowing!!) {
                                                 dialogStatus?.cancel()
                                             }
-                                        }catch (e:java.lang.Exception){
+                                        } catch (e: java.lang.Exception) {
                                             e.printStackTrace()
                                         }
 
                                         val statusTimerDialog = AlertDialog.Builder(this@CommonActivity)
-                                        val view = layoutInflater.inflate(R.layout.status_timer_dialog,null,false)
+                                        val view = layoutInflater.inflate(R.layout.status_timer_dialog, null, false)
                                         statusTimerDialog.setView(view)
                                         statusTimerDialog.setTitle(DataStore.statusList[i].name)
-                                        statusTimerDialog.setPositiveButton("Завершить"){
+                                        statusTimerDialog.setPositiveButton("Завершить") {
                                             dialogInterface, i ->
-                                            stopStatus()
-                                        }
+                                                stopStatus()
+                                            }
 
                                         dialogStatus = statusTimerDialog.create()
                                         dialogStatus?.setCancelable(false)
                                         dialogStatus?.show()
 
-                                        val statusTimer:TextView = view.findViewById(status_timer)
+                                        val statusTimer: TextView = view.findViewById(status_timer)
 
                                         this.timer?.cancel()
 
-                                        this.timer = object : CountDownTimer(DataStore.statusList[i].time.toLong() * 60000, 1000)
-                                        {
+                                        this.timer = object : CountDownTimer(DataStore.statusList[i].time.toLong() * 60000, 1000) {
                                             override fun onFinish() {
                                                 dialogStatus?.cancel()
                                                 stopStatus()
@@ -368,28 +356,25 @@ class CommonActivity : AppCompatActivity() {
 
                                             private fun updateTimer(time: Int) {
                                                 val hours = time / 3600
-                                                val minute = (time % 3600)/60
+                                                val minute = (time % 3600) / 60
                                                 val seconds = time % 60
 
                                                 val timeRemains = "$hours:$minute:$seconds"
                                                 statusTimer.text = timeRemains
-
                                             }
                                         }
 
                                         this.timer?.start()
                                     }
                                 }
-                                if(event.message == "Свободен")
-                                {
+                                if (event.message == "Свободен") {
                                     this.timer?.cancel()
                                     dialogStatus?.cancel()
                                 }
 
                                 fillFabMenu()
                             }
-                        }
-                        catch (e:java.lang.Exception){
+                        } catch (e: java.lang.Exception) {
                             e.printStackTrace()
                         }
                     }
@@ -408,71 +393,63 @@ class CommonActivity : AppCompatActivity() {
 
         isAlive = true
 
-        if (!ProtocolNetworkService.isServiceStarted)
-        {
+        if (!ProtocolNetworkService.isServiceStarted) {
             ControlLifeCycleService.reconnectToServer(this)
-            thread{
-                while (!ProtocolNetworkService.isServiceStarted){
+            thread {
+                while (!ProtocolNetworkService.isServiceStarted) {
                 }
                 runOnUiThread {
                     val message = JSONObject()
-                    message.put("\$c$","getalarm")
+                    message.put("\$c$", "getalarm")
                     message.put("namegbr", DataStore.namegbr)
-                    ProtocolNetworkService.protocol?.send(message = message.toString()){
-                        if(it){
+                    ProtocolNetworkService.protocol?.send(message = message.toString()) {
+                        if (it) {
                             runOnUiThread {
-                                Toast.makeText(this,"Проверка тревоги",Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, "Проверка тревоги", Toast.LENGTH_SHORT).show()
                             }
-
-                        }
-                        else{
+                        } else {
                             runOnUiThread {
-                                Toast.makeText(this,"Ошибка при проверке тревоги",Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, "Ошибка при проверке тревоги", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
                 }
             }
-        }
-        else
-        {
+        } else {
 
-            try{
-                if(dialogAlarm?.isShowing!!){
+            try {
+                if (dialogAlarm?.isShowing!!) {
                     dialogAlarm?.cancel()
                 }
-            }catch (e:java.lang.Exception){
+            } catch (e: java.lang.Exception) {
                 e.printStackTrace()
             }
 
-                val message = JSONObject()
-                message.put("\$c$","getalarm")
-                message.put("namegbr", DataStore.namegbr)
-                ProtocolNetworkService.protocol?.send(message = message.toString()){
-                    if(it){
-                        runOnUiThread {
-                            Toast.makeText(this,"Проверка тревоги",Toast.LENGTH_SHORT).show()
-                        }
-
+            val message = JSONObject()
+            message.put("\$c$", "getalarm")
+            message.put("namegbr", DataStore.namegbr)
+            ProtocolNetworkService.protocol?.send(message = message.toString()) {
+                if (it) {
+                    runOnUiThread {
+                        Toast.makeText(this, "Проверка тревоги", Toast.LENGTH_SHORT).show()
                     }
-                    else{
-                        runOnUiThread {
-                            Toast.makeText(this,"Ошибка при проверке тревоги",Toast.LENGTH_SHORT).show()
-                        }
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(this, "Ошибка при проверке тревоги", Toast.LENGTH_SHORT).show()
                     }
                 }
+            }
         }
 
-        if(!EventBus.getDefault().isRegistered(this))
-        EventBus.getDefault().register(this)
-
+        if (!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this)
     }
 
     override fun onResume() {
         super.onResume()
 
-        if(mMapView != null)
-        mMapView?.onResume()
+        if (mMapView != null)
+            mMapView?.onResume()
 
         if (!locationOverlay.isMyLocationEnabled && !scaleBarOverlay.isEnabled) {
             locationOverlay.enableMyLocation()
@@ -485,25 +462,22 @@ class CommonActivity : AppCompatActivity() {
 
         mMapView?.onPause()
 
-        if(locationOverlay.isMyLocationEnabled && scaleBarOverlay.isEnabled)
-        {
+        if (locationOverlay.isMyLocationEnabled && scaleBarOverlay.isEnabled) {
             locationOverlay.disableMyLocation()
             scaleBarOverlay.disableScaleBar()
         }
 
-        if (locationOverlay.isFollowLocationEnabled)
-        {
+        if (locationOverlay.isFollowLocationEnabled) {
             locationOverlay.disableFollowLocation()
         }
-
     }
 
     override fun onStop() {
         super.onStop()
         isAlive = false
 
-        if(EventBus.getDefault().isRegistered(this))
-        EventBus.getDefault().unregister(this)
+        if (EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().unregister(this)
 
         alertAccept = false
     }
@@ -522,17 +496,16 @@ class CommonActivity : AppCompatActivity() {
             val builder = android.app.AlertDialog.Builder(this)
             builder.setMessage("GPS отключен, хотите ли вы его включить? (Приложение не работает без GPS)")
                 .setCancelable(false)
-                .setPositiveButton("Да"){_,_ ->
+                .setPositiveButton("Да") { _, _ ->
                     startActivity(Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                     thread {
-                        while(!manager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-                        {
-                            //gps problem
+                        while (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                            // gps problem
                         }
                         runOnUiThread {
                             try {
                                 mMapView?.controller?.animateTo(GeoPoint(LocationService.imHere!!.latitude, LocationService.imHere!!.longitude))
-                            }catch (e:java.lang.Exception){
+                            } catch (e: java.lang.Exception) {
                                 e.printStackTrace()
                             }
                             mMapView?.overlays?.add(locationOverlay())
@@ -542,19 +515,16 @@ class CommonActivity : AppCompatActivity() {
                     }
                 }
                 .setNegativeButton("No") {
-                        dialog,_->
-                    dialog.cancel()
-                }
+                    dialog, _ ->
+                        dialog.cancel()
+                    }
             val alert = builder.create()
             alert.show()
         }
 
-        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-        {
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             buildAlertMessageNoGps()
-        }
-        else
-        {
+        } else {
 
             try {
                 mMapView?.controller?.animateTo(
@@ -563,27 +533,25 @@ class CommonActivity : AppCompatActivity() {
                         LocationService.imHere!!.longitude
                     )
                 )
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
             try {
                 mMapView?.overlays?.add(locationOverlay())
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
             try {
                 mMapView?.overlays?.add(initRotationGestureOverlay())
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
             try {
                 mMapView?.overlays?.add(initScaleBarOverlay())
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
-
         }
-
     }
 
     private fun locationOverlay(): MyLocationNewOverlay {
@@ -591,7 +559,7 @@ class CommonActivity : AppCompatActivity() {
         val gpsMyLocationProvider = GpsMyLocationProvider(this)
         try {
             gpsMyLocationProvider.addLocationSource(LocationService.imHere!!.provider)
-        }catch (e:java.lang.Exception){
+        } catch (e: java.lang.Exception) {
             e.printStackTrace()
         }
 
@@ -672,13 +640,13 @@ class CommonActivity : AppCompatActivity() {
 
         val fabMenu: FloatingActionMenu = findViewById(common_fab_menu)
 
-        if(fabMenu.childCount>0)
-        fabMenu.removeAllMenuButtons()
+        if (fabMenu.childCount> 0)
+            fabMenu.removeAllMenuButtons()
 
-        for (i in 0 until  DataStore.statusList.count()) {
-            if( DataStore.statusList[i].name != "На тревоге" && DataStore.statusList[i].name != DataStore.status){
+        for (i in 0 until DataStore.statusList.count()) {
+            if (DataStore.statusList[i].name != "На тревоге" && DataStore.statusList[i].name != DataStore.status) {
                 val actionButton = com.github.clans.fab.FloatingActionButton(this)
-                actionButton.labelText =  DataStore.statusList[i].name
+                actionButton.labelText = DataStore.statusList[i].name
                 actionButton.colorNormal = ContextCompat.getColor(this, color.colorPrimary)
                 actionButton.setOnClickListener {
                     if (fabMenu.isOpened) {
@@ -696,26 +664,26 @@ class CommonActivity : AppCompatActivity() {
                                     statusChangeMessage.put("command", "status")
                                     statusChangeMessage.put("newstatus", actionButton.labelText)
                                     ProtocolNetworkService.protocol?.request(statusChangeMessage.toString()) {
-                                            access: Boolean, data: ByteArray? ->
-                                        if (access && data != null) {
-                                            runOnUiThread {
-                                                DataStore.status = JSONObject(String(data)).getString("status")
-                                                val title: String = DataStore.call + " ( " + DataStore.status + " ) "
-                                                supportActionBar?.title = title
-                                            }
-                                        } else {
-                                            runOnUiThread {
-                                                Toast.makeText(this, "Смена статуса невозможно, сервер не отвечает", Toast.LENGTH_SHORT).show()
+                                        access: Boolean, data: ByteArray? ->
+                                            if (access && data != null) {
+                                                runOnUiThread {
+                                                    DataStore.status = JSONObject(String(data)).getString("status")
+                                                    val title: String = DataStore.call + " ( " + DataStore.status + " ) "
+                                                    supportActionBar?.title = title
+                                                }
+                                            } else {
+                                                runOnUiThread {
+                                                    Toast.makeText(this, "Смена статуса невозможно, сервер не отвечает", Toast.LENGTH_SHORT).show()
+                                                }
                                             }
                                         }
-                                    }
                                 }
                             }
                         }
                         fabMenu.close(true)
                     }
-            }
-                when ( DataStore.statusList[i].name) {
+                }
+                when (DataStore.statusList[i].name) {
                     "Заправляется" -> { actionButton.setImageResource(drawable.ic_refueling) }
                     "Обед" -> { actionButton.setImageResource(drawable.ic_dinner) }
                     "Ремонт" -> { actionButton.setImageResource(drawable.ic_repairs) }
@@ -742,19 +710,17 @@ class CommonActivity : AppCompatActivity() {
                 fabMenu.addMenuButton(actionButton)
             }
         }
-
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if(isFinishing){
-            if(!exit)
+        if (isFinishing) {
+            if (!exit)
                 ControlLifeCycleService.stopService(this)
 
             finish()
             exitProcess(0)
         }
-
     }
 
     override fun onBackPressed() {

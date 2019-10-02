@@ -11,7 +11,7 @@ import java.lang.Exception
 class LocationService : LocationListener {
     companion object {
         var imHere: Location? = null
-        var Enable:Boolean = false
+        var Enable: Boolean = false
     }
 
     @SuppressLint("MissingPermission")
@@ -24,7 +24,8 @@ class LocationService : LocationListener {
                 LocationManager.GPS_PROVIDER,
                 1000,
                 0.toFloat(),
-                this)
+                this
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -33,7 +34,8 @@ class LocationService : LocationListener {
                 LocationManager.PASSIVE_PROVIDER,
                 1000,
                 0.toFloat(),
-                this)
+                this
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -48,14 +50,14 @@ class LocationService : LocationListener {
             e.printStackTrace()
         }
 
-        when{
-            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)->{
+        when {
+            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> {
                 imHere = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
             }
-            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)->{
+            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> {
                 imHere = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
             }
-            locationManager.isProviderEnabled(LocationManager.PASSIVE_PROVIDER)->{
+            locationManager.isProviderEnabled(LocationManager.PASSIVE_PROVIDER) -> {
                 imHere = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER)
             }
         }

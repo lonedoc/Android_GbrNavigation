@@ -10,22 +10,22 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import java.lang.Exception
 import kobramob.rubeg38.ru.gbrnavigation.R
+import kotlin.concurrent.thread
 import oldVersion.commonactivity.AlarmObjectInfo
 import oldVersion.objectactivity.data.ObjectDataStore
 import oldVersion.objectactivity.navigatorfragment.NavigatorFragment
 import oldVersion.resource.DataStore
 import oldVersion.workservice.ProtocolNetworkService
 import org.json.JSONObject
-import java.lang.Exception
-import kotlin.concurrent.thread
 
 class ObjectFragment : androidx.fragment.app.Fragment() {
 
-    private var objectTimeToArrived:TextView? = null
+    private var objectTimeToArrived: TextView? = null
 
-    private var buttonSendReports:Button? = null
-    private var buttonSendArrived:Button? = null
+    private var buttonSendReports: Button? = null
+    private var buttonSendArrived: Button? = null
 
     @SuppressLint("SetTextI18n")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -37,7 +37,7 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
         val objectAddress: TextView = rootView.findViewById(R.id.objectAddress)
         val objectAlarm: TextView = rootView.findViewById(R.id.objectAlarm)
         val objectAlarmTime: TextView = rootView.findViewById(R.id.objectAlarmTime)
-        val objectAlarmApply:TextView = rootView.findViewById(R.id.objectAlarmApplyTime)
+        val objectAlarmApply: TextView = rootView.findViewById(R.id.objectAlarmApplyTime)
         objectTimeToArrived = rootView.findViewById(R.id.objectTimeToArrived)
         val objectCustomer: TextView = rootView.findViewById(R.id.objectCustomer)
         val objectTIP: TextView = rootView.findViewById(R.id.objectTIP)
@@ -57,47 +57,45 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
                 DataStore.reports
             )
             var selectedReport = ""
-            report_spinner.onItemSelectedListener = object:AdapterView.OnItemSelectedListener{
+            report_spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(p0: AdapterView<*>?) {
                 }
 
                 override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                    if(report_spinner.selectedItem !=null){
+                    if (report_spinner.selectedItem != null) {
                         selectedReport = DataStore.reports[p2]
-                        Log.d("selected report",selectedReport)
+                        Log.d("selected report", selectedReport)
                     }
                 }
             }
             alertDialog.setView(view)
             alertDialog.setTitle("Отправка рапорта")
-            alertDialog.setPositiveButton("Отправить"){ _: DialogInterface, _: Int ->
+            alertDialog.setPositiveButton("Отправить") { _: DialogInterface, _: Int ->
                 val reportsMessage = JSONObject()
                 reportsMessage.put("\$c$", "reports")
-                reportsMessage.put("report",selectedReport)
-                reportsMessage.put("comment","${report_text.text}")
+                reportsMessage.put("report", selectedReport)
+                reportsMessage.put("comment", "${report_text.text}")
                 reportsMessage.put("namegbr", DataStore.namegbr)
-                reportsMessage.put("name",alarmObjectInfo.name)
-                reportsMessage.put("number",alarmObjectInfo.number)
-                Log.d("Report","$reportsMessage")
-                ProtocolNetworkService.protocol?.send("$reportsMessage"){
-                        success:Boolean->
-                    if(success){
-                        activity!!.runOnUiThread {
-                            Toast.makeText(context,"Рапорт доставлен",Toast.LENGTH_SHORT).show()
+                reportsMessage.put("name", alarmObjectInfo.name)
+                reportsMessage.put("number", alarmObjectInfo.number)
+                Log.d("Report", "$reportsMessage")
+                ProtocolNetworkService.protocol?.send("$reportsMessage") {
+                    success: Boolean ->
+                        if (success) {
+                            activity!!.runOnUiThread {
+                                Toast.makeText(context, "Рапорт доставлен", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            activity!!.runOnUiThread {
+                                Toast.makeText(context, "Рапорт не доставлен", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
-                    else
-                    {
-                        activity!!.runOnUiThread {
-                            Toast.makeText(context,"Рапорт не доставлен",Toast.LENGTH_SHORT).show()
-                        }
-                    }
+            }
+            alertDialog.setNeutralButton("Отложить") {
+                dialog: DialogInterface, i ->
+                    dialog.cancel()
                 }
-            }
-            alertDialog.setNeutralButton("Отложить"){
-                dialog:DialogInterface,i->
-                dialog.cancel()
-            }
             val dialog = alertDialog.create()
             dialog.setCancelable(false)
             dialog.show()
@@ -110,46 +108,43 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
                 .setCancelable(false)
                 .setMessage("Вы прибыли на место")
                 .setPositiveButton("Подтвердить") {
-                        _, _ ->
-                    ObjectDataStore.arrivedToObjectSend = true
-                    val message = JSONObject()
-                    message.put("\$c$", "gbrkobra")
-                    message.put("command", "alarmpr")
-                    message.put("number", alarmObjectInfo.number)
-                    ProtocolNetworkService.protocol?.send(message = message.toString()) {
+                    _, _ ->
+                        ObjectDataStore.arrivedToObjectSend = true
+                        val message = JSONObject()
+                        message.put("\$c$", "gbrkobra")
+                        message.put("command", "alarmpr")
+                        message.put("number", alarmObjectInfo.number)
+                        ProtocolNetworkService.protocol?.send(message = message.toString()) {
                             success: Boolean ->
-                        if (success) {
-                            activity!!.runOnUiThread {
-                                if (NavigatorFragment.road != null) {
-                                    if (NavigatorFragment.road!!.mRouteHigh.count() > 1) {
-                                        if (NavigatorFragment.mMapView != null) {
-                                            NavigatorFragment.road!!.mRouteHigh.clear()
-                                            NavigatorFragment.mMapView!!.overlays.removeAt(
-                                                NavigatorFragment.mMapView!!.overlays.count() - 1
-                                            )
-                                            NavigatorFragment.mMapView!!.invalidate()
+                                if (success) {
+                                    activity!!.runOnUiThread {
+                                        if (NavigatorFragment.road != null) {
+                                            if (NavigatorFragment.road!!.mRouteHigh.count() > 1) {
+                                                if (NavigatorFragment.mMapView != null) {
+                                                    NavigatorFragment.road!!.mRouteHigh.clear()
+                                                    NavigatorFragment.mMapView!!.overlays.removeAt(
+                                                        NavigatorFragment.mMapView!!.overlays.count() - 1
+                                                    )
+                                                    NavigatorFragment.mMapView!!.invalidate()
+                                                }
+                                            }
                                         }
+
+                                        Toast.makeText(context, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
+                                    }
+                                } else {
+                                    activity!!.runOnUiThread {
+                                        Toast.makeText(context, "Прибытие не подтверждено", Toast.LENGTH_LONG).show()
                                     }
                                 }
-
-                                Toast.makeText(context, "Прибытие подтверждено", Toast.LENGTH_LONG).show()
                             }
-                        }
-                        else
-                        {
-                            activity!!.runOnUiThread {
-                                Toast.makeText(context, "Прибытие не подтверждено", Toast.LENGTH_LONG).show()
-                            }
-                        }
                     }
-                }
-                .setNeutralButton("Отложить"){
-                        dialogInterface, i ->
-                    dialogInterface.cancel()
-                }
+                .setNeutralButton("Отложить") {
+                    dialogInterface, i ->
+                        dialogInterface.cancel()
+                    }
                 .show()
         }
-
 
         try {
             if (alarmObjectInfo.name != " ") {
@@ -157,7 +152,7 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
             } else {
                 objectName.visibility = View.GONE
             }
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             objectName.visibility = View.GONE
         }
 
@@ -167,7 +162,7 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
             } else {
                 objectAddress.visibility = View.GONE
             }
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             objectAddress.visibility = View.GONE
         }
 
@@ -177,17 +172,17 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
             } else {
                 objectCustomer.visibility = View.GONE
             }
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             objectCustomer.visibility = View.GONE
         }
 
         try {
-            if(ObjectDataStore.timeAlarmApply != null){
+            if (ObjectDataStore.timeAlarmApply != null) {
                 objectAlarmApply.text = "Время принятия тревоги: ${ObjectDataStore.timeAlarmApply}"
             } else {
                 objectAlarmApply.visibility = View.GONE
             }
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             objectAlarmApply.visibility = View.GONE
         }
 
@@ -197,7 +192,7 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
             } else {
                 objectAlarm.visibility = View.GONE
             }
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             objectAlarmTime.visibility = View.GONE
         }
 
@@ -208,7 +203,7 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
             } else {
                 objectTIP.visibility = View.GONE
             }
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             objectTIP.visibility = View.GONE
         }
 
@@ -218,7 +213,7 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
             } else {
                 objectAlarm.visibility = View.GONE
             }
-        } catch (e:Exception) {
+        } catch (e: Exception) {
             objectAlarm.visibility = View.GONE
         }
 
@@ -230,7 +225,7 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
     override fun onResume() {
         super.onResume()
         isAlive = true
-        Log.d("ObjectFragment","$isAlive")
+        Log.d("ObjectFragment", "$isAlive")
 
         thread {
             if (ObjectDataStore.timeToArrived != null) {
@@ -259,7 +254,6 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
                     if (ObjectDataStore.putOffArrivedToObjectSend)
                         buttonSendArrived?.isEnabled = true
                 }
-
             } else {
                 Log.d("ObjectFragment", "StartThread 2")
                 do {
@@ -272,29 +266,25 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
                                 buttonSendArrived?.isEnabled = true
                         }
                     }
-
                 } while (!buttonSendReports?.isEnabled!! && isAlive)
                 Log.d("ObjectFragment", "StopThread 2")
             }
         }
         thread {
-            if(ObjectDataStore.putOffArrivedToObjectSend && buttonSendArrived != null)
-            {
+            if (ObjectDataStore.putOffArrivedToObjectSend && buttonSendArrived != null) {
                 activity!!.runOnUiThread {
                     buttonSendArrived?.isEnabled = true
                 }
-            }
-            else
-            {
-                Log.d("ObjectFragment","StartThread 3")
-                do{
-                    if(ObjectDataStore.putOffArrivedToObjectSend){
+            } else {
+                Log.d("ObjectFragment", "StartThread 3")
+                do {
+                    if (ObjectDataStore.putOffArrivedToObjectSend) {
                         activity!!.runOnUiThread {
                             buttonSendArrived?.isEnabled = true
                         }
                     }
-                }while(!buttonSendArrived?.isEnabled!! && isAlive)
-                Log.d("ObjectFragment","StopThread 3")
+                } while (!buttonSendArrived?.isEnabled!! && isAlive)
+                Log.d("ObjectFragment", "StopThread 3")
             }
         }
     }
@@ -302,7 +292,6 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
     override fun onPause() {
         super.onPause()
         isAlive = false
-        Log.d("ObjectFragment","$isAlive")
+        Log.d("ObjectFragment", "$isAlive")
     }
-
 }
