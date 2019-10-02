@@ -88,6 +88,7 @@ class CommonActivity : MvpAppCompatActivity(), CommonView {
         super.onStop()
         isAlive = false
     }
+
     override fun setCenter(geoPoint: GeoPoint) {
         common_mapView.controller.animateTo(geoPoint)
         common_mapView.controller.setZoom(15.0)
