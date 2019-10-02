@@ -115,7 +115,7 @@ class ProtocolNetworkService : Service(){
                             if(oldLocation != null )
                             {
                                 oldSpeed = newSpeed
-                                newSpeed = ((newLocation.distanceToAsDouble(oldLocation)/2)*3.6).toInt()
+                                newSpeed = (LocationService.imHere?.speed!! * 3.6).toInt()
                                 Log.d("CoordinateLoop","oldSpeed $oldSpeed")
                                 Log.d("CoordinateLoop","newSpeed $newSpeed")
                             }

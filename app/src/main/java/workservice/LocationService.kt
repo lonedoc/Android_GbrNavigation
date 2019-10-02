@@ -6,12 +6,15 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.util.Log
 import java.lang.Exception
 
 class LocationService : LocationListener {
     companion object {
         var imHere: Location? = null
         var Enable:Boolean = false
+        var oldTime:Long? = null
+        var newTime:Long? = null
     }
 
     @SuppressLint("MissingPermission")
@@ -22,8 +25,8 @@ class LocationService : LocationListener {
         try {
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
-                2000,
-                50.toFloat(),
+                500,
+                10.toFloat(),
                 this)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -31,8 +34,8 @@ class LocationService : LocationListener {
         try {
             locationManager.requestLocationUpdates(
                 LocationManager.PASSIVE_PROVIDER,
-                2000,
-                50.toFloat(),
+                500,
+                10.toFloat(),
                 this)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -40,10 +43,9 @@ class LocationService : LocationListener {
         try {
             locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER,
-                2000,
-                50.toFloat(),
-                this
-            )
+                500,
+                10.toFloat(),
+                this)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -63,7 +65,15 @@ class LocationService : LocationListener {
     }
 
     override fun onLocationChanged(location: Location?) {
+        if(newTime!=null){
+            oldTime = newTime
+
+        }
         imHere = location
+        newTime = System.currentTimeMillis()
+        if(oldTime!=null){
+            Log.d("LocationService","Time ${(newTime!! - oldTime!!)/1000}")
+        }
         Enable = true
     }
 
