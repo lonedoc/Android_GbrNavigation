@@ -468,7 +468,7 @@ class ObjectActivity : AppCompatActivity() {
                     }
                 }
             }
-            "gbrstatus" -> {
+            /*"gbrstatus" -> {
                 if (event.message != "На тревоге") {
 
                     Toast.makeText(this, "Тревога отменена (смена статуса)", Toast.LENGTH_SHORT).show()
@@ -504,7 +504,7 @@ class ObjectActivity : AppCompatActivity() {
                     }
 
                 }
-            }
+            }*/
 
         }
     }

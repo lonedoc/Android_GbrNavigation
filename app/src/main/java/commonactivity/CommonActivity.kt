@@ -95,7 +95,7 @@ class CommonActivity : AppCompatActivity() {
 
         val toolbar: Toolbar = findViewById(common_toolbar)
         setSupportActionBar(toolbar)
-        val title: String = DataStore.call + " ( " + DataStore.status + " ) "
+        val title: String = "${DataStore.call} ( ${DataStore.status} ) ver.${BuildConfig.VERSION_NAME} "
         supportActionBar?.title = title
 
         fillFabMenu()
@@ -299,7 +299,7 @@ class CommonActivity : AppCompatActivity() {
                         {
                             runOnUiThread {
                                 DataStore.status =  event.message
-                                val title: String = DataStore.call + " ( " + event.message + " ) "
+                                val title: String = "${DataStore.call} ( ${DataStore.status} ) ver.${BuildConfig.VERSION_NAME} "
                                 supportActionBar?.title = title
                                 for(i in 0 until DataStore.statusList.count())
                                 {
@@ -317,7 +317,7 @@ class CommonActivity : AppCompatActivity() {
                                                     if (access && data != null) {
                                                         runOnUiThread {
                                                             DataStore.status = JSONObject(String(data)).getString("status")
-                                                            val title: String = DataStore.call + " ( " + DataStore.status + " ) "
+                                                            val title: String = "${DataStore.call} ( ${DataStore.status} ) ver.${BuildConfig.VERSION_NAME} "
                                                             supportActionBar?.title = title
                                                         }
                                                     } else {
@@ -400,13 +400,13 @@ class CommonActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-
+        isAlive = true
         if (alertSound.isPlaying) {
             alertSound.stop()
             alertSound.reset()
         }
 
-        isAlive = true
+
 
         if (!ProtocolNetworkService.isServiceStarted)
         {
@@ -700,7 +700,7 @@ class CommonActivity : AppCompatActivity() {
                                         if (access && data != null) {
                                             runOnUiThread {
                                                 DataStore.status = JSONObject(String(data)).getString("status")
-                                                val title: String = DataStore.call + " ( " + DataStore.status + " ) "
+                                                val title: String = "${DataStore.call}   (  ${DataStore.status}   ) ver. ${BuildConfig.VERSION_NAME} "
                                                 supportActionBar?.title = title
                                             }
                                         } else {

@@ -18,6 +18,7 @@ import resource.DataStore
 import workservice.ProtocolNetworkService
 import org.json.JSONObject
 import java.lang.Exception
+import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 
 class ObjectFragment : androidx.fragment.app.Fragment() {
@@ -247,6 +248,7 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
                             objectTimeToArrived?.text = ObjectDataStore.timeToArrived
                         }
                     }
+                    sleep(1500)
                 } while (isAlive && ObjectDataStore.timeToArrived == null)
                 Log.d("ObjectFragment", "StopThread 1")
             }
@@ -272,7 +274,7 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
                                 buttonSendArrived?.isEnabled = true
                         }
                     }
-
+                    sleep(1500)
                 } while (!buttonSendReports?.isEnabled!! && isAlive)
                 Log.d("ObjectFragment", "StopThread 2")
             }
@@ -293,6 +295,7 @@ class ObjectFragment : androidx.fragment.app.Fragment() {
                             buttonSendArrived?.isEnabled = true
                         }
                     }
+                    sleep(1500)
                 }while(!buttonSendArrived?.isEnabled!! && isAlive)
                 Log.d("ObjectFragment","StopThread 3")
             }
