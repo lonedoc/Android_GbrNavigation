@@ -113,14 +113,6 @@ class ProtocolDelegate : RubegProtocolDelegate {
                     .build()
                 NotificationService.createNotification(authorization, context)
 
-                /*if (CommonActivity.isAlive) {
-                    val message = JSONObject()
-                    message.put("\$c$", "getalarm")
-                    message.put("namegbr", DataStore.namegbr)
-                    ProtocolNetworkService.protocol?.send(message = message.toString()) {
-                    }
-                }*/
-
                 ProtocolNetworkService.connectInternet = true
                 ProtocolNetworkService.connectServer = true
                 connectionLost = false
@@ -177,14 +169,6 @@ class ProtocolDelegate : RubegProtocolDelegate {
                                 reports = registration.reports,
                                 cityCard = registration.citycard
                             )
-
-                            /*if (MainActivity.isAlive || LoginActivity.isAlive) {
-                                EventBus.getDefault().postSticky(
-                                    RegistrationEvent(
-                                        command = registration.command
-                                    )
-                                )
-                            }*/
                         }
 
                         "gbrstatus" -> {
@@ -212,37 +196,6 @@ class ProtocolDelegate : RubegProtocolDelegate {
                             try {
                                 val alarm = gson.fromJson(message, Alarm::class.java)
 
-                               /* if (!CommonActivity.isAlive && !ObjectActivity.isAlive) {
-                                    val ptk = Intent(context, CommonActivity::class.java)
-                                    ptk.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    context.startActivity(ptk)
-                                } else {
-                                    if (alarm.lon == "")
-                                        alarm.lon = "0.0"
-
-                                    if (alarm.lat == "")
-                                        alarm.lat = "0.0"
-
-                                    if (alarm.zakaz == null)
-                                        alarm.zakaz = " "
-
-                                   *//* EventBus.getDefault().postSticky(
-                                        AlarmEvent(
-                                            command = alarm.command,
-                                            name = alarm.name,
-                                            number = alarm.number,
-                                            lon = alarm.lon.toDouble(),
-                                            lat = alarm.lat.toDouble(),
-                                            inn = alarm.inn,
-                                            zakaz = alarm.zakaz!!,
-                                            address = alarm.address,
-                                            area = alarm.area,
-                                            otvl = alarm.otvl,
-                                            plan = alarm.plan,
-                                            photo = alarm.photo
-                                        )
-                                    )*//*
-                                }*/
                             } catch (e: java.lang.Exception) {
                                 e.printStackTrace()
                             }
