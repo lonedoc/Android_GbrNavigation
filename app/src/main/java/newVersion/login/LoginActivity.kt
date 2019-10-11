@@ -1,7 +1,11 @@
 package newVersion.login
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -13,11 +17,13 @@ import java.lang.Exception
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_login.*
-import newVersion.NetworkService
 import newVersion.Utils.PrefsUtil
 import newVersion.common.CommonActivity
+import newVersion.login.resource.AdapterIpAddress
+import newVersion.login.resource.ProgressDialog
 import newVersion.models.HostPool
 import newVersion.models.Preferences
+import newVersion.servicess.NetworkService
 import oldVersion.workservice.NotificationService
 import ru.rubeg38.technicianmobile.utils.setOnTextChanged
 
@@ -65,12 +71,23 @@ class LoginActivity : MvpAppCompatActivity(), LoginView {
             if (adapter.getAddresses() != null) {
                 val address = adapter.getAddresses()
                 val port = portTextView.text.toString()
-                val imei = intent.getStringExtra("imei")
+                val imei = getImei()
                 presenter.submit(address, port, imei)
             } else {
                 Log.d("ActivityLogin", "Enter return")
                 return@thread
             }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getImei(): String? {
+        val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            telephonyMgr.imei
+        } else {
+            telephonyMgr.deviceId
         }
     }
 
@@ -161,6 +178,7 @@ class LoginActivity : MvpAppCompatActivity(), LoginView {
     }
 
     override fun showDialog() {
+
         runOnUiThread {
             progressDialog.show(supportFragmentManager, "ProgressDialog")
         }
@@ -181,8 +199,8 @@ class LoginActivity : MvpAppCompatActivity(), LoginView {
 
         runOnUiThread {
             val intent = Intent(this, CommonActivity::class.java)
-         presenter.onDestroy()
-         startActivity(intent)
+            presenter.onDestroy()
+            startActivity(intent)
 
             Log.d("LoginActivity", "RegisterSuccess")
         }

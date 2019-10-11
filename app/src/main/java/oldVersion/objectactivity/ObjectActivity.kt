@@ -23,7 +23,6 @@ import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlin.concurrent.thread
 import oldVersion.commonactivity.AlarmObjectInfo
-import oldVersion.commonactivity.CommonActivity
 import oldVersion.objectactivity.data.ObjectDataStore
 import oldVersion.objectactivity.navigatorfragment.NavigatorFragment
 import oldVersion.objectactivity.navigatorfragment.NavigatorFragment.Companion.mMapView
@@ -168,6 +167,7 @@ class ObjectActivity : AppCompatActivity() {
                     }
                     true
                 }
+
             Log.d("Debug", "SystemClock.elapsedRealtime() = ${SystemClock.elapsedRealtime()}")
             val commonTimer: Chronometer = findViewById(R.id.common_timer)
             commonTimer.base = SystemClock.elapsedRealtime()
@@ -217,6 +217,7 @@ class ObjectActivity : AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
+
     private fun openFragment(fragment: androidx.fragment.app.Fragment) {
         val transaction = supportFragmentManager.beginTransaction()
         transaction.replace(R.id.fragment_container, fragment)
@@ -415,8 +416,8 @@ class ObjectActivity : AppCompatActivity() {
     fun onAlarmEvent(event: AlarmEvent) {
         EventBus.getDefault().removeAllStickyEvents()
         EventBus.getDefault().unregister(this)
-        val commonActivity = Intent(this, CommonActivity::class.java)
-        startActivity(commonActivity)
+     /*   val commonActivity = Intent(this, CommonActivity::class.java)
+        startActivity(commonActivity)*/
         finish()
     }
 
@@ -448,8 +449,8 @@ class ObjectActivity : AppCompatActivity() {
                             ObjectDataStore.clearAllAlarmData()
                             EventBus.getDefault().unregister(this)
                             EventBus.getDefault().removeAllStickyEvents()
-                            val commonActivity = Intent(this, CommonActivity::class.java)
-                            startActivity(commonActivity)
+                            /*val commonActivity = Intent(this, CommonActivity::class.java)
+                            startActivity(commonActivity)*/
                             finish()
                         }
                     }
@@ -484,8 +485,8 @@ class ObjectActivity : AppCompatActivity() {
 
                             ObjectDataStore.clearAllAlarmData()
 
-                            val commonActivity = Intent(this, CommonActivity::class.java)
-                            startActivity(commonActivity)
+                            /*val commonActivity = Intent(this, CommonActivity::class.java)
+                            startActivity(commonActivity)*/
                             finish()
                         }
                     }

@@ -21,7 +21,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import oldVersion.commonactivity.CommonActivity
 import oldVersion.workservice.NotificationService.createNotification
 import org.json.JSONObject
 import org.osmdroid.util.GeoPoint
@@ -294,10 +293,10 @@ class ProtocolNetworkService : Service() {
 
     override fun onDestroy() {
         // TODO Закрывает приложение когда это не надо!!!
-        if (CommonActivity.exit) {
+        /*if (CommonActivity.exit) {
             Log.d("Service", "Destroy")
             System.exit(0)
-        }
+        }*/
         isServiceStarted = false
         super.onDestroy()
     }

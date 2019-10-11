@@ -19,7 +19,6 @@ import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlin.concurrent.thread
 import newVersion.login.LoginActivity
-import oldVersion.commonactivity.CommonActivity
 import oldVersion.objectactivity.ObjectActivity
 
 object NotificationService {
@@ -41,11 +40,11 @@ object NotificationService {
                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT)
             }
-            CommonActivity.isAlive -> {
+           /* CommonActivity.isAlive -> {
                 val i = Intent(context, CommonActivity::class.java)
                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT)
-            }
+            }*/
             ObjectActivity.isAlive || ObjectActivity.saveAlarm != null -> {
                 val i = Intent(context, ObjectActivity::class.java)
                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
@@ -269,9 +268,9 @@ object NotificationService {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val pendingIntent: PendingIntent = Intent(context, CommonActivity::class.java).let { notificationIntent ->
+        /*val pendingIntent: PendingIntent = Intent(context, CommonActivity::class.java).let { notificationIntent ->
             PendingIntent.getActivity(context, 0, notificationIntent, 0)
-        }
+        }*/
 
         val builder: NotificationCompat.Builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) NotificationCompat.Builder(
             context,
@@ -281,7 +280,7 @@ object NotificationService {
         return builder
             .setContentTitle("Service")
             .setContentText("Service notifications")
-            .setContentIntent(pendingIntent)
+            /*.setContentIntent(pendingIntent)*/
             .setSmallIcon(R.drawable.ic_service)
             .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
             .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility

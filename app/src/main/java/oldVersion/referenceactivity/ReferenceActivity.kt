@@ -17,7 +17,6 @@ import com.google.android.material.tabs.TabLayout
 import java.lang.Exception
 import kobramob.rubeg38.ru.gbrnavigation.R
 import oldVersion.commonactivity.AlarmObjectInfo
-import oldVersion.commonactivity.CommonActivity
 import oldVersion.objectactivity.ObjectActivity
 import oldVersion.resource.DataStore
 
@@ -57,8 +56,8 @@ class ReferenceActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         if (!intent.getBooleanExtra("objectActivity", false)) {
-            val commonActivity = Intent(this, CommonActivity::class.java)
-            startActivity(commonActivity)
+          /*  val commonActivity = Intent(this, CommonActivity::class.java)
+            startActivity(commonActivity)*/
         } else {
             val objectInfo: AlarmObjectInfo = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
             val objectActivity = Intent(this, ObjectActivity::class.java)
@@ -78,15 +77,15 @@ class ReferenceFragmentPagerAdapter(fm: FragmentManager?) :
         var fragment: Fragment? = null
         when (position) {
             0 ->
-                 {
+                {
                     fragment = PCSInfoFragment()
                 }
             1 ->
-                 {
+                {
                     fragment = ESInfoFragment()
                 }
             2 ->
-                 {
+                {
                     fragment = USInfoFragment()
                 }
         }

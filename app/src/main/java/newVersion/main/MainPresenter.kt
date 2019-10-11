@@ -17,7 +17,7 @@ import newVersion.network.auth.AuthAPI
 import newVersion.network.auth.OnAuthListener
 import newVersion.network.auth.RPAuthAPI
 import org.greenrobot.eventbus.EventBus
-import ru.rubeg38.rubegprotocol.RubegProtocol
+import rubegprotocol.RubegProtocol
 
 @InjectViewState
 class MainPresenter : MvpPresenter<MainView>(), OnAuthListener, Destroyable, Init {
@@ -77,13 +77,14 @@ class MainPresenter : MvpPresenter<MainView>(), OnAuthListener, Destroyable, Ini
             port = preferences.serverPort
         )
 
+        Log.d("MainPresenter","${preferences.serverAddress}")
         viewState.startService(credentials, hostPool)
         sleep(1000)
         EventBus.getDefault().post(newCredetials(credentials))
 
         val protocol = RubegProtocol.sharedInstance
         if (authAPI != null) {
-            Log.d("MainPresenter","Destroy Auth Api")
+            Log.d("MainPresenter", "Destroy Auth Api")
             authAPI!!.onDestroy()
         }
 
@@ -140,6 +141,7 @@ class MainPresenter : MvpPresenter<MainView>(), OnAuthListener, Destroyable, Ini
     }
 
     override fun onDestroy() {
+        authAPI?.onDestroy()
         init = false
         super.onDestroy()
     }

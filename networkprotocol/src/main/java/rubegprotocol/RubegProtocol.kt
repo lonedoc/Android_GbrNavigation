@@ -1,11 +1,14 @@
-package ru.rubeg38.rubegprotocol
+package rubegprotocol
 
+import org.json.JSONObject
+import ru.rubeg38.rubegprotocol.*
 import java.io.IOException
 import java.lang.Thread.sleep
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Semaphore
 import kotlin.concurrent.thread
 
 class RubegProtocol {
@@ -35,8 +38,8 @@ class RubegProtocol {
     private var socket: DatagramChannel
 
     private var connectionWatchers = ArrayList<ConnectionWatcher?>()
-    private var textMessageWatchers = ArrayList<TextMessageWatcher?>()
-    private var binaryMessageWatchers = ArrayList<BinaryMessageWatcher?>()
+    private var textMessageWatchers = CopyOnWriteArrayList<TextMessageWatcher?>()
+    private var binaryMessageWatchers = CopyOnWriteArrayList<BinaryMessageWatcher?>()
 
     private var outcomingMessagesCount: Long = 0
     private var incomingMessagesCount: Long = 0
@@ -47,6 +50,9 @@ class RubegProtocol {
     private val packetsQueue = PriorityQueue<Packet>()
     private val acksQueue = Queue<AcknowledgementPacket>()
     private var congestionWindow = ArrayList<Transmission>()
+
+//    private val readLoopSemaphore = Semaphore(1, true)
+    private val sendLoopSemaphore = Semaphore(1, true)
 
     private constructor() {
         socket = DatagramChannel.open()
@@ -195,6 +201,11 @@ class RubegProtocol {
         // Debug
         println("Protocol: reset")
 
+//        readLoopSemaphore.acquire()
+        sendLoopSemaphore.acquire()
+
+        println("Protocol reset: Lock")
+
         connected = false
 
         congestionWindow.clear()
@@ -210,11 +221,18 @@ class RubegProtocol {
         outcomingMessagesCount = 0
 
         token = null
+
+//        readLoopSemaphore.release()
+        sendLoopSemaphore.release()
+
+        println("Protocol reset: Unlock")
     }
 
     private fun readLoop() {
         thread {
             while (started) {
+//                readLoopSemaphore.acquire()
+
                 if (lastResponseTime + CONNECTION_DROP_INTERVAL <= System.currentTimeMillis()) {
                     lastResponseTime = System.currentTimeMillis()
 
@@ -232,9 +250,12 @@ class RubegProtocol {
 
                     buffer.flip()
 
-                    if (!buffer.hasRemaining())
+                    if (!buffer.hasRemaining()) {
+//                        readLoopSemaphore.release()
                         continue
+                    }
                 } catch (ex: IOException) {
+//                    readLoopSemaphore.release()
                     continue
                 }
 
@@ -256,9 +277,12 @@ class RubegProtocol {
                     ContentType.BINARY, ContentType.STRING -> {
                         handleData(packet as DataPacket)
                     }
+                    else -> {}
                 }
 
                 incomingTransmissions = HashMap(incomingTransmissions.filter { !it.value.failed })
+
+//                readLoopSemaphore.release()
             }
 
             reset()
@@ -268,6 +292,11 @@ class RubegProtocol {
     private fun sendLoop() {
         thread {
             while (started) {
+                if (sendLoopSemaphore.availablePermits() == 0)
+                    sendLoopSemaphore.release()
+
+                sendLoopSemaphore.acquire()
+
                 // Handle acknowledgements
                 var ack = acksQueue.dequeue()
 
@@ -278,18 +307,9 @@ class RubegProtocol {
                 }
 
                 // Retransmit packets
-                congestionWindow.forEach { transmission -> // TODO: Concurrent access
-//                    // Debug
-//                    println("Protocol: ${transmission.lastAttemptTime + RETRANSMIT_INTERVAL - System.currentTimeMillis()}ms to retransmit")
-
+                congestionWindow.forEach { transmission -> // TODO: Fix the concurrent modification problem
                     if (transmission.lastAttemptTime + RETRANSMIT_INTERVAL <= System.currentTimeMillis()) {
-//                        // Debug
-//                        println("Protocol: retransmit")
-
                         if (transmission.attemptsCount < MAX_ATTEMPTS_COUNT) {
-//                            // Debug
-//                            println("Protocol: attempts count less then max attempts count")
-
                             try {
                                 sendPacket(transmission.packet)
                             } catch (ex: IOException) {
@@ -314,9 +334,6 @@ class RubegProtocol {
 
                     packetsQueue.removeAll { it.headers.messageNumber == messageNumber }
 
-//                    // Debug
-//                    println("Protocol: handle failed transmission ($messageNumber)")
-
                     outcomingTransmissions[messageNumber]?.onComplete?.invoke(false)
                     outcomingTransmissions.remove(messageNumber)
                 }
@@ -327,26 +344,21 @@ class RubegProtocol {
                 val congestionWindowIsFull = congestionWindow.count() >= CONGESTION_WINDOW_SIZE
                 val packetsQueueIsEmpty = packetsQueue.count() == 0
 
-//                // Debug
-//                println("Protocol: congestion window is full: $congestionWindowIsFull")
-//                println("Protocol: packets queue is empty: $packetsQueueIsEmpty")
-
                 if (!packetsQueueIsEmpty && !congestionWindowIsFull) {
                     val packet = packetsQueue.dequeue()
 
-//                    // Debug
-//                    println("Protocol: there is a packet to send")
-
                     if (packet != null) {
-                        if (packet.headers.contentType in arrayListOf(ContentType.STRING, ContentType.BINARY)) {
-//                            // Debug
-//                            println("Protocol: packet added to congestion window")
-
-                            congestionWindow.add(Transmission(
+                        if (packet.headers.contentType in arrayListOf(
+                                ContentType.STRING,
+                                ContentType.BINARY
+                            )) {
+                            congestionWindow.add(
+                                Transmission(
                                 packet,
                                 System.currentTimeMillis(),
                                 1
-                            ))
+                            )
+                            )
                         }
 
                         try {
@@ -355,6 +367,7 @@ class RubegProtocol {
                             ex.printStackTrace()
                         }
 
+                        sendLoopSemaphore.release()
                         continue
                     }
                 }
@@ -362,13 +375,7 @@ class RubegProtocol {
                 // Maintain connection
                 val syncTimeHasCome = lastRequestTime + SYNC_INTERVAL <= System.currentTimeMillis()
 
-//                // Debug
-//                println("Protocol: sync time has come: $syncTimeHasCome")
-
                 if (syncTimeHasCome) {
-//                    // Debug
-//                    println("Protocol: maintain connection")
-
                     if (isConnected) {
                         val connectionPacket = ConnectionPacket(token!!)
 
@@ -382,6 +389,8 @@ class RubegProtocol {
 
                 if (packetsQueueIsEmpty)
                     sleep(SLEEP_INTERVAL)
+
+                sendLoopSemaphore.release()
             }
 
             reset()
@@ -391,6 +400,16 @@ class RubegProtocol {
     private fun sendPacket(packet: Packet) {
         val buffer = ByteBuffer.wrap(packet.encode())
         val host = hosts[currentHostIndex % hosts.count()]
+
+        println("HOSTS -> $hosts")
+        println("CurrentHostIndex -> $currentHostIndex")
+        println("HOST -> $host")
+
+        if(currentHostIndex>hosts.count() && incomingMessagesCount==0.toLong()){
+            val jsonObject = JSONObject()
+            jsonObject.put("\$c$","ServerNotResponse")
+            textMessageWatchers.forEach { it?.onTextMessageReceived(jsonObject.toString()) }
+        }
 
         socket.send(buffer, host)
 
@@ -411,7 +430,7 @@ class RubegProtocol {
     private fun handleData(packet: DataPacket) {
         val messageNumber = packet.headers.messageNumber
 
-        if (!incomingTransmissions.containsKey(messageNumber) && messageNumber < incomingMessagesCount)
+        if (!incomingTransmissions.containsKey(messageNumber) && messageNumber <= incomingMessagesCount && messageNumber != 0L)
             return
 
         if (messageNumber > incomingMessagesCount)
@@ -439,6 +458,8 @@ class RubegProtocol {
                         val message = transmission.message!!
                         binaryMessageWatchers.forEach { it?.onBinaryMessageReceived(message) }
                     }
+                    ContentType.CONNECTION -> TODO()
+                    ContentType.ACKNOWLEDGEMENT -> TODO()
                 }
 
                 incomingTransmissions.remove(messageNumber)

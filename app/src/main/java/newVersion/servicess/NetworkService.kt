@@ -1,4 +1,4 @@
-package newVersion
+package newVersion.servicess
 
 import android.annotation.SuppressLint
 import android.app.Service
@@ -16,12 +16,14 @@ import com.google.firebase.messaging.RemoteMessage
 import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.concurrent.thread
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import newVersion.Utils.newCredetials
 import newVersion.login.LoginActivity
+import newVersion.main.MainActivity
 import newVersion.models.Auth
 import newVersion.models.Credentials
 import newVersion.models.HostPool
@@ -34,7 +36,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import ru.rubeg38.rubegprotocol.ConnectionWatcher
-import ru.rubeg38.rubegprotocol.RubegProtocol
+import rubegprotocol.RubegProtocol
 
 class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
@@ -62,7 +64,7 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
     override fun onConnectionLost() {
         Log.d("Service", "Connection lost")
 
-        if (!connectionLost && protocol.isStarted && !LoginActivity.isAlive) {
+        if (!connectionLost && protocol.isStarted && !LoginActivity.isAlive || !connectionLost && protocol.isStarted && !MainActivity.isAlive) {
             connectionLost = true
             when {
                 isConnected(applicationContext) -> {
@@ -117,9 +119,9 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
         if (auth.authorized) {
             protocol.token = auth.authInfo?.token
         } else {
-            val protocol = RubegProtocol.sharedInstance
+          /*  val protocol = RubegProtocol.sharedInstance
             if (protocol.isStarted)
-                protocol.stop()
+                protocol.stop()*/
         }
     }
 
@@ -189,6 +191,10 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
         }
     }
 
+    private fun coordinateLoop() {
+        thread {
+        }
+    }
     private fun stopService() {
         try {
 
@@ -213,6 +219,7 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
         }
         isServiceStarted = false
     }
+
     @SuppressLint("HardwareIds", "SimpleDateFormat")
     private fun pingFakeServer() {
         val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.mmmZ")
@@ -245,8 +252,8 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
     }
 
     override fun onDestroy() {
+        Log.d("NetworkService", "Destroy")
         stopService()
-        ProtocolNetworkService.isServiceStarted = false
         super.onDestroy()
     }
 }

@@ -15,7 +15,7 @@ class ObjectTabFragment : androidx.fragment.app.Fragment() {
 
         val viewPager: ViewPager = rootView.findViewById(R.id.pager)
         viewPager.adapter =
-            ObjectFragmentPagerAdapter(childFragmentManager, context!!)
+            ObjectFragmentPagerAdapter(childFragmentManager)
 
         val tablLayout: TabLayout = rootView.findViewById(R.id.objectTab)
         tablLayout.setupWithViewPager(viewPager)

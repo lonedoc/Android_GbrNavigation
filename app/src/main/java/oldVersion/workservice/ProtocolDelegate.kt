@@ -1,7 +1,6 @@
 package oldVersion.workservice
 
 import android.content.Context
-import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.util.Log
@@ -10,8 +9,6 @@ import com.google.gson.Gson
 import java.util.*
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocol
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocolDelegate
-import oldVersion.commonactivity.CommonActivity
-import oldVersion.objectactivity.ObjectActivity
 import oldVersion.resource.ControlLifeCycleService.startService
 import oldVersion.resource.DataStore
 import org.greenrobot.eventbus.EventBus
@@ -116,13 +113,13 @@ class ProtocolDelegate : RubegProtocolDelegate {
                     .build()
                 NotificationService.createNotification(authorization, context)
 
-                if (CommonActivity.isAlive) {
+                /*if (CommonActivity.isAlive) {
                     val message = JSONObject()
                     message.put("\$c$", "getalarm")
                     message.put("namegbr", DataStore.namegbr)
                     ProtocolNetworkService.protocol?.send(message = message.toString()) {
                     }
-                }
+                }*/
 
                 ProtocolNetworkService.connectInternet = true
                 ProtocolNetworkService.connectServer = true
@@ -195,13 +192,13 @@ class ProtocolDelegate : RubegProtocolDelegate {
                             val status = gson.fromJson(message, StatusGson::class.java)
 
                             if (status.status != "") {
-                                if (CommonActivity.isAlive && status.status != "На тревоге") {
+                                /*if (CommonActivity.isAlive && status.status != "На тревоге") {
                                     val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
                                         .addData("command", status.command)
                                         .addData("status", status.status)
                                         .build()
                                     NotificationService.createNotification(remoteMessage, context)
-                                }
+                                }*/
                                 EventBus.getDefault().postSticky(
                                     MessageEvent(
                                         command = status.command,
@@ -213,9 +210,9 @@ class ProtocolDelegate : RubegProtocolDelegate {
 
                         "alarm" -> {
                             try {
-                                val alarm = gson.fromJson(message, AlarmGson::class.java)
+                                val alarm = gson.fromJson(message, Alarm::class.java)
 
-                                if (!CommonActivity.isAlive && !ObjectActivity.isAlive) {
+                               /* if (!CommonActivity.isAlive && !ObjectActivity.isAlive) {
                                     val ptk = Intent(context, CommonActivity::class.java)
                                     ptk.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                     context.startActivity(ptk)
@@ -229,7 +226,7 @@ class ProtocolDelegate : RubegProtocolDelegate {
                                     if (alarm.zakaz == null)
                                         alarm.zakaz = " "
 
-                                    EventBus.getDefault().postSticky(
+                                   *//* EventBus.getDefault().postSticky(
                                         AlarmEvent(
                                             command = alarm.command,
                                             name = alarm.name,
@@ -244,8 +241,8 @@ class ProtocolDelegate : RubegProtocolDelegate {
                                             plan = alarm.plan,
                                             photo = alarm.photo
                                         )
-                                    )
-                                }
+                                    )*//*
+                                }*/
                             } catch (e: java.lang.Exception) {
                                 e.printStackTrace()
                             }

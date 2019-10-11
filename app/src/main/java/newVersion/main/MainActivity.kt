@@ -1,6 +1,5 @@
 package newVersion.main
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
@@ -8,7 +7,6 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
-import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -22,14 +20,14 @@ import com.google.firebase.messaging.RemoteMessage
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_main.*
-import newVersion.LocationListener
-import newVersion.NetworkService
 import newVersion.Utils.PrefsUtil
 import newVersion.common.CommonActivity
 import newVersion.login.LoginActivity
 import newVersion.models.Credentials
 import newVersion.models.HostPool
 import newVersion.models.Preferences
+import newVersion.servicess.LocationListener
+import newVersion.servicess.NetworkService
 import oldVersion.workservice.NotificationService
 
 class MainActivity : MvpAppCompatActivity(), MainView {
@@ -38,6 +36,9 @@ class MainActivity : MvpAppCompatActivity(), MainView {
 
     private val permissionGranted = PackageManager.PERMISSION_GRANTED
 
+    companion object{
+        var isAlive = false
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -49,6 +50,16 @@ class MainActivity : MvpAppCompatActivity(), MainView {
         } else {
             run()
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        isAlive = true
+    }
+
+    override fun onStop() {
+        super.onStop()
+        isAlive = false
     }
 
     private fun run() {
@@ -146,17 +157,6 @@ class MainActivity : MvpAppCompatActivity(), MainView {
         }
     }
 
-    @SuppressLint("MissingPermission")
-    private fun getImei(): String? {
-        val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            telephonyMgr.imei
-        } else {
-            telephonyMgr.deviceId
-        }
-    }
-
     override fun initLocationManager() {
         runOnUiThread {
             val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -202,9 +202,8 @@ class MainActivity : MvpAppCompatActivity(), MainView {
 
     override fun openLoginActivity() {
         runOnUiThread {
+            presenter.onDestroy()
             val loginActivity = Intent(this, LoginActivity::class.java)
-            loginActivity.putExtra("imei", getImei())
-
             startActivity(loginActivity)
         }
     }
@@ -224,8 +223,8 @@ class MainActivity : MvpAppCompatActivity(), MainView {
         NotificationService.createNotification(remoteMessage1, applicationContext)
 
         runOnUiThread {
-            val intent = Intent(this, CommonActivity::class.java)
             presenter.onDestroy()
+            val intent = Intent(this, CommonActivity::class.java)
             startActivity(intent)
             Log.d("LoginActivity", "RegisterSuccess")
         }

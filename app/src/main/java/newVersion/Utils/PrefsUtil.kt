@@ -12,7 +12,7 @@ class PrefsUtil(context: Context) : Preferences {
         get() {
             val arrayList: ArrayList<String> = ArrayList()
             val string = prefs.getString("ip", "")
-            for (w in string?.trim(',')?.split(" ")!!) {
+            for (w in string?.split(", ")!!) {
                 if (w.isNotEmpty()) {
                     arrayList.add(w)
                 }

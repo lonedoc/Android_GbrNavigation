@@ -50,4 +50,17 @@
     <string name="addobject">addObject</string>
     <string name="removeobject">removeObject</string>
 
+
+    <string name="alarm_text">Тревога на объекте</string>
+    <string name="object_name">Имя объекта:</string>
+    <string name="object_address">Адрес:</string>
+    <string name="object_customer">Заказчик:</string>
+    <string name="object_inn">ИНН:</string>
+    <string name="object_alarm">Тревога:</string>
+    <string name="object_alarm_time">Время тревоги:</string>
+    <string name="object_alarm_apply_time">Время принятия тревоги:</string>
+    <string name="object_time_arrived">Время прибытия:</string>
+    <string name="object_additionally">Дополнительно:</string>
+    <string name="object_number">Номер объекта:</string>
+
 </resources>

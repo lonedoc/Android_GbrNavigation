@@ -1,4 +1,4 @@
-package newVersion.login
+package newVersion.login.resource
 
 import android.util.Log
 import android.view.LayoutInflater
@@ -9,6 +9,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.redmadrobot.inputmask.MaskedTextChangedListener
 import kobramob.rubeg38.ru.gbrnavigation.R
+import newVersion.login.LoginPresenter
 import ru.rubeg38.technicianmobile.utils.setOnTextChanged
 
 class AdapterIpAddress(

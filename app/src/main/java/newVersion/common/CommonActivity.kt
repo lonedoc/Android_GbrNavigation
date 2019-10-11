@@ -3,24 +3,42 @@ package newVersion.common
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.content.res.Configuration
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.Menu
+import android.view.MenuItem
 import android.view.View
+import android.view.WindowManager
 import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.DialogFragment
 import com.arellomobile.mvp.MvpAppCompatActivity
 import com.arellomobile.mvp.presenter.InjectPresenter
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.messaging.RemoteMessage
+import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
+import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_common.*
-import newVersion.LocationListener
-import newVersion.NetworkService
+import newVersion.Utils.DataStoreUtils
 import newVersion.Utils.PrefsUtil
+import newVersion.alarm.AlarmActivity
+import newVersion.callback.CommonCallback
+import newVersion.common.alarm.AlarmDialogFragment
+import newVersion.common.serverSetting.ServerSettingFragment
+import newVersion.common.status.StatusFragment
 import newVersion.models.Credentials
 import newVersion.models.HostPool
+import newVersion.servicess.LocationListener
+import newVersion.servicess.LocationListener.Companion.imHere
+import newVersion.servicess.NetworkService
+import oldVersion.workservice.Alarm
+import oldVersion.workservice.GpsStatus
 import oldVersion.workservice.NotificationService
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -28,18 +46,17 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import kotlin.concurrent.thread
 
-
-class CommonActivity : MvpAppCompatActivity(), CommonView {
-
-    companion object{
+class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
+    companion object {
         var isAlive = false
+        private var waitLoop: Boolean = false
     }
 
-    private lateinit var rotationGestureOverlay: RotationGestureOverlay
-    private lateinit var locationOverlay: MyLocationNewOverlay
-    private lateinit var scaleBarOverlay: ScaleBarOverlay
+    private var dialogAlarm: DialogFragment? = null
+    private var rotationGestureOverlay: RotationGestureOverlay? = null
+    private var locationOverlay: MyLocationNewOverlay? = null
+    private var scaleBarOverlay: ScaleBarOverlay? = null
 
     @InjectPresenter
     lateinit var presenter: CommonPresenter
@@ -48,32 +65,44 @@ class CommonActivity : MvpAppCompatActivity(), CommonView {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_common)
         setSupportActionBar(common_toolbar)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.common_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.server_setting -> {
+                val dialog = ServerSettingFragment()
+                dialog.show(supportFragmentManager, "ChangeServerSetting")
+            }
+            R.id.reference -> {
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onStart() {
         super.onStart()
 
-        isAlive = true
-
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val preferences = PrefsUtil(applicationContext)
         if (!locationManager.isProviderEnabled((LocationManager.GPS_PROVIDER))) {
             createSettingGpsDialog()
-        }
-        else
-        {
-           initPresenter(locationManager,preferences)
+        } else {
+            initPresenter(locationManager, preferences)
         }
     }
 
     private fun initPresenter(
         locationManager: LocationManager,
         preferences: PrefsUtil
-    )
-    {
-        if(!presenter.init)
-        {
-            Log.d("CommonActivity","Init")
+    ) {
+        if (!presenter.init) {
+            Log.d("CommonActivity", "Init")
             presenter.init(preferences)
         }
         presenter.stateGpsCheck(locationManager)
@@ -81,12 +110,71 @@ class CommonActivity : MvpAppCompatActivity(), CommonView {
 
     override fun onResume() {
         super.onResume()
+        isAlive = true
         presenter.setTitle()
+
+        if (DataStoreUtils.namegbr != null)
+            presenter.sendAlarmRequest(DataStoreUtils.namegbr!!)
+
+        presenter.fillStatusBar()
+        presenter.getContext(null)
     }
 
     override fun onStop() {
         super.onStop()
         isAlive = false
+        presenter.getContext(applicationContext)
+    }
+
+    override fun applyAlarm(alarm: Alarm) {
+        openAlarmActivity(alarm)
+        DataStoreUtils.namegbr?.let { presenter.sendAlarmApplyRequest(alarm) }
+    }
+
+    override fun setCenterLoop() {
+        thread {
+            if (waitLoop) return@thread
+            waitLoop = true
+            while (locationOverlay?.lastFix == null) {
+                // wait
+                sleep(1000)
+            }
+            runOnUiThread {
+                if (imHere != null) {
+                    common_mapView.overlays.remove(locationOverlay)
+                    common_mapView.overlays.add(initLocationOverlay())
+                    presenter.setCenter(imHere)
+                } else {
+                    presenter.setCenter(locationOverlay?.lastFix)
+                }
+                waitLoop = false
+                showToastMessage("Удалось определить ваше последнее месторасположение")
+            }
+        }
+    }
+
+    override fun openAlarmActivity(alarm: Alarm) {
+        val alarmActivity = Intent(this, AlarmActivity::class.java)
+
+        alarmActivity.putExtra("info", alarm)
+
+        startActivity(alarmActivity)
+    }
+
+    override fun openAlarmDialog(alarm: Alarm) {
+        if (AlarmDialogFragment.isAlive) {
+            return
+        } else {
+            dialogAlarm = if (intent.getBooleanExtra("activeSound", true))
+                AlarmDialogFragment.newInstance(alarm, this, true)
+            else
+                AlarmDialogFragment.newInstance(alarm, this, false)
+
+            if (intent.hasExtra("activeSound"))
+                intent.removeExtra("activeSound")
+
+            dialogAlarm?.show(supportFragmentManager, "AlarmDialogFragment")
+        }
     }
 
     override fun setCenter(geoPoint: GeoPoint) {
@@ -95,19 +183,120 @@ class CommonActivity : MvpAppCompatActivity(), CommonView {
     }
 
     fun fabClick(view: View) {
-        when(view.id){
-            R.id.common_myLocation->{
-                presenter.setCenter(LocationListener.imHere)
+        when (view.id) {
+            R.id.common_myLocation -> {
+                if (locationOverlay?.isFollowLocationEnabled!!) {
+                    locationOverlay?.disableFollowLocation()
+                    common_followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.viewBackground))
+                    common_followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorPrimary))
+                }
+                if (locationOverlay?.lastFix != null) {
+                    presenter.setCenter(locationOverlay?.lastFix!!)
+                } else {
+                    showToastMessage("Ваше месторасположение не определено")
+                }
             }
-            R.id.common_followMe->{
-
+            R.id.common_followMe -> {
+                when {
+                    locationOverlay?.isFollowLocationEnabled!! -> {
+                        locationOverlay?.disableFollowLocation()
+                        common_followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.viewBackground))
+                        common_followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorPrimary))
+                    }
+                    !locationOverlay?.isFollowLocationEnabled!! -> {
+                        locationOverlay?.enableFollowLocation()
+                        common_followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorPrimary))
+                        common_followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.viewBackground))
+                    }
+                }
             }
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.common_menu,menu)
-        return true
+    override fun fillStatusBar(statusList: ArrayList<GpsStatus>) {
+        runOnUiThread {
+            when (resources.configuration.orientation) {
+                Configuration.ORIENTATION_LANDSCAPE -> {
+                    when (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) {
+                        Configuration.SCREENLAYOUT_SIZE_LARGE -> {
+                            common_followMe.size = FloatingActionButton.SIZE_NORMAL
+                            common_myLocation.size = FloatingActionButton.SIZE_NORMAL
+                        }
+                        Configuration.SCREENLAYOUT_SIZE_XLARGE -> {
+                            common_followMe.size = FloatingActionButton.SIZE_NORMAL
+                            common_myLocation.size = FloatingActionButton.SIZE_NORMAL
+                        }
+                        else -> {
+                            common_followMe.size = FloatingActionButton.SIZE_MINI
+                            common_myLocation.size = FloatingActionButton.SIZE_MINI
+                        }
+                    }
+                }
+                Configuration.ORIENTATION_PORTRAIT -> {
+                    when (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) {
+                        Configuration.SCREENLAYOUT_SIZE_LARGE -> {
+                            common_followMe.size = FloatingActionButton.SIZE_NORMAL
+                            common_myLocation.size = FloatingActionButton.SIZE_NORMAL
+                        }
+                        Configuration.SCREENLAYOUT_SIZE_XLARGE -> {
+                            common_followMe.size = FloatingActionButton.SIZE_NORMAL
+                            common_myLocation.size = FloatingActionButton.SIZE_NORMAL
+                        }
+                        else -> {
+                            common_followMe.size = FloatingActionButton.SIZE_MINI
+                            common_myLocation.size = FloatingActionButton.SIZE_MINI
+                        }
+                    }
+                }
+            }
+
+            if (common_fab_menu.childCount> 0) {
+                common_fab_menu.removeAllMenuButtons()
+            }
+
+            for (i in 0 until statusList.count()) {
+                val actionButton = com.github.clans.fab.FloatingActionButton(applicationContext)
+                actionButton.labelText = statusList[i].name
+                actionButton.colorNormal = ContextCompat.getColor(applicationContext, R.color.colorPrimary)
+                actionButton.setOnClickListener {
+                    if (common_fab_menu.isOpened) {
+                        presenter.sendStatusRequest(statusList[i].name)
+                        common_fab_menu.close(true)
+                    }
+                }
+                when (statusList[i].name) {
+                    "Заправляется" -> { actionButton.setImageResource(R.drawable.ic_refueling) }
+                    "Обед" -> { actionButton.setImageResource(R.drawable.ic_dinner) }
+                    "Ремонт" -> { actionButton.setImageResource(R.drawable.ic_repairs) }
+                    "Свободен" -> { actionButton.setImageResource(R.drawable.ic_freedom) }
+                    else -> { actionButton.setImageResource(R.drawable.ic_unknown_status) }
+                }
+                val sizeNormal = 0
+                val sizeMini = 1
+                when (resources.configuration.orientation) {
+                    Configuration.ORIENTATION_LANDSCAPE -> {
+                        when (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) {
+                            Configuration.SCREENLAYOUT_SIZE_LARGE -> { actionButton.buttonSize = sizeNormal }
+                            Configuration.SCREENLAYOUT_SIZE_XLARGE -> { actionButton.buttonSize = sizeNormal }
+                            else -> { actionButton.buttonSize = sizeMini }
+                        }
+                    }
+                    Configuration.ORIENTATION_PORTRAIT -> {
+                        when (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) {
+                            Configuration.SCREENLAYOUT_SIZE_LARGE -> { actionButton.buttonSize = sizeNormal }
+                            Configuration.SCREENLAYOUT_SIZE_XLARGE -> { actionButton.buttonSize = sizeNormal }
+                            else -> { actionButton.buttonSize = sizeMini }
+                        }
+                    }
+                }
+                common_fab_menu.addMenuButton(actionButton)
+            }
+        }
+    }
+
+    override fun createStatusTimer(time: Long) {
+        val dialog = StatusFragment.newInstance(time)
+        dialog.show(supportFragmentManager, "StatusTimer")
     }
 
     override fun setTitle(title: String) {
@@ -118,11 +307,11 @@ class CommonActivity : MvpAppCompatActivity(), CommonView {
 
     override fun showToastMessage(message: String) {
         runOnUiThread {
-            Toast.makeText(applicationContext,message,Toast.LENGTH_SHORT).show()
+            Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
         }
     }
 
-    override fun initMapView(){
+    override fun initMapView() {
         org.osmdroid.config.Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
         common_mapView.setTileSource(TileSourceFactory.MAPNIK)
         common_mapView.setHasTransientState(true)
@@ -130,30 +319,29 @@ class CommonActivity : MvpAppCompatActivity(), CommonView {
         common_mapView.isTilesScaledToDpi = true
         common_mapView.isFlingEnabled = true
 
-        presenter.setCenter(LocationListener.imHere)
+        presenter.setCenter(imHere)
     }
 
     override fun addOverlays() {
         org.osmdroid.config.Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
 
-        if(!common_mapView.overlays.contains(initLocationOverlay()))
-        {
-            common_mapView.overlays.add(initLocationOverlay())
-            locationOverlay.enableMyLocation()
+        initLocationOverlay()
+        initRotationGestureOverlay()
+        initScaleBarOverlay()
+
+        if (locationOverlay != null) {
+            common_mapView.overlays.add(locationOverlay)
+            locationOverlay?.enableMyLocation()
         }
 
-        if(!common_mapView.overlays.contains(initRotationGestureOverlay()))
-        {
-            common_mapView.overlays.add(initRotationGestureOverlay())
-
+        if (rotationGestureOverlay != null) {
+            common_mapView.overlays.add(rotationGestureOverlay)
         }
 
-        if(!common_mapView.overlays.contains(initScaleBarOverlay()))
-        {
-            common_mapView.overlays.add(initScaleBarOverlay())
-            scaleBarOverlay.enableScaleBar()
+        if (scaleBarOverlay != null) {
+            common_mapView.overlays.add(scaleBarOverlay)
+            scaleBarOverlay?.enableScaleBar()
         }
-
     }
 
     override fun createSettingGpsDialog() {
@@ -175,7 +363,7 @@ class CommonActivity : MvpAppCompatActivity(), CommonView {
                 }
                 runOnUiThread {
                     LocationListener(locationManager)
-                    initPresenter(locationManager,preferences)
+                    initPresenter(locationManager, preferences)
                 }
             }
         }
@@ -183,30 +371,30 @@ class CommonActivity : MvpAppCompatActivity(), CommonView {
 
     private fun initLocationOverlay(): MyLocationNewOverlay {
         val gpsMyLocationProvider = GpsMyLocationProvider(applicationContext)
-        locationOverlay = if(LocationListener.imHere!=null){
-            Log.d("CommonActivity","Init locationOverlay")
-            gpsMyLocationProvider.addLocationSource(LocationListener.imHere!!.provider)
-            MyLocationNewOverlay(gpsMyLocationProvider,common_mapView)
+        locationOverlay = if (imHere != null) {
+            Log.d("CommonActivity", "Init locationOverlay")
+            gpsMyLocationProvider.addLocationSource(imHere!!.provider)
+            MyLocationNewOverlay(gpsMyLocationProvider, common_mapView)
         } else {
             MyLocationNewOverlay(common_mapView)
         }
-        locationOverlay.setDirectionArrow(presenter.customIcon(R.drawable.ic_navigator_icon,applicationContext),presenter.customIcon(R.drawable.ic_navigator_active_icon,applicationContext))
-        locationOverlay.isDrawAccuracyEnabled = false
-        return locationOverlay
+        locationOverlay?.setDirectionArrow(presenter.customIcon(R.drawable.ic_navigator_icon, applicationContext), presenter.customIcon(R.drawable.ic_navigator_active_icon, applicationContext))
+        locationOverlay?.isDrawAccuracyEnabled = false
+        return locationOverlay!!
     }
 
     private fun initRotationGestureOverlay(): RotationGestureOverlay {
         rotationGestureOverlay = RotationGestureOverlay(common_mapView)
-        rotationGestureOverlay.isEnabled = true
+        rotationGestureOverlay?.isEnabled = true
         common_mapView.setMultiTouchControls(true)
-        return rotationGestureOverlay
+        return rotationGestureOverlay!!
     }
 
     private fun initScaleBarOverlay(): ScaleBarOverlay {
         scaleBarOverlay = ScaleBarOverlay(common_mapView)
-        scaleBarOverlay.setCentred(true)
-        scaleBarOverlay.setScaleBarOffset(resources.displayMetrics.widthPixels / 2, 10)
-        return scaleBarOverlay
+        scaleBarOverlay?.setCentred(true)
+        scaleBarOverlay?.setScaleBarOffset(resources.displayMetrics.widthPixels / 2, 10)
+        return scaleBarOverlay!!
     }
 
     override fun startService(credentials: Credentials, hostPool: HostPool) {
@@ -235,8 +423,6 @@ class CommonActivity : MvpAppCompatActivity(), CommonView {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        presenter.onDestroy()
+    override fun onBackPressed() {
     }
 }

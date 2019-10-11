@@ -5,10 +5,12 @@ import android.view.View
 import com.arellomobile.mvp.InjectViewState
 import com.arellomobile.mvp.MvpPresenter
 import com.google.firebase.iid.FirebaseInstanceId
+import java.lang.Thread.sleep
 import javax.security.auth.Destroyable
 import newVersion.Utils.DataStoreUtils
 import newVersion.Utils.newCredetials
 import newVersion.commonInterface.Init
+import newVersion.login.resource.AdapterIpAddress
 import newVersion.models.Auth
 import newVersion.models.Credentials
 import newVersion.models.HostPool
@@ -17,8 +19,7 @@ import newVersion.network.auth.AuthAPI
 import newVersion.network.auth.OnAuthListener
 import newVersion.network.auth.RPAuthAPI
 import org.greenrobot.eventbus.EventBus
-import ru.rubeg38.rubegprotocol.RubegProtocol
-import java.lang.Thread.sleep
+import rubegprotocol.RubegProtocol
 
 @InjectViewState
 class LoginPresenter : MvpPresenter<LoginView>(), OnAuthListener, Destroyable, Init {
@@ -144,6 +145,9 @@ class LoginPresenter : MvpPresenter<LoginView>(), OnAuthListener, Destroyable, I
         if (!isAddressValid || !isPortValid || !isImeiValid || !isFcmTokenValid) {
             if (!isFcmTokenValid) {
                 viewState.showToastMessage("Устройств не может получить google token, возможно на устройстве не установлены сервисы Google")
+            }
+            if (!isImeiValid) {
+                viewState.showToastMessage("Не удалось получить Imei устройства")
             }
             viewState.closeDialog()
             return
