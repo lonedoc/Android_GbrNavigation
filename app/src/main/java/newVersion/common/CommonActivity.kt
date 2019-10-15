@@ -37,8 +37,8 @@ import newVersion.models.HostPool
 import newVersion.servicess.LocationListener
 import newVersion.servicess.LocationListener.Companion.imHere
 import newVersion.servicess.NetworkService
-import oldVersion.workservice.Alarm
-import oldVersion.workservice.GpsStatus
+import newVersion.Utils.Alarm
+import newVersion.Utils.GpsStatus
 import oldVersion.workservice.NotificationService
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -113,8 +113,15 @@ class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
         isAlive = true
         presenter.setTitle()
 
-        if (DataStoreUtils.namegbr != null)
-            presenter.sendAlarmRequest(DataStoreUtils.namegbr!!)
+        when{
+            intent.hasExtra("alarm")->{
+                openAlarmDialog(alarm = intent.getSerializableExtra("alarm") as Alarm)
+            }
+            else->{
+                if (DataStoreUtils.namegbr != null)
+                    presenter.sendAlarmRequest(DataStoreUtils.namegbr!!)
+            }
+        }
 
         presenter.fillStatusBar()
         presenter.getContext(null)

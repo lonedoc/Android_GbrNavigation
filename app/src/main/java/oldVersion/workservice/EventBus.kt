@@ -1,5 +1,8 @@
 package oldVersion.workservice
 
+import newVersion.Utils.AreaInfo
+import newVersion.Utils.ResponsibleList
+
 data class AlarmEvent(
     val command: String,
     val name: String,
@@ -10,7 +13,7 @@ data class AlarmEvent(
     var zakaz: String = "",
     val address: String,
     val area: AreaInfo,
-    val otvl: ArrayList<OtvlList> = ArrayList(),
+    val responsible: ArrayList<ResponsibleList> = ArrayList(),
     val plan: ArrayList<String> = ArrayList(),
     val photo: ArrayList<String> = ArrayList()
 )

@@ -1,7 +1,7 @@
 package newVersion.models
 
-import oldVersion.workservice.CityCard
-import oldVersion.workservice.GpsStatus
+import newVersion.Utils.CityCard
+import newVersion.Utils.GpsStatus
 
 data class Auth(
     var authInfo: AuthInfo?,

@@ -62,5 +62,6 @@
     <string name="object_time_arrived">Время прибытия:</string>
     <string name="object_additionally">Дополнительно:</string>
     <string name="object_number">Номер объекта:</string>
+    <string name="position">Должность:</string>
 
 </resources>

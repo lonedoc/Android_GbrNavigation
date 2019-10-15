@@ -17,7 +17,7 @@ import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 import kobramob.rubeg38.ru.gbrnavigation.R
 import oldVersion.resource.DataStore
-import oldVersion.workservice.EsInfo
+import newVersion.Utils.EsInfo
 
 class ESInfoFragment : Fragment() {
     override fun onCreateView(

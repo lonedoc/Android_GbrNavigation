@@ -1,8 +1,6 @@
 package newVersion.Utils
 
 import newVersion.models.AuthInfo
-import oldVersion.workservice.CityCard
-import oldVersion.workservice.GpsStatus
 
 object DataStoreUtils {
     var call: String? = null

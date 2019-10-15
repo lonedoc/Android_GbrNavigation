@@ -7,7 +7,7 @@ import newVersion.commonInterface.Destroyable
 import newVersion.commonInterface.Init
 import newVersion.models.CardEvent
 import newVersion.models.EnableButtons
-import oldVersion.workservice.Alarm
+import newVersion.Utils.Alarm
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -28,10 +28,12 @@ class CardPresenter : MvpPresenter<CardView>(), Destroyable, Init {
         setInn(info.inn)
         setAlarm(info.area?.name)
         setAlarmTime(info.area?.alarmtime)
-
+        setAdditionally(info.additionally)
         if(!EventBus.getDefault().isRegistered(this))
         EventBus.getDefault().register(this)
     }
+
+
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     fun enableButtons(event: EnableButtons) {
@@ -42,6 +44,16 @@ class CardPresenter : MvpPresenter<CardView>(), Destroyable, Init {
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     fun getCurrentTime(event: CurrentTime){
         setAlarmTimeApply(event.currentTime)
+    }
+
+    private fun setAdditionally(additionally: String?) {
+        if(additionally!=null){
+            viewState.setObjectAdditionally(additionally)
+        }
+        else
+        {
+            viewState.setObjectAdditionally("")
+        }
     }
 
     private fun setNumber(number: String?) {
@@ -91,6 +103,10 @@ class CardPresenter : MvpPresenter<CardView>(), Destroyable, Init {
         viewState.setObjectTimeApplyAlarm(currentTime)
     }
 
+    private fun setTimeArrived(arrivedTime:String){
+        viewState.setObjectTimeArrived(arrivedTime)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         if(EventBus.getDefault().isRegistered(this))
@@ -101,5 +117,14 @@ class CardPresenter : MvpPresenter<CardView>(), Destroyable, Init {
         EventBus.getDefault().post(CardEvent(action = action))
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
+    fun timeArrived(event:ArrivedTime){
+        val hours = event.arrivedTime / 3600
+        val minute = (event.arrivedTime  % 3600) / 60
+        val seconds = event.arrivedTime  % 60
+        setTimeArrived("$hours:$minute:$seconds")
+    }
 
 }
+
+data class ArrivedTime(var arrivedTime: Int)

@@ -26,11 +26,11 @@ class ResponsibleFragment : androidx.fragment.app.Fragment() {
 
         val alarmObjectInfo = activity!!.intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
 
-        if (alarmObjectInfo.otvlList.count()> 0) {
+        if (alarmObjectInfo.responsibleList.count()> 0) {
             responsibleList.layoutManager = LinearLayoutManager(activity)
             responsibleList.adapter =
                 AdapterResponsibleList(
-                    alarmObjectInfo.otvlList,
+                    alarmObjectInfo.responsibleList,
                     context
                 )
 

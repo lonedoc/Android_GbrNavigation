@@ -4,13 +4,13 @@ import com.arellomobile.mvp.MvpAppCompatFragment
 import com.arellomobile.mvp.MvpView
 import com.arellomobile.mvp.viewstate.strategy.SkipStrategy
 import com.arellomobile.mvp.viewstate.strategy.StateStrategyType
-import oldVersion.workservice.Alarm
+import newVersion.Utils.Alarm
 
 interface AlarmView : MvpView {
     fun setTitle(title: String)
     fun openFragment(fragment: MvpAppCompatFragment)
     fun startTimer()
-    fun completeAlarm()
+    fun completeAlarm(alarm:Alarm?)
 
     @StateStrategyType(value = SkipStrategy::class)
     fun showToastMessage(message: String)

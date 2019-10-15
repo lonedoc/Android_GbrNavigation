@@ -29,8 +29,8 @@ import newVersion.network.status.OnStatusListener
 import newVersion.network.status.RPStatusAPI
 import newVersion.network.status.StatusAPI
 import newVersion.servicess.NetworkService
-import oldVersion.workservice.Alarm
-import oldVersion.workservice.GpsStatus
+import newVersion.Utils.Alarm
+import newVersion.Utils.GpsStatus
 import org.greenrobot.eventbus.EventBus
 import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol
@@ -46,14 +46,16 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
 
     override fun onAlarmDataReceived(alarm: Alarm) {
         Log.d("CommonPresenter", "$alarm")
-        sleep(2000)
+
         if (!AlarmDialogFragment.isAlive)
             if (CommonActivity.isAlive)
                 viewState.openAlarmDialog(alarm)
             else {
+                sleep(2000)
                 val unsleepActivity = Intent(context, CommonActivity::class.java)
                 unsleepActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 unsleepActivity.putExtra("activeSound", false)
+                unsleepActivity.putExtra("alarm",alarm)
                 context?.startActivity(unsleepActivity)
             }
     }

@@ -2,7 +2,7 @@ package oldVersion.commonactivity
 
 import android.util.Log
 import java.io.Serializable
-import oldVersion.workservice.OtvlList
+import newVersion.Utils.ResponsibleList
 
 class AlarmObjectInfo() : Serializable {
     var name: String? = null
@@ -15,7 +15,7 @@ class AlarmObjectInfo() : Serializable {
     var areaName: String? = null
     var areaAlarmTime: String? = null
     val planAndPhotoList: ArrayList<String> = ArrayList()
-    val otvlList: ArrayList<OtvlList> = ArrayList()
+    val responsibleList: ArrayList<ResponsibleList> = ArrayList()
     val reportsList: ArrayList<String> = ArrayList()
     constructor(
         name: String,
@@ -28,7 +28,7 @@ class AlarmObjectInfo() : Serializable {
         areaName: String,
         areaAlarmTime: String,
         planAndPhotoList: ArrayList<String> = ArrayList(),
-        otvlList: ArrayList<OtvlList> = ArrayList(),
+        responsibleList: ArrayList<ResponsibleList> = ArrayList(),
         reportsList: ArrayList<String> = ArrayList()
     ) : this() {
         this.name = name
@@ -41,12 +41,12 @@ class AlarmObjectInfo() : Serializable {
         this.areaName = areaName
         this.areaAlarmTime = areaAlarmTime
         this.planAndPhotoList.addAll(planAndPhotoList)
-        this.otvlList.addAll(otvlList)
+        this.responsibleList.addAll(responsibleList)
         this.reportsList.addAll(reportsList)
     }
 
     fun isNotEmpty(): Boolean {
-        return this.name != null || this.number != null || this.lon != null || this.lat != null || this.inn != null || this.zakaz != null || this.address != null || this.areaName != null || this.areaAlarmTime != null || this.planAndPhotoList.count()> 0 || this.otvlList.count()> 0 || this.reportsList.count()> 0
+        return this.name != null || this.number != null || this.lon != null || this.lat != null || this.inn != null || this.zakaz != null || this.address != null || this.areaName != null || this.areaAlarmTime != null || this.planAndPhotoList.count()> 0 || this.responsibleList.count()> 0 || this.reportsList.count()> 0
     }
     fun clear() {
         this.name = null
@@ -59,14 +59,14 @@ class AlarmObjectInfo() : Serializable {
         this.areaName = null
         this.areaAlarmTime = null
         this.planAndPhotoList.clear()
-        this.otvlList.clear()
+        this.responsibleList.clear()
         this.reportsList.clear()
     }
     fun print() {
         Log.d(
             "AlarmObjectInfo",
             " \n \n Name = $name \n Number = $number \n Lon = $lon \n Lat = $lat \n Zakaz = $zakaz \n address = $address \n areaName = $areaName \n " +
-                "areaAlarmTime = $areaAlarmTime \n $planAndPhotoList \n $otvlList \n $reportsList"
+                "areaAlarmTime = $areaAlarmTime \n $planAndPhotoList \n $responsibleList \n $reportsList"
         )
     }
 }

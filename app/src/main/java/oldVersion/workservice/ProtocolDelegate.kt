@@ -9,6 +9,10 @@ import com.google.gson.Gson
 import java.util.*
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocol
 import kobramob.rubeg38.ru.networkprotocol.RubegProtocolDelegate
+import newVersion.Utils.Alarm
+import newVersion.Utils.NotAlarmGson
+import newVersion.Utils.RegistrationGson
+import newVersion.Utils.StatusGson
 import oldVersion.resource.ControlLifeCycleService.startService
 import oldVersion.resource.DataStore
 import org.greenrobot.eventbus.EventBus

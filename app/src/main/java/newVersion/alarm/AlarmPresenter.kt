@@ -1,6 +1,7 @@
 package newVersion.alarm
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import com.arellomobile.mvp.InjectViewState
 import com.arellomobile.mvp.MvpPresenter
@@ -19,7 +20,9 @@ import newVersion.network.complete.CompleteAPI
 import newVersion.network.complete.OnCompleteListener
 import newVersion.network.complete.RPCompleteAPI
 import newVersion.servicess.LocationListener.Companion.imHere
-import oldVersion.workservice.Alarm
+import newVersion.Utils.Alarm
+import newVersion.alarm.card.ArrivedTime
+import newVersion.common.CommonActivity
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -83,20 +86,37 @@ class AlarmPresenter : MvpPresenter<AlarmView>(), OnAlarmListener, OnCompleteLis
 
     override fun onCompleteDataReceived(name: String) {
         Log.d("CompletePresenter", name)
-
         when {
             name != alarmInfo?.name -> return
+
             name == alarmInfo?.name -> {
                 viewState.showToastMessage("Тревога завершена")
-                viewState.completeAlarm()
+                viewState.completeAlarm(null)
             }
         }
     }
 
     override fun onAlarmDataReceived(alarm: Alarm) {
         Log.d("AlarmPresenter", "$alarm")
-        viewState.showToastMessage("Новая тревога")
-        viewState.completeAlarm()
+
+        if(alarm.name!=alarmInfo?.name)
+        when{
+            !AlarmActivity.isAlive ->{
+                Log.d("AlarmPresenter","New alarm")
+                viewState.showToastMessage("Тревога завершена")
+                AlarmActivity.elapsedMillis = null
+                val intent = Intent(context, CommonActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                intent.putExtra("alarm",alarm)
+                context?.startActivity(intent)
+                onDestroy()
+            }
+            else->{
+                viewState.showToastMessage("Новая тревога")
+                viewState.completeAlarm(alarm)
+            }
+        }
+
     }
 
     fun sendArrived() {
@@ -109,6 +129,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(), OnAlarmListener, OnCompleteLis
                 changeStateButton(enableArrived = false, enableReport = true)
                 completeApi?.sendArrivedObject(alarmInfo?.number!!) {
                     if (it) {
+
                         viewState.showToastMessage("Сообщение о прибытие было доставлено, теперь вы можете отправить рапорт")
                     } else {
                         viewState.showToastMessage("Сообщение о прибытие не было доставлено, отправка повторится через несколько секунд")
@@ -172,18 +193,21 @@ class AlarmPresenter : MvpPresenter<AlarmView>(), OnAlarmListener, OnCompleteLis
                 strDistance.toLong()
         else{
             viewState.showToastMessage("Ошибка: Дистанция для прибытия не была указана, автоматическое прибытие отключено")
+            changeStateButton(enableArrived = true, enableReport = false)
             return
         }
 
         if(lon==null || lat == null)
         {
             viewState.showToastMessage("Ошибка: Не указаны координаты до объекта, автоматическое прибытие отменено")
+            changeStateButton(enableArrived = true, enableReport = false)
             return
         }
 
         if(lon=="0" || lat=="0")
         {
             viewState.showToastMessage("Ошибка: Не указаны координаты до объекта, автоматическое прибытие отменено")
+            changeStateButton(enableArrived = true, enableReport = false)
             return
         }
 

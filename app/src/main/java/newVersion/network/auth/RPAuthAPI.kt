@@ -7,7 +7,7 @@ import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import newVersion.models.Auth
 import newVersion.models.AuthInfo
 import newVersion.models.Credentials
-import oldVersion.workservice.RegistrationGson
+import newVersion.Utils.RegistrationGson
 import org.json.JSONObject
 import ru.rubeg38.rubegprotocol.TextMessageWatcher
 import rubegprotocol.RubegProtocol

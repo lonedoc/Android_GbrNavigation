@@ -5,8 +5,8 @@ import com.arellomobile.mvp.viewstate.strategy.SkipStrategy
 import com.arellomobile.mvp.viewstate.strategy.StateStrategyType
 import newVersion.models.Credentials
 import newVersion.models.HostPool
-import oldVersion.workservice.Alarm
-import oldVersion.workservice.GpsStatus
+import newVersion.Utils.Alarm
+import newVersion.Utils.GpsStatus
 import org.osmdroid.util.GeoPoint
 
 interface CommonView : MvpView {

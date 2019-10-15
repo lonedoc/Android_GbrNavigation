@@ -1,5 +1,6 @@
-package oldVersion.workservice
+package newVersion.Utils
 
+import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 
 data class Alarm(
@@ -12,7 +13,8 @@ data class Alarm(
     var zakaz: String? = null,
     val address: String? = null,
     val area: AreaInfo? = null,
-    val otvl: ArrayList<OtvlList> = ArrayList(),
+    @SerializedName("dop") var additionally:String? = null,
+    @SerializedName("otvl") val responsibleList: ArrayList<ResponsibleList> = ArrayList(),
     val plan: ArrayList<String> = ArrayList(),
     val photo: ArrayList<String> = ArrayList()
 ) : Serializable
@@ -55,4 +57,4 @@ data class UsInfo(val name: String, val phone: String) : Serializable
 
 data class AreaInfo(val name: String, val alarmtime: String) : Serializable
 
-data class OtvlList(val name: String, val position: String, val phone: String, val phoneh: String, val phonew: String, val address: String) : Serializable
+data class ResponsibleList(val name: String, val position: String, val phone: String, val phoneh: String, val phonew: String, val address: String) : Serializable

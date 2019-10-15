@@ -1,6 +1,6 @@
 package newVersion.network.alarm
 
-import oldVersion.workservice.Alarm
+import newVersion.Utils.Alarm
 
 interface OnAlarmListener {
     fun onAlarmDataReceived(alarm: Alarm)

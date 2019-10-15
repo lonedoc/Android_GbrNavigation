@@ -1,6 +1,6 @@
 package newVersion.callback
 
-import oldVersion.workservice.Alarm
+import newVersion.Utils.Alarm
 
 interface CommonCallback {
     fun applyAlarm(alarm: Alarm)

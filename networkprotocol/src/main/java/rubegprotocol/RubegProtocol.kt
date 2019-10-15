@@ -401,10 +401,6 @@ class RubegProtocol {
         val buffer = ByteBuffer.wrap(packet.encode())
         val host = hosts[currentHostIndex % hosts.count()]
 
-        println("HOSTS -> $hosts")
-        println("CurrentHostIndex -> $currentHostIndex")
-        println("HOST -> $host")
-
         if(currentHostIndex>hosts.count() && incomingMessagesCount==0.toLong()){
             val jsonObject = JSONObject()
             jsonObject.put("\$c$","ServerNotResponse")
@@ -430,15 +426,19 @@ class RubegProtocol {
     private fun handleData(packet: DataPacket) {
         val messageNumber = packet.headers.messageNumber
 
+        val acknowledgement = AcknowledgementPacket(packet)
+
+        packetsQueue.enqueue(acknowledgement, Priority.HIGH)
+
         if (!incomingTransmissions.containsKey(messageNumber) && messageNumber <= incomingMessagesCount && messageNumber != 0L)
             return
+
+
 
         if (messageNumber > incomingMessagesCount)
             incomingMessagesCount = messageNumber
 
-        val acknowledgement = AcknowledgementPacket(packet)
 
-        packetsQueue.enqueue(acknowledgement, Priority.HIGH)
 
         if (!incomingTransmissions.containsKey(messageNumber))
             incomingTransmissions[messageNumber] = IncomingTransmission()

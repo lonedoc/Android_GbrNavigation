@@ -15,7 +15,9 @@ import newVersion.Utils.DataStoreUtils
 import newVersion.alarm.pager.AlarmTabFragment
 import newVersion.callback.ReportCallback
 import newVersion.common.CommonActivity
-import oldVersion.workservice.Alarm
+import newVersion.Utils.Alarm
+import newVersion.alarm.card.ArrivedTime
+import org.greenrobot.eventbus.EventBus
 
 class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
     override fun recallActivity(alarmInfo: Alarm?) {
@@ -111,6 +113,7 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
                 }
                 .setPositiveButton("Отправить"){
                         dialogInterface, i ->
+                    EventBus.getDefault().postSticky(ArrivedTime((elapsedMillis?.div(1000))?.toInt()!!))
                     presenter.sendArrived()
                 }
                 .show()
@@ -124,7 +127,7 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
         }
     }
 
-    override fun completeAlarm() {
+    override fun completeAlarm(alarm:Alarm?) {
         runOnUiThread {
             alarm_timer.stop()
 
@@ -135,6 +138,8 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
             presenter.onDestroy()
 
             val intent = Intent(applicationContext, CommonActivity::class.java)
+            if(alarm!=null)
+                intent.putExtra("alarm",alarm)
             startActivity(intent)
         }
     }
