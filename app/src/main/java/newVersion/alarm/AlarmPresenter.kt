@@ -91,6 +91,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(), OnAlarmListener, OnCompleteLis
 
             name == alarmInfo?.name -> {
                 viewState.showToastMessage("Тревога завершена")
+                DataStoreUtils.status = "Свободен"
                 viewState.completeAlarm(null)
             }
         }

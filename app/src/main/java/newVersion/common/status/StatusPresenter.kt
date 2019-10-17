@@ -16,9 +16,10 @@ import rubegprotocol.RubegProtocol
 class StatusPresenter : MvpPresenter<StatusView>(), OnStatusListener, Destroyable, Init {
     override fun onStatusDataReceived(status: String, call: String) {
         Log.d("StatusPresenter", status)
-        DataStoreUtils.status = status
-        DataStoreUtils.call = call
-        viewState.onDismiss()
+        if(status =="На тревоге") return
+            DataStoreUtils.status = status
+            DataStoreUtils.call = call
+            viewState.onDismiss()
     }
 
     var statusAPI: StatusAPI? = null

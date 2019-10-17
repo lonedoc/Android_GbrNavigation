@@ -11,6 +11,8 @@ import newVersion.Utils.Alarm
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import java.text.SimpleDateFormat
+import java.util.*
 
 @InjectViewState
 class CardPresenter : MvpPresenter<CardView>(), Destroyable, Init {
@@ -119,10 +121,15 @@ class CardPresenter : MvpPresenter<CardView>(), Destroyable, Init {
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     fun timeArrived(event:ArrivedTime){
+        val currentTime: String = SimpleDateFormat(
+            "HH:mm:ss",
+            Locale.getDefault()
+        ).format(Date())
+
         val hours = event.arrivedTime / 3600
         val minute = (event.arrivedTime  % 3600) / 60
         val seconds = event.arrivedTime  % 60
-        setTimeArrived("$hours:$minute:$seconds")
+        setTimeArrived("$currentTime ($hours:$minute:$seconds)")
     }
 
 }

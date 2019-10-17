@@ -14,11 +14,12 @@ import androidx.core.content.ContextCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kobramob.rubeg38.ru.gbrnavigation.R
+import newVersion.alarm.AlarmActivity
 import newVersion.common.CommonActivity
 
 class FirebaseMessage : FirebaseMessagingService() {
     override fun onMessageReceived(p0: RemoteMessage) {
-        if(!CommonActivity.isAlive)
+        if(!CommonActivity.isAlive && !AlarmActivity.isAlive)
         when {
             p0.data["message"] == "Связь с сервером потеряна" -> {
                 Log.d("Push - message", "Связь с сервером потеряна")

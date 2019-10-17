@@ -26,6 +26,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         android:textColor="@color/textDark"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView13" />
@@ -48,6 +49,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:textColor="@color/textDark"
+        android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView15" />
 
@@ -122,6 +124,7 @@
         android:layout_marginTop="16dp"
         android:text="Мобильный:"
         android:textColor="@color/textDark"
+        android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/cardView" />
 
@@ -133,6 +136,7 @@
         android:layout_marginTop="8dp"
         android:text="Рабочий:"
         android:textColor="@color/textDark"
+        android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/personal_mobileNumber" />
 
@@ -144,6 +148,7 @@
         android:layout_marginTop="8dp"
         android:text="Домашний:"
         android:textColor="@color/textDark"
+        android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/personal_workNumber" />
 
@@ -154,6 +159,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:textColor="@color/textDark"
+        android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView14" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -106,7 +106,8 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
     }
 
     override fun onStatusDataReceived(status: String, call: String) {
-        if (DataStoreUtils.status != status) {
+        if (DataStoreUtils.status == status || status == "На тревоге") return
+
             DataStoreUtils.status = status
             DataStoreUtils.call = call
             fillStatusBar()
@@ -119,7 +120,7 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
                     viewState.createStatusTimer(statusList[i].time.toLong())
                 }
             }
-        }
+
     }
 
     fun sendStatusRequest(status: String) {
@@ -171,11 +172,14 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
         viewState.addOverlays()
 
         val protocol = RubegProtocol.sharedInstance
+
         if (statusAPI != null) statusAPI?.onDestroy()
+
         statusAPI = RPStatusAPI(protocol)
         statusAPI?.onStatusListener = this
 
         if (alarmApi != null) alarmApi?.onDestroy()
+
         alarmApi = RPAlarmAPI(protocol)
         alarmApi?.onAlarmListener = this
     }
