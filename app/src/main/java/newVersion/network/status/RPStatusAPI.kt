@@ -2,7 +2,7 @@ package newVersion.network.status
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import newVersion.Utils.StatusGson
+import newVersion.utils.StatusGson
 import org.json.JSONObject
 import ru.rubeg38.rubegprotocol.TextMessageWatcher
 import rubegprotocol.RubegProtocol

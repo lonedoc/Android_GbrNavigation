@@ -1,6 +1,6 @@
 package newVersion.network.alarm
 
-import newVersion.Utils.Alarm
+import newVersion.utils.Alarm
 
 interface OnAlarmListener {
     fun onAlarmDataReceived(alarm: Alarm)

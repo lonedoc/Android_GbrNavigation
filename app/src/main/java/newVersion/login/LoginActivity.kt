@@ -17,14 +17,14 @@ import java.lang.Exception
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_login.*
-import newVersion.Utils.PrefsUtil
+import newVersion.utils.PrefsUtil
 import newVersion.common.CommonActivity
 import newVersion.login.resource.AdapterIpAddress
 import newVersion.login.resource.ProgressDialog
 import newVersion.models.HostPool
 import newVersion.models.Preferences
 import newVersion.servicess.NetworkService
-import oldVersion.workservice.NotificationService
+import newVersion.servicess.NotificationService
 import ru.rubeg38.technicianmobile.utils.setOnTextChanged
 
 class LoginActivity : MvpAppCompatActivity(), LoginView {

@@ -4,7 +4,7 @@ import com.arellomobile.mvp.MvpAppCompatFragment
 import com.arellomobile.mvp.MvpView
 import com.arellomobile.mvp.viewstate.strategy.SkipStrategy
 import com.arellomobile.mvp.viewstate.strategy.StateStrategyType
-import newVersion.Utils.Alarm
+import newVersion.utils.Alarm
 
 interface AlarmView : MvpView {
     fun setTitle(title: String)

@@ -7,8 +7,8 @@ import com.arellomobile.mvp.MvpPresenter
 import com.google.firebase.iid.FirebaseInstanceId
 import java.lang.Thread.sleep
 import javax.security.auth.Destroyable
-import newVersion.Utils.DataStoreUtils
-import newVersion.Utils.newCredetials
+import newVersion.utils.DataStoreUtils
+import newVersion.utils.newCredetials
 import newVersion.commonInterface.Init
 import newVersion.login.resource.AdapterIpAddress
 import newVersion.models.Auth

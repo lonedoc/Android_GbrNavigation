@@ -4,7 +4,7 @@ import android.os.CountDownTimer
 import android.util.Log
 import com.arellomobile.mvp.InjectViewState
 import com.arellomobile.mvp.MvpPresenter
-import newVersion.Utils.DataStoreUtils
+import newVersion.utils.DataStoreUtils
 import newVersion.commonInterface.Destroyable
 import newVersion.commonInterface.Init
 import newVersion.network.status.OnStatusListener

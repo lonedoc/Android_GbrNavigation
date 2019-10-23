@@ -7,7 +7,7 @@ import newVersion.commonInterface.Destroyable
 import newVersion.commonInterface.Init
 import newVersion.models.CardEvent
 import newVersion.models.EnableButtons
-import newVersion.Utils.Alarm
+import newVersion.utils.Alarm
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode

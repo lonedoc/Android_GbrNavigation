@@ -9,9 +9,7 @@ import android.view.View
 import android.widget.*
 import com.arellomobile.mvp.MvpAppCompatDialogFragment
 import kobramob.rubeg38.ru.gbrnavigation.R
-import newVersion.Utils.DataStoreUtils
 import newVersion.callback.ReportCallback
-import newVersion.common.alarm.AlarmDialogFragment
 
 class AlarmReportFragment:MvpAppCompatDialogFragment() {
 

@@ -2,10 +2,12 @@ package newVersion.alarm
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import com.arellomobile.mvp.InjectViewState
 import com.arellomobile.mvp.MvpPresenter
-import newVersion.Utils.DataStoreUtils
+import newVersion.utils.DataStoreUtils
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 import newVersion.alarm.pager.AlarmTabFragment
@@ -20,9 +22,17 @@ import newVersion.network.complete.CompleteAPI
 import newVersion.network.complete.OnCompleteListener
 import newVersion.network.complete.RPCompleteAPI
 import newVersion.servicess.LocationListener.Companion.imHere
-import newVersion.Utils.Alarm
-import newVersion.alarm.card.ArrivedTime
+import newVersion.utils.Alarm
+import newVersion.alarm.AlarmActivity.Companion.elapsedMillis
+import newVersion.alarm.plan.PlanPresenter.Companion.plan
 import newVersion.common.CommonActivity
+import newVersion.models.RefreshPlan
+import newVersion.network.image.ImageAPI
+import newVersion.network.image.OnImageListener
+import newVersion.network.image.RPImageAPI
+import newVersion.network.status.OnStatusListener
+import newVersion.network.status.RPStatusAPI
+import newVersion.network.status.StatusAPI
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -30,14 +40,42 @@ import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol
 
 @InjectViewState
-class AlarmPresenter : MvpPresenter<AlarmView>(), OnAlarmListener, OnCompleteListener, Destroyable, Init {
+class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListener, OnAlarmListener, OnCompleteListener, Destroyable, Init {
+    override fun onStatusDataReceived(status: String, call: String) {
+        if(status == "Свободен")
+            viewState.completeAlarm(null)
+    }
+
+    override fun onImageDataReceived(imageByte: ByteArray) {
+        val bitmap: Bitmap = BitmapFactory.decodeByteArray(imageByte, 0, imageByte.count())
+        for(i in 0 until plan.count())
+        {
+            if(plan[i]==null){
+                plan[i]=bitmap
+                break
+            }
+        }
+
+        EventBus.getDefault().post(
+            RefreshPlan(
+                true
+            )
+        )
+
+    }
+
+
 
     override var init: Boolean = false
-    private var alarmApi: AlarmAPI? = null
-    private var completeApi: CompleteAPI? = null
+
     private var alarmInfo: Alarm? = null
     private var context:Context? = null
     private var checkArrivedAlive = false
+
+    private var imageApi: ImageAPI? = null
+    private var alarmApi: AlarmAPI? = null
+    private var completeApi: CompleteAPI? = null
+    private var statusApi:StatusAPI? = null
 
     override fun isInit(): Boolean {
         return init
@@ -60,6 +98,14 @@ class AlarmPresenter : MvpPresenter<AlarmView>(), OnAlarmListener, OnCompleteLis
         if (this.completeApi != null) completeApi?.onDestroy()
         this.completeApi = RPCompleteAPI(protocol)
         this.completeApi?.onCompleteListener = this
+
+        if(this.imageApi != null) return
+        this.imageApi = RPImageAPI(protocol = protocol)
+        this.imageApi?.onImageListener = this
+
+        if(this.statusApi != null) return
+        this.statusApi = RPStatusAPI(protocol = protocol)
+        this.statusApi?.onStatusListener = this
 
         viewState.startTimer()
         viewState.openFragment(AlarmTabFragment())
@@ -227,7 +273,15 @@ class AlarmPresenter : MvpPresenter<AlarmView>(), OnAlarmListener, OnCompleteLis
                 if(endPoint.distanceToAsDouble(GeoPoint(imHere)) > distance) continue
 
                 if (!AlarmActivity.isAlive)
-                    viewState.recallActivity(alarmInfo)
+                {
+                    val recallActivity = Intent( context,AlarmActivity::class.java)
+                    recallActivity.putExtra("info",alarmInfo)
+                    recallActivity.putExtra("elapsedMillis",elapsedMillis)
+                    recallActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context?.startActivity(recallActivity)
+                    return@thread
+                }
+
 
                 Log.d("AlarmPresenter","${endPoint.distanceToAsDouble(GeoPoint(imHere))}")
                 viewState.showArrivedDialog()
@@ -247,15 +301,21 @@ class AlarmPresenter : MvpPresenter<AlarmView>(), OnAlarmListener, OnCompleteLis
     }
 
     override fun onDestroy() {
+
         init = false
+
         checkArrivedAlive = false
+
         alarmApi?.onDestroy()
         completeApi?.onDestroy()
+        imageApi?.onDestroy()
+        statusApi?.onDestroy()
 
         if(EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().unregister(this)
 
         super.onDestroy()
     }
+
 
 }

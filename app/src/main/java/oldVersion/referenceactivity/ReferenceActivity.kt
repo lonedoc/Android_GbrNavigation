@@ -16,8 +16,6 @@ import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
 import java.lang.Exception
 import kobramob.rubeg38.ru.gbrnavigation.R
-import oldVersion.commonactivity.AlarmObjectInfo
-import oldVersion.objectactivity.ObjectActivity
 import oldVersion.resource.DataStore
 
 class ReferenceActivity : AppCompatActivity() {
@@ -59,10 +57,10 @@ class ReferenceActivity : AppCompatActivity() {
           /*  val commonActivity = Intent(this, CommonActivity::class.java)
             startActivity(commonActivity)*/
         } else {
-            val objectInfo: AlarmObjectInfo = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
+      /*      val objectInfo: AlarmObjectInfo = intent.getSerializableExtra("objectInfo") as AlarmObjectInfo
             val objectActivity = Intent(this, ObjectActivity::class.java)
             objectActivity.putExtra("objectInfo", objectInfo)
-            startActivity(objectActivity)
+            startActivity(objectActivity)*/
         }
     }
 }

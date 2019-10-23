@@ -2,7 +2,7 @@ package newVersion.alarm.responsible
 
 import com.arellomobile.mvp.InjectViewState
 import com.arellomobile.mvp.MvpPresenter
-import newVersion.Utils.Alarm
+import newVersion.utils.Alarm
 import newVersion.commonInterface.Destroyable
 import newVersion.commonInterface.Init
 

@@ -32,7 +32,6 @@ class FirebaseMessage : FirebaseMessagingService() {
 
                 val soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + packageName + "/" + R.raw.alarm_sound)
                 alarmBuilder.setContentTitle("Тревога")
-                    /*.setContentIntent(pendingIntent)*/
                     .setContentText("${p0.data["message"]}")
                     .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
                     .setCategory(NotificationCompat.CATEGORY_ALARM)

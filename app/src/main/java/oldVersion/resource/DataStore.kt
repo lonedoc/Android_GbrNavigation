@@ -1,7 +1,7 @@
 package oldVersion.resource
 
-import newVersion.Utils.CityCard
-import newVersion.Utils.GpsStatus
+import newVersion.utils.CityCard
+import newVersion.utils.GpsStatus
 
 object DataStore {
 

@@ -10,7 +10,7 @@ import android.widget.TextView
 import com.arellomobile.mvp.MvpAppCompatFragment
 import com.arellomobile.mvp.presenter.InjectPresenter
 import kobramob.rubeg38.ru.gbrnavigation.R
-import newVersion.Utils.Alarm
+import newVersion.utils.Alarm
 
 class CardFragment : MvpAppCompatFragment(), CardView {
 

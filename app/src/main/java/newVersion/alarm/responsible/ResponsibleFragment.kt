@@ -11,8 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.arellomobile.mvp.MvpAppCompatFragment
 import com.arellomobile.mvp.presenter.InjectPresenter
 import kobramob.rubeg38.ru.gbrnavigation.R
-import newVersion.Utils.Alarm
-import newVersion.Utils.ResponsibleList
+import newVersion.utils.Alarm
+import newVersion.utils.ResponsibleList
 import newVersion.alarm.responsible.personalCard.PersonalCardFragment
 
 class ResponsibleFragment : MvpAppCompatFragment(), ResponsibleView {

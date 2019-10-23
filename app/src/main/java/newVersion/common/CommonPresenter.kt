@@ -10,13 +10,13 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import com.arellomobile.mvp.InjectViewState
 import com.arellomobile.mvp.MvpPresenter
+import kobramob.rubeg38.ru.networkprotocol.BuildConfig
 import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
 import java.util.*
-import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
-import newVersion.Utils.DataStoreUtils
+import newVersion.utils.DataStoreUtils
 import newVersion.common.alarm.AlarmDialogFragment
 import newVersion.commonInterface.Destroyable
 import newVersion.commonInterface.Init
@@ -29,8 +29,8 @@ import newVersion.network.status.OnStatusListener
 import newVersion.network.status.RPStatusAPI
 import newVersion.network.status.StatusAPI
 import newVersion.servicess.NetworkService
-import newVersion.Utils.Alarm
-import newVersion.Utils.GpsStatus
+import newVersion.utils.Alarm
+import newVersion.utils.GpsStatus
 import org.greenrobot.eventbus.EventBus
 import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol

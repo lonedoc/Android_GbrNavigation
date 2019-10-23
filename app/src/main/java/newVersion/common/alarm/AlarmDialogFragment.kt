@@ -18,7 +18,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import kobramob.rubeg38.ru.gbrnavigation.R
 import newVersion.callback.CommonCallback
-import newVersion.Utils.Alarm
+import newVersion.utils.Alarm
 
 class AlarmDialogFragment : DialogFragment() {
 

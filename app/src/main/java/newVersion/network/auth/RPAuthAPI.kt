@@ -3,11 +3,11 @@ package newVersion.network.auth
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
+import kobramob.rubeg38.ru.networkprotocol.BuildConfig
 import newVersion.models.Auth
 import newVersion.models.AuthInfo
 import newVersion.models.Credentials
-import newVersion.Utils.RegistrationGson
+import newVersion.utils.RegistrationGson
 import org.json.JSONObject
 import ru.rubeg38.rubegprotocol.TextMessageWatcher
 import rubegprotocol.RubegProtocol

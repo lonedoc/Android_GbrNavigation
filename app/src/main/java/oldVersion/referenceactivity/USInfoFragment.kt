@@ -18,7 +18,7 @@ import java.lang.Exception
 import java.util.ArrayList
 import kobramob.rubeg38.ru.gbrnavigation.R
 import oldVersion.resource.DataStore
-import newVersion.Utils.UsInfo
+import newVersion.utils.UsInfo
 
 class USInfoFragment : Fragment() {
 

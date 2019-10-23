@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
+import android.util.Log
 import android.view.WindowManager
 import android.widget.Toast
 import com.arellomobile.mvp.MvpAppCompatActivity
@@ -11,20 +12,21 @@ import com.arellomobile.mvp.MvpAppCompatFragment
 import com.arellomobile.mvp.presenter.InjectPresenter
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlinx.android.synthetic.main.activity_alarm.*
-import newVersion.Utils.DataStoreUtils
+import newVersion.utils.Alarm
+import newVersion.utils.DataStoreUtils
+import newVersion.alarm.card.ArrivedTime
 import newVersion.alarm.pager.AlarmTabFragment
+import newVersion.alarm.plan.ImageScaleFragment
+import newVersion.alarm.plan.PlanPresenter
+import newVersion.alarm.plan.PlanPresenter.Companion.plan
 import newVersion.callback.ReportCallback
 import newVersion.common.CommonActivity
-import newVersion.Utils.Alarm
-import newVersion.alarm.card.ArrivedTime
 import org.greenrobot.eventbus.EventBus
+
 
 class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
     override fun recallActivity(alarmInfo: Alarm?) {
-        val recallActivity = Intent( applicationContext,AlarmActivity::class.java)
-        recallActivity.putExtra("infi",alarmInfo)
-        recallActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(recallActivity)
+
     }
 
     @InjectPresenter
@@ -35,12 +37,34 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
         var isAlive = false
     }
 
+    private val alarmTabFragment: AlarmTabFragment =
+        AlarmTabFragment()
+    private val navigatorFragment: newVersion.alarm.navigator.NavigatorFragment =
+        newVersion.alarm.navigator.NavigatorFragment ()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_alarm)
         setSupportActionBar(alarm_toolbar)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        alarm_bottom_menu.menu.getItem(0).isChecked = true
+
+        alarm_bottom_menu.setOnNavigationItemSelectedListener {
+            item ->
+            when(item.itemId){
+                R.id.cardObject->{
+                    openFragment(alarmTabFragment)
+                    supportActionBar!!.title="Карточка объекта"
+                }
+                R.id.navigator->{
+                    openFragment(navigatorFragment)
+                    supportActionBar!!.title="Навигатор"
+                }
+        }
+            true
+        }
     }
 
     override fun onResume() {
@@ -59,14 +83,14 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
         alarm_toolbar.title = title
     }
 
-    override fun openFragment(fragment: MvpAppCompatFragment) {
-        val transaction = supportFragmentManager.beginTransaction()
-        transaction.replace(R.id.alarm_fragment_container, fragment)
-        transaction.addToBackStack(null)
-        transaction.commit()
-    }
+
 
     override fun startTimer() {
+        Log.d("AlarmActivity", "$elapsedMillis")
+
+        if(intent.hasExtra("elapsedMillis"))
+            elapsedMillis = intent.getLongExtra("elapsedMillis",0)
+
         if (elapsedMillis != null) {
             alarm_timer.base = SystemClock.elapsedRealtime() - elapsedMillis!!
         } else {
@@ -133,6 +157,11 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
 
             elapsedMillis = 0
 
+            if(plan.count()>0)
+            plan.clear()
+
+            PlanPresenter.countQueueImageInDownload = 0
+
             intent.removeExtra("info")
 
             presenter.onDestroy()
@@ -145,8 +174,21 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
     }
 
     override fun onBackPressed() {
-        super.onBackPressed()
-        openFragment(AlarmTabFragment())
-        alarm_bottom_menu.menu.getItem(0).isChecked = true
+
+        when {
+            ImageScaleFragment.isAlive -> {
+                supportFragmentManager.popBackStack()
+            }
+            alarmTabFragment.haveChild() -> {
+                alarmTabFragment.onBackPressed()
+            }
+        }
+    }
+
+    override fun openFragment(fragment: MvpAppCompatFragment) {
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.alarm_fragment_container, fragment)
+        transaction.addToBackStack(null)
+        transaction.commit()
     }
 }

@@ -3,7 +3,7 @@ package newVersion.alarm.responsible
 import com.arellomobile.mvp.MvpView
 import com.arellomobile.mvp.viewstate.strategy.SkipStrategy
 import com.arellomobile.mvp.viewstate.strategy.StateStrategyType
-import newVersion.Utils.ResponsibleList
+import newVersion.utils.ResponsibleList
 
 interface ResponsibleView : MvpView{
 

@@ -25,8 +25,8 @@ import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_common.*
-import newVersion.Utils.DataStoreUtils
-import newVersion.Utils.PrefsUtil
+import newVersion.utils.DataStoreUtils
+import newVersion.utils.PrefsUtil
 import newVersion.alarm.AlarmActivity
 import newVersion.callback.CommonCallback
 import newVersion.common.alarm.AlarmDialogFragment
@@ -37,9 +37,9 @@ import newVersion.models.HostPool
 import newVersion.servicess.LocationListener
 import newVersion.servicess.LocationListener.Companion.imHere
 import newVersion.servicess.NetworkService
-import newVersion.Utils.Alarm
-import newVersion.Utils.GpsStatus
-import oldVersion.workservice.NotificationService
+import newVersion.utils.Alarm
+import newVersion.utils.GpsStatus
+import newVersion.servicess.NotificationService
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.ScaleBarOverlay

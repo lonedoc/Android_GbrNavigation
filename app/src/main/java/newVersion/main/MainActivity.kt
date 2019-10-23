@@ -20,7 +20,7 @@ import com.google.firebase.messaging.RemoteMessage
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_main.*
-import newVersion.Utils.PrefsUtil
+import newVersion.utils.PrefsUtil
 import newVersion.common.CommonActivity
 import newVersion.login.LoginActivity
 import newVersion.models.Credentials
@@ -28,7 +28,7 @@ import newVersion.models.HostPool
 import newVersion.models.Preferences
 import newVersion.servicess.LocationListener
 import newVersion.servicess.NetworkService
-import oldVersion.workservice.NotificationService
+import newVersion.servicess.NotificationService
 
 class MainActivity : MvpAppCompatActivity(), MainView {
     @InjectPresenter

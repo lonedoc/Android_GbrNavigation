@@ -6,8 +6,8 @@ import com.arellomobile.mvp.MvpPresenter
 import java.lang.Thread.sleep
 import javax.security.auth.Destroyable
 import kotlin.concurrent.thread
-import newVersion.Utils.DataStoreUtils
-import newVersion.Utils.newCredetials
+import newVersion.utils.DataStoreUtils
+import newVersion.utils.newCredetials
 import newVersion.commonInterface.Init
 import newVersion.models.Auth
 import newVersion.models.Credentials

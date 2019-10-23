@@ -13,6 +13,7 @@ import android.util.Log
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.extensions.jsonBody
 import com.google.firebase.messaging.RemoteMessage
+import com.google.gson.JsonObject
 import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
 import java.util.*
@@ -21,7 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import newVersion.Utils.newCredetials
+import newVersion.utils.newCredetials
 import newVersion.login.LoginActivity
 import newVersion.main.MainActivity
 import newVersion.models.Auth
@@ -30,11 +31,12 @@ import newVersion.models.HostPool
 import newVersion.network.auth.AuthAPI
 import newVersion.network.auth.OnAuthListener
 import newVersion.network.auth.RPAuthAPI
-import oldVersion.workservice.NotificationService.createNotification
-import oldVersion.workservice.ProtocolNetworkService
+import newVersion.servicess.LocationListener.Companion.imHere
+import newVersion.servicess.NotificationService.createNotification
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import org.osmdroid.util.GeoPoint
 import ru.rubeg38.rubegprotocol.ConnectionWatcher
 import rubegprotocol.RubegProtocol
 
@@ -164,8 +166,12 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
     private fun startService(credentials: Credentials, hostPool: HostPool) {
         if (isServiceStarted) return
 
+
+
+
         EventBus.getDefault().register(this)
         isServiceStarted = true
+
 
         protocol = RubegProtocol.sharedInstance
         unsubscribe = protocol.subscribe(this as ConnectionWatcher)
@@ -174,6 +180,9 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
         authAPI.onAuthListener = this
 
+
+        coordinateLoop(credentials)
+
         wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
             newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService:lock").apply {
                 acquire()
@@ -181,7 +190,7 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
         }
 
         GlobalScope.launch(Dispatchers.IO) {
-            while (ProtocolNetworkService.isServiceStarted) {
+            while (isServiceStarted) {
                 launch(Dispatchers.IO) {
                     Log.d("Service", "process")
                     pingFakeServer()
@@ -191,10 +200,6 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
         }
     }
 
-    private fun coordinateLoop() {
-        thread {
-        }
-    }
     private fun stopService() {
         try {
 
@@ -251,6 +256,51 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
         }
     }
 
+
+    private fun coordinateLoop(credentials: Credentials) {
+        var oldCoordinate:GeoPoint? = GeoPoint(0.0,0.0)
+        thread {
+            while(isServiceStarted)
+            {
+                try{
+
+                    if(!protocol.isConnected) continue
+
+                    if(imHere == null) continue
+
+                    if(oldCoordinate == GeoPoint(imHere)) continue
+
+                    oldCoordinate = GeoPoint(imHere)
+
+                    Log.d("Speed","${imHere?.speed?.times(3.6)}")
+                    val jsonMessage = JsonObject()
+                    jsonMessage.addProperty("\$c$", "gbrkobra")
+                    jsonMessage.addProperty("command", "location")
+                    jsonMessage.addProperty("id",credentials.imei )
+                    jsonMessage.addProperty("lon", imHere?.longitude)
+                    jsonMessage.addProperty("lat", imHere?.latitude)
+                    jsonMessage.addProperty("speed", (imHere?.speed!! * 3.6).toInt())
+
+                    val request = jsonMessage.toString()
+
+                    protocol.send(request){
+                        if(it){
+                            Log.d("Coordinate","Send")
+                        }
+                        else
+                        {
+                            Log.d("Coordinate","NotSend")
+                        }
+                    }
+
+                }catch (e:java.lang.Exception){
+                    e.printStackTrace()
+                }
+                sleep(2000)
+
+            }
+        }
+    }
     override fun onDestroy() {
         Log.d("NetworkService", "Destroy")
         stopService()

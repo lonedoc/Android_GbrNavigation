@@ -1,6 +1,5 @@
 package newVersion.network.status
 
-import javax.security.auth.Destroyable
 import ru.rubeg38.rubegprotocol.TextMessageWatcher
 
 interface StatusAPI : TextMessageWatcher, newVersion.commonInterface.Destroyable {

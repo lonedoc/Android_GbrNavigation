@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <org.osmdroid.views.MapView
+        android:id="@+id/alarm_navigator_mapView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/alarm_navigator_myLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="8dp"
+        app:fabSize="mini"
+        android:layout_alignTop="@+id/alarm_navigator_mapView"
+        android:layout_alignEnd="@+id/alarm_navigator_mapView"
+        app:srcCompat="@drawable/ic_gps_fixed"
+        app:rippleColor="@color/colorAccent"
+        app:backgroundTint="@color/viewBackground"/>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/alarm_navigator_followMe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        app:fabSize="mini"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="24dp"
+        android:layout_alignEnd="@+id/alarm_navigator_mapView"
+        android:layout_below="@+id/alarm_navigator_myLocation"
+        app:srcCompat="@drawable/ic_direction_walk"
+        app:rippleColor="@color/colorAccent"
+        app:backgroundTint="@color/viewBackground"
+        android:adjustViewBounds="false"/>
+</RelativeLayout>
