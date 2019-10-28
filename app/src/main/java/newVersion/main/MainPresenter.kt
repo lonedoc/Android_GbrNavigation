@@ -102,12 +102,13 @@ class MainPresenter : MvpPresenter<MainView>(), OnAuthListener, Destroyable, Ini
         authAPI!!.sendAuthRequest { success ->
             if (!success) {
                 if (preferences.serverAddress.count() == 1) {
+
                     if (protocol.isStarted) {
                         protocol.stop()
-                        viewState.disconnectServer()
-                        viewState.openLoginActivity()
                     }
 
+                    viewState.disconnectServer()
+                    viewState.openLoginActivity()
                     viewState.showToastMessage("Не удалось выполнить запрос. Сервер не отвечает или  неправильно введен IP-адрес сервера")
                 }
             }

@@ -178,10 +178,13 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
         statusAPI = RPStatusAPI(protocol)
         statusAPI?.onStatusListener = this
 
+        sleep(2)
         if (alarmApi != null) alarmApi?.onDestroy()
 
         alarmApi = RPAlarmAPI(protocol)
         alarmApi?.onAlarmListener = this
+
+        sleep(2)
     }
 
     fun setTitle() {

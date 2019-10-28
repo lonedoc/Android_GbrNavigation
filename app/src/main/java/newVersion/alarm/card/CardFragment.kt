@@ -31,18 +31,25 @@ class CardFragment : MvpAppCompatFragment(), CardView {
         bArrived = rootView?.findViewById(R.id.card_send_arrived)!!
 
         bReport.setOnClickListener {
+            Log.d("Report","send")
             presenter.sendAction("Report")
         }
         bArrived.setOnClickListener {
+            Log.d("Arrived","send")
             presenter.sendAction("Arrived")
         }
+
         return rootView
     }
-
     override fun onResume() {
         super.onResume()
-        if (!presenter.init) {
+
+        if (!presenter.init && activity?.intent?.hasExtra("info")!!) {
             presenter.init(activity?.intent?.getSerializableExtra("info") as Alarm)
+        }
+        else
+        {
+            presenter.init(null)
         }
     }
     override fun setStateReportButton(enable: Boolean) {

@@ -64,6 +64,46 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
 
     }
 
+    override fun onCompleteDataReceived(name: String) {
+        Log.d("CompletePresenter", name)
+        when {
+            name != alarmInfo?.name -> return
+
+            name == alarmInfo?.name -> {
+                viewState.showToastMessage("Тревога завершена")
+                DataStoreUtils.status = "Свободен"
+                viewState.completeAlarm(null)
+            }
+            name =="oldVersion"->{
+                viewState.showToastMessage("Для стабильной работы приложения необходимо обновить Сервер сообщений")
+                DataStoreUtils.status = "Свободен"
+                viewState.completeAlarm(null)
+            }
+        }
+    }
+
+    override fun onAlarmDataReceived(alarm: Alarm) {
+        Log.d("AlarmPresenter", "$alarm")
+
+        if(alarm.name!=alarmInfo?.name)
+            when{
+                !AlarmActivity.isAlive ->{
+                    Log.d("AlarmPresenter","New alarm")
+                    viewState.showToastMessage("Тревога завершена")
+                    elapsedMillis = null
+                    val intent = Intent(context, CommonActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.putExtra("alarm",alarm)
+                    context?.startActivity(intent)
+                    onDestroy()
+                }
+                else->{
+                    viewState.showToastMessage("Новая тревога")
+                    viewState.completeAlarm(alarm)
+                }
+            }
+
+    }
 
 
     override var init: Boolean = false
@@ -81,89 +121,72 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
         return init
     }
 
-    fun init(alarmInfo: Alarm?, applicationContext: Context) {
+    fun init(info: Alarm?, applicationContext: Context) {
+
+        Log.d("AlarmPResenter","$info")
+
+
 
         this.context = applicationContext
 
-        this.alarmInfo = alarmInfo
+        this.alarmInfo = info
 
         this.init = true
+
+        if(info == null)
+        {
+            viewState.showToastMessage("Отсутствует информация по тревоге")
+            viewState.completeAlarm(null)
+            return
+        }
 
         val protocol = RubegProtocol.sharedInstance
 
         if (this.alarmApi != null) alarmApi?.onDestroy()
         this.alarmApi = RPAlarmAPI(protocol)
         this.alarmApi?.onAlarmListener = this
+        sleep(2)
 
         if (this.completeApi != null) completeApi?.onDestroy()
         this.completeApi = RPCompleteAPI(protocol)
         this.completeApi?.onCompleteListener = this
+        sleep(2)
 
         if(this.imageApi != null) return
         this.imageApi = RPImageAPI(protocol = protocol)
         this.imageApi?.onImageListener = this
+        sleep(2)
 
         if(this.statusApi != null) return
         this.statusApi = RPStatusAPI(protocol = protocol)
         this.statusApi?.onStatusListener = this
+        sleep(2)
 
         viewState.startTimer()
         viewState.openFragment(AlarmTabFragment())
         viewState.setTitle("Карточка объекта")
 
-        if(!EventBus.getDefault().isRegistered(this))
+       // if(!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this)
 
-        arrivedCheck(DataStoreUtils.cityCard?.pcsinfo?.dist,alarmInfo?.lon,alarmInfo?.lat)
+        Log.d("AlarmPresenter","${EventBus.getDefault().isRegistered(this)}")
+
+        changeStateButton(enableArrived = false,enableReport = false)
+        arrivedCheck(DataStoreUtils.cityCard?.pcsinfo?.dist, info.lon, info.lat)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun getEvent(event: CardEvent){
         when{
             event.action == "Arrived"->{
+                changeStateButton(enableArrived = true, enableReport = false)
                 viewState.showArrivedDialog()
             }
             event.action == "Report"->{
+                changeStateButton(enableArrived = false, enableReport = true)
                 viewState.showReportDialog()
             }
         }
-    }
-
-
-    override fun onCompleteDataReceived(name: String) {
-        Log.d("CompletePresenter", name)
-        when {
-            name != alarmInfo?.name -> return
-
-            name == alarmInfo?.name -> {
-                viewState.showToastMessage("Тревога завершена")
-                DataStoreUtils.status = "Свободен"
-                viewState.completeAlarm(null)
-            }
-        }
-    }
-
-    override fun onAlarmDataReceived(alarm: Alarm) {
-        Log.d("AlarmPresenter", "$alarm")
-
-        if(alarm.name!=alarmInfo?.name)
-        when{
-            !AlarmActivity.isAlive ->{
-                Log.d("AlarmPresenter","New alarm")
-                viewState.showToastMessage("Тревога завершена")
-                AlarmActivity.elapsedMillis = null
-                val intent = Intent(context, CommonActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                intent.putExtra("alarm",alarm)
-                context?.startActivity(intent)
-                onDestroy()
-            }
-            else->{
-                viewState.showToastMessage("Новая тревога")
-                viewState.completeAlarm(alarm)
-            }
-        }
-
     }
 
     fun sendArrived() {
@@ -176,7 +199,6 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
                 changeStateButton(enableArrived = false, enableReport = true)
                 completeApi?.sendArrivedObject(alarmInfo?.number!!) {
                     if (it) {
-
                         viewState.showToastMessage("Сообщение о прибытие было доставлено, теперь вы можете отправить рапорт")
                     } else {
                         viewState.showToastMessage("Сообщение о прибытие не было доставлено, отправка повторится через несколько секунд")
@@ -259,7 +281,11 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
         }
 
         if(imHere==null)
+        {
             viewState.showToastMessage("Не удалось определить ваше месторасположение по GPS, система находится в режиме ожидания ваших координат")
+            changeStateButton(enableArrived = true, enableReport = false)
+        }
+
 
         val endPoint = GeoPoint(lat.toDouble(),lon.toDouble())
         thread{
@@ -284,6 +310,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
 
 
                 Log.d("AlarmPresenter","${endPoint.distanceToAsDouble(GeoPoint(imHere))}")
+                changeStateButton(enableArrived = true, enableReport = false)
                 viewState.showArrivedDialog()
 
                 checkArrivedAlive = false
@@ -302,6 +329,9 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
 
     override fun onDestroy() {
 
+     /*   if(EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().unregister(this)*/
+
         init = false
 
         checkArrivedAlive = false
@@ -311,8 +341,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
         imageApi?.onDestroy()
         statusApi?.onDestroy()
 
-        if(EventBus.getDefault().isRegistered(this))
-            EventBus.getDefault().unregister(this)
+
 
         super.onDestroy()
     }

@@ -21,8 +21,8 @@ import com.arellomobile.mvp.presenter.InjectPresenter
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.messaging.RemoteMessage
 import java.lang.Thread.sleep
-import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
+import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_common.*
 import newVersion.utils.DataStoreUtils
@@ -32,6 +32,7 @@ import newVersion.callback.CommonCallback
 import newVersion.common.alarm.AlarmDialogFragment
 import newVersion.common.serverSetting.ServerSettingFragment
 import newVersion.common.status.StatusFragment
+import newVersion.main.MainActivity
 import newVersion.models.Credentials
 import newVersion.models.HostPool
 import newVersion.servicess.LocationListener
@@ -114,6 +115,11 @@ class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
         presenter.setTitle()
 
         when{
+            DataStoreUtils.call == null && DataStoreUtils.namegbr == null->{
+                showToastMessage("Ошибка приложения, автоматическая перезагрузка")
+                val intent = Intent(this,MainActivity::class.java)
+                startActivity(intent)
+            }
             intent.hasExtra("alarm")->{
                 openAlarmDialog(alarm = intent.getSerializableExtra("alarm") as Alarm)
             }

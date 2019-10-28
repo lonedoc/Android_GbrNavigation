@@ -39,6 +39,9 @@ import org.greenrobot.eventbus.ThreadMode
 import org.osmdroid.util.GeoPoint
 import ru.rubeg38.rubegprotocol.ConnectionWatcher
 import rubegprotocol.RubegProtocol
+import java.math.RoundingMode
+import java.text.DecimalFormat
+import kotlin.collections.ArrayList
 
 class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
@@ -66,7 +69,7 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
     override fun onConnectionLost() {
         Log.d("Service", "Connection lost")
 
-        if (!connectionLost && protocol.isStarted && !LoginActivity.isAlive || !connectionLost && protocol.isStarted && !MainActivity.isAlive) {
+        if (!connectionLost && protocol.isStarted && !LoginActivity.isAlive && !MainActivity.isAlive) {
             connectionLost = true
             when {
                 isConnected(applicationContext) -> {
@@ -160,14 +163,11 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
                 stopService()
             }
         }
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     private fun startService(credentials: Credentials, hostPool: HostPool) {
         if (isServiceStarted) return
-
-
-
 
         EventBus.getDefault().register(this)
         isServiceStarted = true
@@ -256,31 +256,68 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
         }
     }
 
+    private var coordinateQueue:ArrayList<Pair<GeoPoint,Int>> = ArrayList()
 
     private fun coordinateLoop(credentials: Credentials) {
         var oldCoordinate:GeoPoint? = GeoPoint(0.0,0.0)
         thread {
             while(isServiceStarted)
             {
+                sleep(2000)
+                Log.d("NetworkService","Loop")
                 try{
-
-                    if(!protocol.isConnected) continue
 
                     if(imHere == null) continue
 
                     if(oldCoordinate == GeoPoint(imHere)) continue
 
+
+                    if(!protocol.isConnected) {
+
+                        coordinateQueue.add(Pair(GeoPoint(imHere),(imHere?.speed!! * 3.6).toInt()))
+                        sleep(1000)
+                        continue
+                    }
+
                     oldCoordinate = GeoPoint(imHere)
 
-                    Log.d("Speed","${imHere?.speed?.times(3.6)}")
+
+                    val df = DecimalFormat("#.######")
+                    if(coordinateQueue.count()!= 0)
+                    {
+                        Log.d("Coordinate","Send loop")
+                        for(i in 0 until coordinateQueue.count())
+                        {
+                            val jsonMessage = JsonObject()
+                            jsonMessage.addProperty("\$c$", "gbrkobra")
+                            jsonMessage.addProperty("command", "location")
+                            jsonMessage.addProperty("id",credentials.imei )
+                            jsonMessage.addProperty("lon", df.format(coordinateQueue[i].first.longitude))
+                            jsonMessage.addProperty("lat", df.format((coordinateQueue[i].first.latitude)))
+                            jsonMessage.addProperty("speed",  coordinateQueue[i].second)
+                            val request = jsonMessage.toString()
+
+                            protocol.send(request){
+                                if(it){
+                                    Log.d("Coordinate","Send")
+                                }
+                                else
+                                {
+                                    Log.d("Coordinate","NotSend")
+                                }
+                            }
+                            Log.d("Coordinate","Send")
+                        }
+                        coordinateQueue.clear()
+                        continue
+                    }
                     val jsonMessage = JsonObject()
                     jsonMessage.addProperty("\$c$", "gbrkobra")
                     jsonMessage.addProperty("command", "location")
                     jsonMessage.addProperty("id",credentials.imei )
-                    jsonMessage.addProperty("lon", imHere?.longitude)
-                    jsonMessage.addProperty("lat", imHere?.latitude)
+                    jsonMessage.addProperty("lon", df.format((imHere?.longitude)))
+                    jsonMessage.addProperty("lat", df.format((imHere?.latitude)))
                     jsonMessage.addProperty("speed", (imHere?.speed!! * 3.6).toInt())
-
                     val request = jsonMessage.toString()
 
                     protocol.send(request){
@@ -290,13 +327,14 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
                         else
                         {
                             Log.d("Coordinate","NotSend")
+                            coordinateQueue.add(Pair(GeoPoint(imHere),(imHere?.speed!! * 3.6).toInt()))
                         }
                     }
 
                 }catch (e:java.lang.Exception){
                     e.printStackTrace()
                 }
-                sleep(2000)
+
 
             }
         }

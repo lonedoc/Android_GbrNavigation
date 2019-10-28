@@ -22,7 +22,8 @@ class CardPresenter : MvpPresenter<CardView>(), Destroyable, Init {
         return init
     }
 
-    fun init(info: Alarm) {
+    fun init(info: Alarm?) {
+        if(info == null) return
         setName(info.name)
         setAddress(info.address)
         setNumber(info.number)

@@ -28,6 +28,22 @@ class NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
         viewState.addOverlays()
     }
 
+    fun haveCoordinate(info:Alarm):Boolean{
+        if( info.lat==null || info.lon == null)
+        {
+            viewState.showToastMessage("Не были указаны координаты объекта")
+            return false
+        }
+
+        if(info.lat=="0" || info.lon=="0" )
+        {
+            viewState.showToastMessage("Не были указаны координаты объекта")
+            return false
+        }
+
+        return true
+    }
+
     fun startTrack(info:Alarm) {
 
         if( info.lat==null || info.lon == null)
@@ -113,7 +129,7 @@ class NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
         } else {
             viewState.showToastMessage("Ваше месторасположение не определено, невозможно построить маршрут, приложение переходит в режим ожидания")
             thread {
-                sleep(5000)
+                sleep(2000)
                 viewState.setCenterLoop()
             }
         }
@@ -151,6 +167,12 @@ class NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
                 {
                     viewState.showToastMessage("Вы прибыли на место")
                     viewState.clearOverlay(roadOverlay)
+                    return@thread
+                }
+
+                if(distance(road)==null)
+                {
+                    viewState.recreateTrack(roadOverlay)
                     return@thread
                 }
 

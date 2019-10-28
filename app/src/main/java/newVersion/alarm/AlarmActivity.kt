@@ -26,7 +26,7 @@ import org.greenrobot.eventbus.EventBus
 
 class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
     override fun recallActivity(alarmInfo: Alarm?) {
-
+        //
     }
 
     @InjectPresenter
@@ -70,8 +70,12 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
     override fun onResume() {
         super.onResume()
         isAlive = true
-        if (!presenter.init) {
+        if (!presenter.init && intent.hasExtra("info") ) {
             presenter.init(intent?.getSerializableExtra("info") as Alarm,applicationContext)
+        }
+        else
+        {
+            presenter.init(null,applicationContext)
         }
     }
 
@@ -79,14 +83,12 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
         super.onStop()
         isAlive = false
     }
+
     override fun setTitle(title: String) {
         alarm_toolbar.title = title
     }
 
-
-
     override fun startTimer() {
-        Log.d("AlarmActivity", "$elapsedMillis")
 
         if(intent.hasExtra("elapsedMillis"))
             elapsedMillis = intent.getLongExtra("elapsedMillis",0)
@@ -137,7 +139,13 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
                 }
                 .setPositiveButton("Отправить"){
                         dialogInterface, i ->
-                    EventBus.getDefault().postSticky(ArrivedTime((elapsedMillis?.div(1000))?.toInt()!!))
+                    try {
+                        EventBus.getDefault().postSticky(ArrivedTime((elapsedMillis?.div(1000))?.toInt()!!))
+                    }catch (e:Exception)
+                    {
+                        e.printStackTrace()
+                        showToastMessage("Невозможно установить время прибытия внутри приложения, возникла ошибка")
+                    }
                     presenter.sendArrived()
                 }
                 .show()
@@ -167,8 +175,10 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
             presenter.onDestroy()
 
             val intent = Intent(applicationContext, CommonActivity::class.java)
+
             if(alarm!=null)
                 intent.putExtra("alarm",alarm)
+
             startActivity(intent)
         }
     }
@@ -190,5 +200,10 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
         transaction.replace(R.id.alarm_fragment_container, fragment)
         transaction.addToBackStack(null)
         transaction.commit()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        presenter.onDestroy()
     }
 }
