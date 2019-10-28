@@ -53,12 +53,10 @@ class CardFragment : MvpAppCompatFragment(), CardView {
         }
     }
     override fun setStateReportButton(enable: Boolean) {
-        Log.d("Enable", "true")
         bReport.isEnabled = enable
     }
 
     override fun setStateArrivedButton(enable: Boolean) {
-        Log.d("Enable", "true")
         bArrived.isEnabled = enable
     }
 

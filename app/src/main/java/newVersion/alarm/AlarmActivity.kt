@@ -25,9 +25,6 @@ import org.greenrobot.eventbus.EventBus
 
 
 class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
-    override fun recallActivity(alarmInfo: Alarm?) {
-        //
-    }
 
     @InjectPresenter
     lateinit var presenter: AlarmPresenter
@@ -131,6 +128,7 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
         runOnUiThread {
             AlertDialog.Builder(this)
                 .setTitle("Автоматическое прибытие")
+                .setCancelable(false)
                 .setMessage("Вы прибыли на месте, выберите действие")
                 .setNeutralButton("Отложить"){
                         dialogInterface, i ->
@@ -203,7 +201,15 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        if(plan.count()>0)
+            plan.clear()
+
+        PlanPresenter.countQueueImageInDownload = 0
+
+        intent.removeExtra("info")
+
+        elapsedMillis = 0
         presenter.onDestroy()
+        super.onDestroy()
     }
 }
