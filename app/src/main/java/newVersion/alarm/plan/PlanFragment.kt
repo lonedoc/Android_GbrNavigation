@@ -8,9 +8,9 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.arellomobile.mvp.MvpAppCompatFragment
-import com.arellomobile.mvp.presenter.InjectPresenter
 import kobramob.rubeg38.ru.gbrnavigation.R
+import moxy.MvpAppCompatFragment
+import moxy.presenter.InjectPresenter
 import newVersion.utils.Alarm
 
 class PlanFragment : MvpAppCompatFragment(), PlanView {
@@ -34,8 +34,8 @@ class PlanFragment : MvpAppCompatFragment(), PlanView {
     override fun onResume() {
         super.onResume()
         if(!presenter.isInit()){
-            val imageInfo = activity!!.intent.getSerializableExtra("info") as Alarm
-            presenter.init(imageInfo)
+            val imageInfo = activity!!.intent.getSerializableExtra("info") as? Alarm
+            presenter.init(imageInfo!!)
         }
     }
     override fun initRecyclerView(plan:ArrayList<Bitmap?>){

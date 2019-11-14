@@ -50,10 +50,7 @@
             android:value="default" />
 
 
-        <service
-            android:name="oldVersion.workservice.ProtocolNetworkService"
-            android:enabled="true"
-            android:exported="false" />
+
         <service
             android:name="newVersion.servicess.NetworkService"
             android:enabled="true"
@@ -66,9 +63,7 @@
             </intent-filter>
         </service>
 
-        <activity
-            android:name="oldVersion.objectactivity.ObjectActivity"
-            android:keepScreenOn="true" />
+
 
         <activity android:name="newVersion.login.LoginActivity"
             android:keepScreenOn="true">
@@ -87,6 +82,9 @@
             android:keepScreenOn="true"/>
 
         <activity android:name="newVersion.alarm.AlarmActivity"
+            android:keepScreenOn="true"/>
+
+        <activity android:name="newVersion.common.directory.DirectoryActivity"
             android:keepScreenOn="true"/>
         <!--<service
             android:name="mad.location.manager.lib.Services.KalmanLocationService"

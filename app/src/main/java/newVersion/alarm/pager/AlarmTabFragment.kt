@@ -1,14 +1,13 @@
 package newVersion.alarm.pager
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.viewpager.widget.ViewPager
-import com.arellomobile.mvp.MvpAppCompatFragment
 import com.google.android.material.tabs.TabLayout
 import kobramob.rubeg38.ru.gbrnavigation.R
+import moxy.MvpAppCompatFragment
 
 
 class AlarmTabFragment : MvpAppCompatFragment() {
@@ -23,7 +22,7 @@ class AlarmTabFragment : MvpAppCompatFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val rootView: View = inflater.inflate(R.layout.alarm_tab_fragment, container, false)
+        val rootView: View = inflater.inflate(R.layout.fragment_alarm_tab, container, false)
 
         pager = rootView.findViewById(R.id.alarm_pager)
         tabLayout = rootView.findViewById(R.id.alarm_tab)

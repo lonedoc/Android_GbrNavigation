@@ -8,9 +8,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import com.arellomobile.mvp.MvpAppCompatDialogFragment
-import com.arellomobile.mvp.presenter.InjectPresenter
 import kobramob.rubeg38.ru.gbrnavigation.R
+import moxy.MvpAppCompatDialogFragment
+import moxy.presenter.InjectPresenter
 
 class StatusFragment : MvpAppCompatDialogFragment(), StatusView {
 

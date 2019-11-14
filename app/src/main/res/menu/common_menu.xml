@@ -8,7 +8,7 @@
             android:title="@string/changeServer" />
 
     <item
-        android:id="@+id/reference"
+        android:id="@+id/directory"
         android:orderInCategory="100"
         app:showAsAction="never"
         android:title="@string/reference"

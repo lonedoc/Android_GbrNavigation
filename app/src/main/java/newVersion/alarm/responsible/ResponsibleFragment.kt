@@ -8,14 +8,18 @@ import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.arellomobile.mvp.MvpAppCompatFragment
-import com.arellomobile.mvp.presenter.InjectPresenter
 import kobramob.rubeg38.ru.gbrnavigation.R
+import moxy.MvpAppCompatFragment
+import moxy.presenter.InjectPresenter
 import newVersion.utils.Alarm
 import newVersion.utils.ResponsibleList
 import newVersion.alarm.responsible.personalCard.PersonalCardFragment
 
 class ResponsibleFragment : MvpAppCompatFragment(), ResponsibleView {
+
+    @InjectPresenter
+    lateinit var presenter: ResponsiblePresenter
+
     override fun showPersonalCard(
         name: String,
         position:String,
@@ -50,8 +54,7 @@ class ResponsibleFragment : MvpAppCompatFragment(), ResponsibleView {
         }
     }
 
-    @InjectPresenter
-    lateinit var presenter: ResponsiblePresenter
+
 
     private var rootView:View? = null
     override fun onCreateView(

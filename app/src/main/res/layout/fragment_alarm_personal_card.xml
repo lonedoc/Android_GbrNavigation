@@ -16,7 +16,7 @@
         android:background="@android:color/transparent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView13"
-        app:srcCompat="@drawable/ic_phone" />
+        app:srcCompat="@drawable/ic_phone_enable" />
 
     <TextView
         android:id="@+id/personal_homeNumber"
@@ -40,7 +40,7 @@
         android:background="@android:color/transparent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView15"
-        app:srcCompat="@drawable/ic_phone" />
+        app:srcCompat="@drawable/ic_phone_enable" />
 
     <TextView
         android:id="@+id/personal_workNumber"
@@ -62,7 +62,7 @@
         android:background="@android:color/transparent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView14"
-        app:srcCompat="@drawable/ic_phone" />
+        app:srcCompat="@drawable/ic_phone_enable" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView"

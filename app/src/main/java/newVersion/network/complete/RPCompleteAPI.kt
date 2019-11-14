@@ -40,9 +40,13 @@ class RPCompleteAPI(
     override fun onTextMessageReceived(message: String) {
         if (!JSONObject(message).has("command")) return
 
+
         when (JSONObject(message).getString("command")) {
             "notalarm" -> {
-                onCompleteListener?.onCompleteDataReceived(JSONObject(message).getString("name"))
+                if(JSONObject(message).has("name"))
+                    onCompleteListener?.onCompleteDataReceived(JSONObject(message).getString("name"))
+                else
+                    onCompleteListener?.onCompleteDataReceived("oldVersion")
                 return
             }
             else -> { return }

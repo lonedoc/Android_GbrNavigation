@@ -4,27 +4,40 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
-import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.WindowManager
 import android.widget.Toast
-import com.arellomobile.mvp.MvpAppCompatActivity
-import com.arellomobile.mvp.MvpAppCompatFragment
-import com.arellomobile.mvp.presenter.InjectPresenter
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlinx.android.synthetic.main.activity_alarm.*
-import newVersion.utils.Alarm
-import newVersion.utils.DataStoreUtils
+import moxy.MvpAppCompatActivity
+import moxy.MvpAppCompatFragment
+import moxy.presenter.InjectPresenter
 import newVersion.alarm.card.ArrivedTime
+import newVersion.alarm.directory.DirectoryFragment
 import newVersion.alarm.pager.AlarmTabFragment
 import newVersion.alarm.plan.ImageScaleFragment
 import newVersion.alarm.plan.PlanPresenter
 import newVersion.alarm.plan.PlanPresenter.Companion.plan
 import newVersion.callback.ReportCallback
 import newVersion.common.CommonActivity
+import newVersion.utils.Alarm
+import newVersion.utils.DataStoreUtils
 import org.greenrobot.eventbus.EventBus
 
 
 class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
+
+    override fun removeData() {
+        if(plan.count()>0)
+            plan.clear()
+
+        PlanPresenter.countQueueImageInDownload = 0
+
+        intent.removeExtra("info")
+
+        elapsedMillis = 0
+    }
 
     @InjectPresenter
     lateinit var presenter: AlarmPresenter
@@ -64,16 +77,44 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.object_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.directory -> {
+                if(DataStoreUtils.cityCard!=null)
+                    if(DataStoreUtils.cityCard!!.pcsinfo.name!="")
+                        supportActionBar!!.title = DataStoreUtils.cityCard!!.pcsinfo.name
+                    else
+                        supportActionBar!!.title = "Нет имени ЧОПА"
+                else
+                    supportActionBar!!.title = "Нет имени ЧОПА"
+                val directoryFragment = DirectoryFragment()
+                openFragment((directoryFragment))
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun onResume() {
         super.onResume()
         isAlive = true
-        if (!presenter.init && intent.hasExtra("info") ) {
-            presenter.init(intent?.getSerializableExtra("info") as Alarm,applicationContext)
+        if (!presenter.init) {
+            if(intent.hasExtra("info"))
+            {
+                val info = intent?.getSerializableExtra("info") as? Alarm
+                presenter.init(info,applicationContext)
+                info?.let { presenter.sendAlarmApplyRequest(it) }
+            }
+            else
+            {
+                presenter.init(null,applicationContext)
+            }
         }
-        else
-        {
-            presenter.init(null,applicationContext)
-        }
+
     }
 
     override fun onStop() {
@@ -131,12 +172,12 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
                 .setCancelable(false)
                 .setMessage("Вы прибыли на месте, выберите действие")
                 .setNeutralButton("Отложить"){
-                        dialogInterface, i ->
+                        _, _ ->
                     showToastMessage("Отправка прибытия отложена, теперь вы можете отправить его с экрана основной информации объекта")
                     presenter.changeStateButton(enableArrived = true, enableReport = false)
                 }
                 .setPositiveButton("Отправить"){
-                        dialogInterface, i ->
+                        _, _ ->
                     try {
                         EventBus.getDefault().postSticky(ArrivedTime((elapsedMillis?.div(1000))?.toInt()!!))
                     }catch (e:Exception)
@@ -159,6 +200,9 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
 
     override fun completeAlarm(alarm:Alarm?) {
         runOnUiThread {
+
+           presenter.onDestroy()
+
             alarm_timer.stop()
 
             elapsedMillis = 0
@@ -170,20 +214,23 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
 
             intent.removeExtra("info")
 
-            presenter.onDestroy()
-
             val intent = Intent(applicationContext, CommonActivity::class.java)
 
             if(alarm!=null)
                 intent.putExtra("alarm",alarm)
 
             startActivity(intent)
+
         }
     }
 
     override fun onBackPressed() {
 
         when {
+            DirectoryFragment.isAlive->{
+                supportActionBar!!.title="Карточка объекта"
+                supportFragmentManager.popBackStack()
+            }
             ImageScaleFragment.isAlive -> {
                 supportFragmentManager.popBackStack()
             }
@@ -209,7 +256,7 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
         intent.removeExtra("info")
 
         elapsedMillis = 0
-        presenter.onDestroy()
+
         super.onDestroy()
     }
 }

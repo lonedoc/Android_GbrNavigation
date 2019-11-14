@@ -2,8 +2,8 @@ package newVersion.common.status
 
 import android.os.CountDownTimer
 import android.util.Log
-import com.arellomobile.mvp.InjectViewState
-import com.arellomobile.mvp.MvpPresenter
+import moxy.InjectViewState
+import moxy.MvpPresenter
 import newVersion.utils.DataStoreUtils
 import newVersion.commonInterface.Destroyable
 import newVersion.commonInterface.Init

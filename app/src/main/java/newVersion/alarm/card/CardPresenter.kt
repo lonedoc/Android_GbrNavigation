@@ -1,7 +1,7 @@
 package newVersion.alarm.card
 
-import com.arellomobile.mvp.InjectViewState
-import com.arellomobile.mvp.MvpPresenter
+import moxy.InjectViewState
+import moxy.MvpPresenter
 import newVersion.common.CurrentTime
 import newVersion.commonInterface.Destroyable
 import newVersion.commonInterface.Init

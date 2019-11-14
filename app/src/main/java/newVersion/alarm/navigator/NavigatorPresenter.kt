@@ -5,8 +5,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.Location
 import androidx.core.content.ContextCompat
-import com.arellomobile.mvp.InjectViewState
-import com.arellomobile.mvp.MvpPresenter
+import moxy.InjectViewState
+import moxy.MvpPresenter
 import newVersion.utils.Alarm
 import newVersion.utils.DataStoreUtils
 import newVersion.commonInterface.Init

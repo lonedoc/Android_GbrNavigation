@@ -95,10 +95,13 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
             }
         }
 
-        while (!isConnected(applicationContext)) {
-        }
+        thread{
+            while (!isConnected(applicationContext)) {
+                sleep(1000)
+            }
 
-        authAPI.sendAuthRequest {
+            authAPI.sendAuthRequest {
+            }
         }
     }
 
@@ -260,6 +263,7 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
     private fun coordinateLoop(credentials: Credentials) {
         var oldCoordinate:GeoPoint? = GeoPoint(0.0,0.0)
+        var oldSpeed = 1
         thread {
             while(isServiceStarted)
             {
@@ -271,6 +275,7 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
                     if(oldCoordinate == GeoPoint(imHere)) continue
 
+                    if(oldSpeed == 0 && imHere?.speed!!.toInt() == 0) continue
 
                     if(!protocol.isConnected) {
 
@@ -280,9 +285,10 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
                     }
 
                     oldCoordinate = GeoPoint(imHere)
-
+                    oldSpeed = (imHere?.speed!! * 3.6).toInt()
 
                     val df = DecimalFormat("#.######")
+
                     if(coordinateQueue.count()!= 0)
                     {
                         Log.d("Coordinate","Send loop")
@@ -311,6 +317,7 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
                         coordinateQueue.clear()
                         continue
                     }
+
                     val jsonMessage = JsonObject()
                     jsonMessage.addProperty("\$c$", "gbrkobra")
                     jsonMessage.addProperty("command", "location")

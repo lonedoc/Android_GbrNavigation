@@ -1,8 +1,8 @@
 package newVersion.common
 
-import com.arellomobile.mvp.MvpView
-import com.arellomobile.mvp.viewstate.strategy.SkipStrategy
-import com.arellomobile.mvp.viewstate.strategy.StateStrategyType
+import moxy.MvpView
+import moxy.viewstate.strategy.SkipStrategy
+import moxy.viewstate.strategy.StateStrategyType
 import newVersion.models.Credentials
 import newVersion.models.HostPool
 import newVersion.utils.Alarm

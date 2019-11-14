@@ -1,11 +1,11 @@
 package newVersion.alarm.responsible
 
-import com.arellomobile.mvp.MvpView
-import com.arellomobile.mvp.viewstate.strategy.SkipStrategy
-import com.arellomobile.mvp.viewstate.strategy.StateStrategyType
+import moxy.MvpView
+import moxy.viewstate.strategy.SkipStrategy
+import moxy.viewstate.strategy.StateStrategyType
 import newVersion.utils.ResponsibleList
 
-interface ResponsibleView : MvpView{
+interface ResponsibleView : MvpView {
 
     fun initRecyclerView(responsibleList:ArrayList<ResponsibleList>)
 

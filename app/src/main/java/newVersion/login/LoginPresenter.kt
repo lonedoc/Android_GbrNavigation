@@ -2,9 +2,9 @@ package newVersion.login
 
 import android.util.Log
 import android.view.View
-import com.arellomobile.mvp.InjectViewState
-import com.arellomobile.mvp.MvpPresenter
 import com.google.firebase.iid.FirebaseInstanceId
+import moxy.InjectViewState
+import moxy.MvpPresenter
 import java.lang.Thread.sleep
 import javax.security.auth.Destroyable
 import newVersion.utils.DataStoreUtils

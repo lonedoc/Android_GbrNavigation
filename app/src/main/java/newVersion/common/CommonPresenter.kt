@@ -8,15 +8,9 @@ import android.location.Location
 import android.location.LocationManager
 import android.util.Log
 import androidx.core.content.ContextCompat
-import com.arellomobile.mvp.InjectViewState
-import com.arellomobile.mvp.MvpPresenter
-import kobramob.rubeg38.ru.networkprotocol.BuildConfig
-import java.lang.Thread.sleep
-import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.concurrent.thread
-import newVersion.utils.DataStoreUtils
+import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
+import moxy.InjectViewState
+import moxy.MvpPresenter
 import newVersion.common.alarm.AlarmDialogFragment
 import newVersion.commonInterface.Destroyable
 import newVersion.commonInterface.Init
@@ -30,10 +24,12 @@ import newVersion.network.status.RPStatusAPI
 import newVersion.network.status.StatusAPI
 import newVersion.servicess.NetworkService
 import newVersion.utils.Alarm
+import newVersion.utils.DataStoreUtils
 import newVersion.utils.GpsStatus
-import org.greenrobot.eventbus.EventBus
 import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol
+import java.lang.Thread.sleep
+import kotlin.concurrent.thread
 
 @InjectViewState
 class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmListener, Init, Destroyable {
@@ -49,7 +45,9 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
 
         if (!AlarmDialogFragment.isAlive)
             if (CommonActivity.isAlive)
+            {
                 viewState.openAlarmDialog(alarm)
+            }
             else {
                 sleep(2000)
                 val unsleepActivity = Intent(context, CommonActivity::class.java)
@@ -58,6 +56,7 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
                 unsleepActivity.putExtra("alarm",alarm)
                 context?.startActivity(unsleepActivity)
             }
+        waitApply = true
     }
 
     fun sendAlarmRequest(namegbr: String) {
@@ -74,28 +73,6 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
         )
     }
 
-    fun sendAlarmApplyRequest(alarm: Alarm) {
-        waitApply = true
-        alarmApi?.sendAlarmApplyRequest(
-            alarm.number!!,
-            complete = {
-                if (it) {
-                    val currentTime: String = SimpleDateFormat(
-                        "HH:mm:ss",
-                        Locale.getDefault()
-                    ).format(Date())
-                    viewState.showToastMessage("Тревога принята в $currentTime")
-                    EventBus.getDefault().postSticky(CurrentTime(currentTime))
-                    waitApply = false
-                    onDestroy()
-                } else {
-                    viewState.showToastMessage("Во время отправки сообщения о принятие тревоги произошел сбой, сообщение будет отправлено еще раз")
-                    sendAlarmApplyRequest(alarm)
-                }
-            }
-        )
-    }
-
     private var statusAPI: StatusAPI? = null
     private var alarmApi: AlarmAPI? = null
     override var init: Boolean = false
@@ -106,7 +83,7 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
     }
 
     override fun onStatusDataReceived(status: String, call: String) {
-        if (DataStoreUtils.status == status || status == "На тревоге") return
+        if (DataStoreUtils.status == status) return
 
             DataStoreUtils.status = status
             DataStoreUtils.call = call
@@ -145,8 +122,8 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
     }
 
     fun init(preferences: newVersion.models.Preferences?) {
-
         init = true
+
         Log.d("CommonPresenter", "Init")
         val addresses = preferences?.serverAddress
         val port = preferences?.serverPort
@@ -174,16 +151,13 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
         val protocol = RubegProtocol.sharedInstance
 
         if (statusAPI != null) statusAPI?.onDestroy()
-
         statusAPI = RPStatusAPI(protocol)
         statusAPI?.onStatusListener = this
-
         sleep(2)
-        if (alarmApi != null) alarmApi?.onDestroy()
 
+        if (alarmApi != null) alarmApi?.onDestroy()
         alarmApi = RPAlarmAPI(protocol)
         alarmApi?.onAlarmListener = this
-
         sleep(2)
     }
 

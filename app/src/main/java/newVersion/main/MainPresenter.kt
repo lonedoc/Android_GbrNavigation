@@ -1,8 +1,8 @@
 package newVersion.main
 
 import android.util.Log
-import com.arellomobile.mvp.InjectViewState
-import com.arellomobile.mvp.MvpPresenter
+import moxy.InjectViewState
+import moxy.MvpPresenter
 import java.lang.Thread.sleep
 import javax.security.auth.Destroyable
 import kotlin.concurrent.thread
@@ -83,6 +83,7 @@ class MainPresenter : MvpPresenter<MainView>(), OnAuthListener, Destroyable, Ini
         EventBus.getDefault().post(newCredetials(credentials))
 
         val protocol = RubegProtocol.sharedInstance
+
         if (authAPI != null) {
             Log.d("MainPresenter", "Destroy Auth Api")
             authAPI!!.onDestroy()

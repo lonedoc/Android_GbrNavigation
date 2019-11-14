@@ -16,8 +16,6 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
-import com.arellomobile.mvp.MvpAppCompatActivity
-import com.arellomobile.mvp.presenter.InjectPresenter
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.messaging.RemoteMessage
 import java.lang.Thread.sleep
@@ -25,11 +23,14 @@ import kobramob.rubeg38.ru.gbrnavigation.R
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_common.*
+import moxy.MvpAppCompatActivity
+import moxy.presenter.InjectPresenter
 import newVersion.utils.DataStoreUtils
 import newVersion.utils.PrefsUtil
 import newVersion.alarm.AlarmActivity
 import newVersion.callback.CommonCallback
 import newVersion.common.alarm.AlarmDialogFragment
+import newVersion.common.directory.DirectoryActivity
 import newVersion.common.serverSetting.ServerSettingFragment
 import newVersion.common.status.StatusFragment
 import newVersion.main.MainActivity
@@ -80,7 +81,9 @@ class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
                 val dialog = ServerSettingFragment()
                 dialog.show(supportFragmentManager, "ChangeServerSetting")
             }
-            R.id.reference -> {
+            R.id.directory -> {
+                val directory = Intent(this, DirectoryActivity::class.java)
+                startActivity(directory)
             }
         }
         return super.onOptionsItemSelected(item)
@@ -88,7 +91,7 @@ class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
 
     override fun onStart() {
         super.onStart()
-
+        isAlive = true
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val preferences = PrefsUtil(applicationContext)
         if (!locationManager.isProviderEnabled((LocationManager.GPS_PROVIDER))) {
@@ -111,7 +114,7 @@ class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
 
     override fun onResume() {
         super.onResume()
-        isAlive = true
+
         presenter.setTitle()
 
         when{
@@ -141,25 +144,25 @@ class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
 
     override fun applyAlarm(alarm: Alarm) {
         openAlarmActivity(alarm)
-        DataStoreUtils.namegbr?.let { presenter.sendAlarmApplyRequest(alarm) }
     }
 
     override fun setCenterLoop() {
         thread {
             if (waitLoop) return@thread
             waitLoop = true
-            while (locationOverlay?.lastFix == null) {
+            while (imHere == null) {
                 // wait
                 sleep(1000)
             }
             runOnUiThread {
-                if (imHere != null) {
-                    common_mapView.overlays.remove(locationOverlay)
-                    common_mapView.overlays.add(initLocationOverlay())
-                    presenter.setCenter(imHere)
-                } else {
-                    presenter.setCenter(locationOverlay?.lastFix)
-                }
+                if(common_mapView.overlays.contains(locationOverlay)) common_mapView.overlays.remove(locationOverlay)
+
+                common_mapView.overlays.add(initLocationOverlay())
+
+                common_mapView.invalidate()
+
+                presenter.setCenter(imHere)
+
                 waitLoop = false
                 showToastMessage("Удалось определить ваше последнее месторасположение")
             }
@@ -167,6 +170,9 @@ class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
     }
 
     override fun openAlarmActivity(alarm: Alarm) {
+
+        finish()
+
         val alarmActivity = Intent(this, AlarmActivity::class.java)
 
         alarmActivity.putExtra("info", alarm)
@@ -203,8 +209,8 @@ class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
                     common_followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.viewBackground))
                     common_followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorPrimary))
                 }
-                if (locationOverlay?.lastFix != null) {
-                    presenter.setCenter(locationOverlay?.lastFix!!)
+                if (imHere != null) {
+                    presenter.setCenter(imHere)
                 } else {
                     showToastMessage("Ваше месторасположение не определено")
                 }
@@ -383,13 +389,17 @@ class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
     }
 
     private fun initLocationOverlay(): MyLocationNewOverlay {
+        if(common_mapView.overlays.contains(locationOverlay)) common_mapView.overlays.remove(locationOverlay)
         val gpsMyLocationProvider = GpsMyLocationProvider(applicationContext)
         locationOverlay = if (imHere != null) {
             Log.d("CommonActivity", "Init locationOverlay")
             gpsMyLocationProvider.addLocationSource(imHere!!.provider)
             MyLocationNewOverlay(gpsMyLocationProvider, common_mapView)
         } else {
-            MyLocationNewOverlay(common_mapView)
+            gpsMyLocationProvider.clearLocationSources()
+            gpsMyLocationProvider.addLocationSource(LocationManager.GPS_PROVIDER)
+            Log.d("CommonActivity","${gpsMyLocationProvider.locationSources}")
+            MyLocationNewOverlay(gpsMyLocationProvider, common_mapView)
         }
         locationOverlay?.setDirectionArrow(presenter.customIcon(R.drawable.ic_navigator_icon, applicationContext), presenter.customIcon(R.drawable.ic_navigator_active_icon, applicationContext))
         locationOverlay?.isDrawAccuracyEnabled = false
