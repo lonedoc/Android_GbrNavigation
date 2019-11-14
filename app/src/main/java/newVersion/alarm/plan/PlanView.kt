@@ -1,9 +1,10 @@
 package newVersion.alarm.plan
 
 import android.graphics.Bitmap
-import com.arellomobile.mvp.MvpView
-import com.arellomobile.mvp.viewstate.strategy.SkipStrategy
-import com.arellomobile.mvp.viewstate.strategy.StateStrategyType
+
+import moxy.MvpView
+import moxy.viewstate.strategy.SkipStrategy
+import moxy.viewstate.strategy.StateStrategyType
 
 interface PlanView : MvpView {
     @StateStrategyType(value = SkipStrategy::class)

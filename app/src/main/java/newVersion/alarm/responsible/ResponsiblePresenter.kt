@@ -1,7 +1,8 @@
 package newVersion.alarm.responsible
 
-import com.arellomobile.mvp.InjectViewState
-import com.arellomobile.mvp.MvpPresenter
+
+import moxy.InjectViewState
+import moxy.MvpPresenter
 import newVersion.utils.Alarm
 import newVersion.commonInterface.Destroyable
 import newVersion.commonInterface.Init

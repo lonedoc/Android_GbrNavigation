@@ -7,9 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
-import com.arellomobile.mvp.MvpAppCompatFragment
-import com.arellomobile.mvp.presenter.InjectPresenter
 import kobramob.rubeg38.ru.gbrnavigation.R
+import moxy.MvpAppCompatFragment
+import moxy.presenter.InjectPresenter
 import newVersion.utils.Alarm
 
 class CardFragment : MvpAppCompatFragment(), CardView {

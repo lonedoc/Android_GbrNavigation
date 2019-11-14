@@ -3,7 +3,7 @@ package newVersion.network.auth
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import kobramob.rubeg38.ru.networkprotocol.BuildConfig
+import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import newVersion.models.Auth
 import newVersion.models.AuthInfo
 import newVersion.models.Credentials
@@ -37,7 +37,7 @@ class RPAuthAPI(
     }
 
     override fun onTextMessageReceived(message: String) {
-        Log.d("AuthMessage", message)
+        Log.d("AlarmMessage Auth", message)
 
         val gson = Gson()
 

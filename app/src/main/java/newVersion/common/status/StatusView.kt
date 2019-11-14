@@ -1,6 +1,6 @@
 package newVersion.common.status
 
-import com.arellomobile.mvp.MvpView
+import moxy.MvpView
 
 interface StatusView : MvpView {
     fun showToastMessage(message: String)

@@ -8,6 +8,6 @@
         </shape>
     </item>
     <item android:top="12dp" android:left="12dp" android:bottom="12dp" android:right="12dp">
-        <inset android:drawable="@drawable/ic_phone"/>
+        <inset android:drawable="@drawable/ic_phone_enable"/>
     </item>
 </layer-list>

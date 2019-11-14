@@ -10,12 +10,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
-import com.arellomobile.mvp.MvpAppCompatDialogFragment
-import com.arellomobile.mvp.presenter.InjectPresenter
 import kobramob.rubeg38.ru.gbrnavigation.R
+import moxy.MvpAppCompatDialogFragment
+import moxy.presenter.InjectPresenter
 
 
-class PersonalCardFragment:MvpAppCompatDialogFragment(),PersonalCardView {
+class PersonalCardFragment: MvpAppCompatDialogFragment(),PersonalCardView {
 
     @InjectPresenter
     lateinit var presenter: PersonalCardPresenter

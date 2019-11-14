@@ -3,7 +3,10 @@ package newVersion.alarm.navigator
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ResolveInfo
+import android.content.res.ColorStateList
 import android.location.LocationManager
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -12,10 +15,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import com.arellomobile.mvp.MvpAppCompatFragment
-import com.arellomobile.mvp.presenter.InjectPresenter
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
+import moxy.MvpAppCompatFragment
+import moxy.presenter.InjectPresenter
 import newVersion.utils.Alarm
 import newVersion.servicess.LocationListener.Companion.imHere
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
@@ -32,7 +36,7 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 
-class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
+class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
     override fun addRoadOverlay(roadOverlay: Polyline?) {
         activity!!.runOnUiThread {
             mMapView!!.overlays.add(roadOverlay)
@@ -106,24 +110,25 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
             routeServers.count()>1->{
                 for(i in 0 until routeServers.count())
                 {
-                    roadManager.setService("http:" + routeServers[0] + "/route/v1/driving/")
+                    roadManager.setService("http:" + routeServers[i] + "/route/v1/driving/")
                     roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
                     road = roadManager.getRoad(waypoints)
 
                     if(road?.mStatus != Road.STATUS_OK ||
-                        presenter.distance(road) == null ||
-                        road.mRouteHigh!!.size == 2 && presenter.distance(road)!!>distance
+                        presenter.distance(road) == null
                     )
                     {
                         showToastMessage("Невозможно проложить путь до объекта, ошибка сервера ${routeServers[i]}")
-                        return
+                        continue
                     }
                     else
                     {
+
                         continue
                     }
                 }
             }
+
 
             routeServers.count()==1->{
                 roadManager.setService("http:" + routeServers[0] + "/route/v1/driving/")
@@ -131,14 +136,19 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
                 road = roadManager.getRoad(waypoints)
 
                 if(road?.mStatus != Road.STATUS_OK ||
-                    presenter.distance(road) == null ||
-                    road.mRouteHigh!!.size == 2 && presenter.distance(road)!!>distance
+                    presenter.distance(road) == null
                 )
                 {
                     showToastMessage("Невозможно проложить путь до объекта, ошибка сервера ${routeServers[0]}")
                     return
                 }
             }
+        }
+        if(road!!.mRouteHigh!!.size < 3 && presenter.distance(road)!!>distance)
+        {
+            buildTrack = false
+            buildTrack(distance,waypoints,routeServers)
+            return
         }
 
         if(imHere==null)
@@ -147,6 +157,7 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
             showToastMessage("Путь проложен от вашего нынешнего месторасположения")
 
         activity!!.runOnUiThread {
+            buildTrack = false
             presenter.tracking(road,distance,waypoints[1])
         }
     }
@@ -173,6 +184,61 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
     ): View? {
         rootView = inflater.inflate(R.layout.fragment_alarm_navigator,container,false)
         mMapView = rootView?.findViewById(R.id.alarm_navigator_mapView)
+
+        val myLocation: FloatingActionButton = rootView?.findViewById(R.id.alarm_navigator_myLocation)!!
+        val followMe:FloatingActionButton = rootView?.findViewById(R.id.alarm_navigator_followMe)!!
+        val yandex:FloatingActionButton = rootView?.findViewById(R.id.alarm_navigator_yandex)!!
+
+
+        myLocation.setOnClickListener {
+            if (locationOverlay?.isFollowLocationEnabled!!) {
+                locationOverlay?.disableFollowLocation()
+                followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.viewBackground))
+                followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.colorPrimary))
+            }
+            if (locationOverlay?.lastFix != null) {
+                presenter.setCenter(locationOverlay?.lastFix!!)
+            } else {
+                showToastMessage("Ваше месторасположение не определено")
+            }
+        }
+        followMe.setOnClickListener {
+            when {
+                locationOverlay?.isFollowLocationEnabled!! -> {
+                    locationOverlay?.disableFollowLocation()
+                    followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.viewBackground))
+                    followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.colorPrimary))
+                }
+                !locationOverlay?.isFollowLocationEnabled!! -> {
+                    locationOverlay?.enableFollowLocation()
+                    followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.colorPrimary))
+                    followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.viewBackground))
+                }
+            }
+        }
+        yandex.setOnClickListener {
+            val info = activity!!.intent.getSerializableExtra("info") as Alarm
+
+            if(presenter.haveCoordinate(info)){
+                val uri: Uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=55.70&lon_to=37.64")
+                val intent = Intent(Intent.ACTION_VIEW,uri)
+                intent.setPackage("ru.yandex.yandexnavi")
+                val packageManager = activity!!.packageManager
+                val activities:List<ResolveInfo> = packageManager.queryIntentActivities(intent,0)
+                val isIntentSafe = activities.isNotEmpty()
+                if(isIntentSafe)
+                {
+                    activity!!.startActivity(intent)
+                }
+                else
+                {
+                    val playMarket = Intent(Intent.ACTION_VIEW)
+                    playMarket.data = Uri.parse("market://details?id=ru.yandex.yandexnavi")
+                    startActivity(playMarket)
+                }
+            }
+        }
+
         return rootView
     }
 
@@ -217,7 +283,7 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
         thread {
             if (waitLoop) return@thread
             waitLoop = true
-            while (locationOverlay?.lastFix == null && isAlive) {
+            while (imHere == null && isAlive) {
                 // wait
                 sleep(2000)
             }
@@ -225,13 +291,9 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
                 return@thread
 
             activity!!.runOnUiThread {
-                if (imHere != null) {
-                    mMapView?.overlays?.remove(locationOverlay)
-                    mMapView?.overlays?.add(initLocationOverlay())
-                    presenter.setCenter(imHere)
-                } else {
-                    presenter.setCenter(locationOverlay?.lastFix)
-                }
+
+                presenter.setCenter(imHere)
+
                 waitLoop = false
                 showToastMessage("Удалось определить ваше последнее месторасположение")
 
@@ -281,7 +343,9 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
             gpsMyLocationProvider.addLocationSource(imHere!!.provider)
             MyLocationNewOverlay(gpsMyLocationProvider, mMapView)
         } else {
-            MyLocationNewOverlay(mMapView)
+            gpsMyLocationProvider.clearLocationSources()
+            gpsMyLocationProvider.addLocationSource(LocationManager.GPS_PROVIDER)
+            MyLocationNewOverlay(gpsMyLocationProvider, mMapView)
         }
         locationOverlay?.setDirectionArrow(presenter.customIcon(R.drawable.ic_navigator_icon, context!!), presenter.customIcon(R.drawable.ic_navigator_active_icon, context!!))
         locationOverlay?.isDrawAccuracyEnabled = false

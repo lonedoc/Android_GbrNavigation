@@ -1,6 +1,6 @@
 package newVersion.main
 
-import com.arellomobile.mvp.MvpView
+import moxy.MvpView
 import newVersion.models.Credentials
 import newVersion.models.HostPool
 

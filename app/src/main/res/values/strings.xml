@@ -63,5 +63,10 @@
     <string name="object_additionally">Дополнительно:</string>
     <string name="object_number">Номер объекта:</string>
     <string name="position">Должность:</string>
+    <string name="arrived_distance">Дистанция прибытия:</string>
+    <string name="pcs_phone">Дежурная часть</string>
+    <string name="es_phone">Экстренные службы:</string>
+    <string name="us_phone">Коммунальный службы:</string>
+    <string name="phone_service_center">Сервисный центр</string>
 
 </resources>

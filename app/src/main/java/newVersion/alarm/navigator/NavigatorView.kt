@@ -1,13 +1,13 @@
 package newVersion.alarm.navigator
 
-import com.arellomobile.mvp.MvpView
-import com.arellomobile.mvp.viewstate.strategy.SkipStrategy
-import com.arellomobile.mvp.viewstate.strategy.StateStrategyType
+import moxy.MvpView
+import moxy.viewstate.strategy.SkipStrategy
+import moxy.viewstate.strategy.StateStrategyType
 import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Polyline
 
-interface NavigatorView:MvpView {
+interface NavigatorView: MvpView {
     @StateStrategyType(value = SkipStrategy::class)
     fun showToastMessage(message:String)
     @StateStrategyType(value = SkipStrategy::class)

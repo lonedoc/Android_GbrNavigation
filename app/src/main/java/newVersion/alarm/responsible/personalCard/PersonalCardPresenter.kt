@@ -1,12 +1,12 @@
 package newVersion.alarm.responsible.personalCard
 
-import com.arellomobile.mvp.InjectViewState
-import com.arellomobile.mvp.MvpPresenter
+import moxy.InjectViewState
+import moxy.MvpPresenter
 import newVersion.commonInterface.Destroyable
 import newVersion.commonInterface.Init
 
 @InjectViewState
-class PersonalCardPresenter:MvpPresenter<PersonalCardView>(),Init,Destroyable {
+class PersonalCardPresenter: MvpPresenter<PersonalCardView>(),Init,Destroyable {
 
     override var init: Boolean = false
 

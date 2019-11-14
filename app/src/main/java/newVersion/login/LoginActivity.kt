@@ -10,13 +10,13 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.arellomobile.mvp.MvpAppCompatActivity
-import com.arellomobile.mvp.presenter.InjectPresenter
 import com.google.firebase.messaging.RemoteMessage
 import java.lang.Exception
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_login.*
+import moxy.MvpAppCompatActivity
+import moxy.presenter.InjectPresenter
 import newVersion.utils.PrefsUtil
 import newVersion.common.CommonActivity
 import newVersion.login.resource.AdapterIpAddress

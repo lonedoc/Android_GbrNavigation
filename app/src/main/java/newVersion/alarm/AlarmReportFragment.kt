@@ -7,11 +7,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.*
-import com.arellomobile.mvp.MvpAppCompatDialogFragment
 import kobramob.rubeg38.ru.gbrnavigation.R
+import moxy.MvpAppCompatDialogFragment
 import newVersion.callback.ReportCallback
 
-class AlarmReportFragment:MvpAppCompatDialogFragment() {
+class AlarmReportFragment: MvpAppCompatDialogFragment() {
 
     companion object{
         lateinit var callback: ReportCallback
@@ -59,11 +59,11 @@ class AlarmReportFragment:MvpAppCompatDialogFragment() {
             .setView(rootView)
             .setTitle("Отправка рапорта")
             .setNeutralButton("Отложить"){
-                    dialogInterface, i ->
+                    _, _ ->
                 callback.reportNotSend()
             }
             .setPositiveButton("Отправить"){
-                    dialogInterface, i ->
+                    _, _ ->
                 callback.sendReport(selectedReport,editText.text.toString())
             }
             .show()

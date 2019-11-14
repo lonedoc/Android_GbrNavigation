@@ -1,5 +1,6 @@
 package newVersion.network.alarm
 
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import java.lang.Exception
@@ -40,9 +41,13 @@ class RPAlarmAPI(
     override fun onTextMessageReceived(message: String) {
         val gson = Gson()
 
-        if (!JSONObject(message).has("command")) {
-            return
-        }
+        if (!JSONObject(message).has("command")) return
+
+        if(JSONObject(message).getString("command")!= "alarm") return
+
+        Log.d("AlarmMessage", message)
+        Log.d("AlarmMessage","$onAlarmListener")
+
         when (JSONObject(message).getString("command")) {
             "alarm" -> {
                 try {
@@ -50,12 +55,9 @@ class RPAlarmAPI(
                     if (alarm.name != null)
                         onAlarmListener?.onAlarmDataReceived(alarm)
                 } catch (e: Exception) {
+                    Log.d("AlarmMessage","${e.printStackTrace()}")
                     e.printStackTrace()
                 }
-                return
-            }
-            else -> {
-                return
             }
         }
     }

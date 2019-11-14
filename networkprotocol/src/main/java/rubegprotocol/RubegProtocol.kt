@@ -1,14 +1,20 @@
 package rubegprotocol
 
+import android.util.Log
 import org.json.JSONObject
 import ru.rubeg38.rubegprotocol.*
+import ru.rubeg38.rubegprotocol.PriorityQueue
+import ru.rubeg38.rubegprotocol.Queue
 import java.io.IOException
 import java.lang.Thread.sleep
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.DatagramChannel
+import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Semaphore
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.concurrent.thread
 
 class RubegProtocol {
@@ -84,7 +90,8 @@ class RubegProtocol {
             if (this.textMessageWatchers[i] == null) {
                 this.textMessageWatchers[i] = watcher
 
-                return { this.textMessageWatchers[i] = null }
+                return {
+                    this.textMessageWatchers[i] = null }
             }
 
             i++
@@ -92,7 +99,9 @@ class RubegProtocol {
 
         this.textMessageWatchers.add(watcher)
 
-        return { this.textMessageWatchers[i] = null }
+        return {
+
+            this.textMessageWatchers[i] = null }
     }
 
     fun subscribe(watcher: BinaryMessageWatcher): () -> Unit {
@@ -424,6 +433,7 @@ class RubegProtocol {
     }
 
     private fun handleData(packet: DataPacket) {
+
         val messageNumber = packet.headers.messageNumber
 
         val acknowledgement = AcknowledgementPacket(packet)
@@ -453,10 +463,12 @@ class RubegProtocol {
                     ContentType.STRING -> {
                         val message = String(transmission.message!!)
                         textMessageWatchers.forEach { it?.onTextMessageReceived(message) }
+                        Log.d("AlarmMessage","$textMessageWatchers")
                     }
                     ContentType.BINARY -> {
                         val message = transmission.message!!
                         binaryMessageWatchers.forEach { it?.onBinaryMessageReceived(message) }
+                        Log.d("AlarmMessage","$textMessageWatchers")
                     }
                     ContentType.CONNECTION -> TODO()
                     ContentType.ACKNOWLEDGEMENT -> TODO()
