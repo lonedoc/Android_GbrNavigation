@@ -88,7 +88,7 @@
         <activity android:name="newVersion.common.directory.DirectoryActivity"
             android:keepScreenOn="true"/>
 
-        <activity android:name="newVersion.common.NewCommonActivity"
+        <activity android:name="newVersion.common.CommonActivity"
             android:keepScreenOn="true"
         />
 

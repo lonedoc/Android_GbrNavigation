@@ -21,7 +21,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import moxy.MvpAppCompatActivity
 import moxy.presenter.InjectPresenter
 import newVersion.utils.PrefsUtil
-import newVersion.common.NewCommonActivity
+import newVersion.common.CommonActivity
 import newVersion.login.LoginActivity
 import newVersion.models.Credentials
 import newVersion.models.HostPool
@@ -234,7 +234,7 @@ class MainActivity : MvpAppCompatActivity(), MainView {
 
         runOnUiThread {
             presenter.onDestroy()
-            val intent = Intent(this, NewCommonActivity::class.java)
+            val intent = Intent(this, CommonActivity::class.java)
             startActivity(intent)
             Log.d("LoginActivity", "RegisterSuccess")
         }

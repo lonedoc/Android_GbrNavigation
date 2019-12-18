@@ -13,6 +13,10 @@ import newVersion.utils.Alarm
 
 class AlarmDialogActivity:AppCompatActivity() {
 
+    companion object{
+        var isAlive:Boolean = false
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.fragment_alarm_dialog)
@@ -33,14 +37,22 @@ class AlarmDialogActivity:AppCompatActivity() {
                 alertSound.release()
             }
 
-            finish()
-
             val alarmActivity = Intent(this, AlarmActivity::class.java)
 
             alarmActivity.putExtra("info", alarm)
 
             startActivity(alarmActivity)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        isAlive = true
+    }
+
+    override fun onStop() {
+        super.onStop()
+        isAlive = false
     }
 
 }

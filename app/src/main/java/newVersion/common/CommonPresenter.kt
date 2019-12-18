@@ -5,16 +5,13 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.Location
-import android.location.LocationManager
 import android.util.Log
 import androidx.core.content.ContextCompat
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.common.alarm.AlarmDialogFragment
-import newVersion.commonInterface.Destroyable
+import newVersion.common.alarm.AlarmDialogActivity
 import newVersion.commonInterface.Init
-import newVersion.models.Credentials
 import newVersion.models.HostPool
 import newVersion.network.alarm.AlarmAPI
 import newVersion.network.alarm.OnAlarmListener
@@ -25,93 +22,35 @@ import newVersion.network.status.StatusAPI
 import newVersion.servicess.NetworkService
 import newVersion.utils.Alarm
 import newVersion.utils.DataStoreUtils
+import newVersion.utils.DataStoreUtils.statusList
 import newVersion.utils.GpsStatus
+import newVersion.utils.PrefsUtil
 import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 
 @InjectViewState
-class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmListener, Init, Destroyable {
-
-    private var context: Context? = null
-
-    fun getContext(context: Context?) {
-        this.context = context
-    }
-
-    override fun onAlarmDataReceived(alarm: Alarm) {
-        Log.d("CommonPresenter", "$alarm")
-
-        if (!AlarmDialogFragment.isAlive)
-            if (CommonActivity.isAlive)
-            {
-                viewState.openAlarmDialog(alarm)
-            }
-            else {
-                sleep(2000)
-                val unsleepActivity = Intent(context, CommonActivity::class.java)
-                unsleepActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                unsleepActivity.putExtra("activeSound", false)
-                unsleepActivity.putExtra("alarm",alarm)
-                context?.startActivity(unsleepActivity)
-            }
-        waitApply = true
-    }
-
-    fun sendAlarmRequest(namegbr: String) {
-        if (waitApply) return
-        alarmApi?.sendAlarmRequest(
-            namegbr,
-            complete = {
-                if (!it) {
-                    viewState.showToastMessage("Проверка наличия тревоги не удалась")
-                } else {
-                    viewState.showToastMessage("Проверка наличия тревоги")
-                }
-            }
-        )
-    }
-
-    private var statusAPI: StatusAPI? = null
-    private var alarmApi: AlarmAPI? = null
-    override var init: Boolean = false
-
-    private var waitApply = false
-    override fun isInit(): Boolean {
-        return init
-    }
+class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAlarmListener {
 
     override fun onStatusDataReceived(status: String, call: String) {
-        if (DataStoreUtils.status == status) return
+        if(DataStoreUtils.status == status) return
 
-            DataStoreUtils.status = status
-            DataStoreUtils.call = call
-            fillStatusBar()
-            setTitle()
-            viewState.createNotification("gbrstatus", status)
+        DataStoreUtils.status = status
+        DataStoreUtils.call = call
+        fillStatusBar()
+        setTitle()
 
-        val statusList = DataStoreUtils.statusList
-        for (i in 0 until DataStoreUtils.statusList.count()) {
+        for (i in 0 until statusList.count()) {
             if (statusList[i].name == status && statusList[i].time != "0") {
                 viewState.createStatusTimer(statusList[i].time.toLong())
             }
         }
 
+        viewState.createNotification("gbrstatus", status)
     }
 
-    fun sendStatusRequest(status: String) {
-        statusAPI?.sendStatusRequest(
-            status,
-            complete = { success ->
-                if (!success) {
-                    viewState.showToastMessage("Запрос на смену статуса не был отправлен")
-                }
-            }
-        )
-    }
-
-    fun fillStatusBar() {
+    private fun fillStatusBar() {
         val statusList: ArrayList<GpsStatus> = ArrayList()
 
         for (i in 0 until DataStoreUtils.statusList.count()) {
@@ -123,44 +62,95 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
         viewState.fillStatusBar(statusList)
     }
 
-    fun init(preferences: newVersion.models.Preferences?) {
+    fun sendStatusRequest(status: String) {
+        statusAPI?.sendStatusRequest(
+            status,
+            complete = { success ->
+                if (!success) {
+                    viewState.showToastMessage("Запрос на смену статуса не был отправлен, запрос будет отправлен повторно")
+                    sendStatusRequest(status)
+                }
+            }
+        )
+    }
+
+    override fun onAlarmDataReceived(alarm: Alarm) {
+        onDestroy()
+
+        val activity = Intent(context, AlarmDialogActivity::class.java)
+        activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        activity.putExtra("info",alarm)
+        context?.startActivity(activity)
+    }
+
+    fun alarmCheck(namegbr: String) {
+        alarmApi?.sendAlarmRequest(
+            namegbr,
+            complete = {
+                if(!it){
+                    viewState.showToastMessage("Проверка наличия тревоги не удалось, повторная отправка")
+                    alarmCheck(namegbr)
+                }
+            }
+        )
+    }
+
+    override fun isInit():Boolean{
+        return init
+    }
+
+    override var init:Boolean = false
+
+    private var statusAPI: StatusAPI? = null
+    private var alarmApi: AlarmAPI? = null
+
+    private var context:Context? = null
+
+    fun init(){
+        setTitle()
+        fillStatusBar()
+        viewState.initMapView()
+        viewState.addOverlays()
+    }
+
+    fun initData(
+        preferences: PrefsUtil,
+        context: Context
+    ) {
+        if(isInit()) return
+
+        init()
+
         init = true
+        this.context = context
 
-        Log.d("CommonPresenter", "Init")
-        val addresses = preferences?.serverAddress
-        val port = preferences?.serverPort
-        val imei = preferences?.imei
-        val fcmtoken = preferences?.fcmtoken
 
-        val credentials = Credentials(
-            imei.toString(),
-            fcmtoken!!
+        val credentials = newVersion.models.Credentials(
+            preferences.imei.toString(),
+            preferences.fcmtoken!!
         )
 
         val hostPool = HostPool(
-            addresses = addresses!!,
-            port = port!!.toInt()
+            preferences.serverAddress,
+            preferences.serverPort
         )
 
-        if (!NetworkService.isServiceStarted) {
-            viewState.startService(credentials, hostPool)
-        }
-
-        viewState.initMapView()
-
-        viewState.addOverlays()
+        if(!NetworkService.isServiceStarted)
+            viewState.startService(credentials,hostPool)
 
         val protocol = RubegProtocol.sharedInstance
 
-        if (statusAPI != null) statusAPI?.onDestroy()
+        if(statusAPI != null) statusAPI?.onDestroy()
         statusAPI = RPStatusAPI(protocol)
         statusAPI?.onStatusListener = this
-        sleep(2)
+        sleep(100)
 
-        if (alarmApi != null) alarmApi?.onDestroy()
+        if(alarmApi != null) alarmApi?.onDestroy()
         alarmApi = RPAlarmAPI(protocol)
         alarmApi?.onAlarmListener = this
-        sleep(2)
+        sleep(100)
+
+        alarmCheck(DataStoreUtils.namegbr!!)
     }
 
     fun setTitle() {
@@ -168,6 +158,27 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
             viewState.setTitle("${DataStoreUtils.call} ( ${DataStoreUtils.status} ) ver. ${BuildConfig.VERSION_NAME}")
         } else {
             viewState.setTitle("Группа не поставлена на дежурство")
+        }
+    }
+
+    override fun onDestroy() {
+        init = false
+        if(alarmApi != null) alarmApi?.onDestroy()
+        if(statusAPI != null) statusAPI?.onDestroy()
+        super.onDestroy()
+    }
+
+    fun setCenter(imHere: Location?) {
+        if(imHere!=null){
+            viewState.setCenter(GeoPoint(imHere))
+        }
+        else
+        {
+            viewState.showToastMessage("Ваше месторасположение не определено")
+            thread{
+                sleep(5000)
+                viewState.waitCoordinate()
+            }
         }
     }
 
@@ -186,41 +197,7 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
         return bitmap
     }
 
-    fun setCenter(imHere: Location?) {
-        if (imHere != null) {
-            viewState.setCenter(GeoPoint(imHere))
-        } else {
-            viewState.showToastMessage("Ваше месторасположение не определено")
-            thread {
-                sleep(5000)
-                viewState.setCenterLoop()
-            }
-        }
-    }
-
-    private var stateGpsCheckStart = false
-    fun stateGpsCheck(locationManager: LocationManager) {
-        thread {
-            Log.d("StateGpsCheck", "$stateGpsCheckStart")
-            if (stateGpsCheckStart) return@thread
-            stateGpsCheckStart = true
-            while (stateGpsCheckStart) {
-                if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    stateGpsCheckStart = false
-                    if (CommonActivity.isAlive)
-                        viewState.createSettingGpsDialog()
-                    return@thread
-                }
-            }
-        }
-    }
-
-    override fun onDestroy() {
-        statusAPI?.onDestroy()
-        alarmApi?.onDestroy()
-        init = false
-        super.onDestroy()
-    }
 }
-
-
+data class CurrentTime(
+    var currentTime: String
+)

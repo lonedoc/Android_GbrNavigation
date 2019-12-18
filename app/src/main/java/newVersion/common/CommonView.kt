@@ -1,5 +1,6 @@
 package newVersion.common
 
+import android.location.LocationManager
 import moxy.MvpView
 import moxy.viewstate.strategy.SkipStrategy
 import moxy.viewstate.strategy.StateStrategyType
@@ -9,28 +10,35 @@ import newVersion.utils.Alarm
 import newVersion.utils.GpsStatus
 import org.osmdroid.util.GeoPoint
 
-interface CommonView : MvpView {
-
-    fun setTitle(title: String)
+interface CommonView:MvpView {
 
     @StateStrategyType(value = SkipStrategy::class)
-    fun showToastMessage(message: String)
+    fun createNotification(command: String, status: String)
 
-    fun initMapView()
-    fun addOverlays()
-    fun setCenter(geoPoint: GeoPoint)
-    fun setCenterLoop()
     fun fillStatusBar(statusList: ArrayList<GpsStatus>)
 
     @StateStrategyType(value = SkipStrategy::class)
-    fun openAlarmDialog(alarm: Alarm)
+    fun setTitle(title:String)
+
     @StateStrategyType(value = SkipStrategy::class)
-    fun createNotification(command: String, status: String)
+    fun callSettingGPS(locationManager: LocationManager)
+
     @StateStrategyType(value = SkipStrategy::class)
-    fun createSettingGpsDialog()
+    fun startService(credentials: Credentials, hostPool: HostPool)
+
+    @StateStrategyType(value = SkipStrategy::class)
+    fun showToastMessage(message:String)
+
+    fun setCenter(geoPoint: GeoPoint)
+
+    @StateStrategyType(value = SkipStrategy::class)
+    fun waitCoordinate()
+
     @StateStrategyType(value = SkipStrategy::class)
     fun createStatusTimer(time: Long)
 
-    fun startService(credentials: Credentials, hostPool: HostPool)
-    fun openAlarmActivity(alarm: Alarm)
+
+    fun initMapView()
+
+    fun addOverlays()
 }

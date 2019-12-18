@@ -16,7 +16,7 @@ import com.google.firebase.messaging.RemoteMessage
 import kobramob.rubeg38.ru.gbrnavigation.R
 import newVersion.alarm.AlarmActivity
 import newVersion.common.CommonActivity
-import newVersion.common.alarm.AlarmDialogFragment
+import newVersion.common.alarm.AlarmDialogActivity
 
 class FirebaseMessage : FirebaseMessagingService() {
     override fun onMessageReceived(p0: RemoteMessage) {
@@ -24,7 +24,7 @@ class FirebaseMessage : FirebaseMessagingService() {
             p0.data["message"] == "Связь с сервером потеряна" -> {
                 Log.d("Push - message", "Связь с сервером потеряна")
             }
-            CommonActivity.isAlive || AlarmActivity.isAlive || AlarmDialogFragment.isAlive->{
+            CommonActivity.isAlive || AlarmActivity.isAlive || AlarmDialogActivity.isAlive->{
                 val alarmBuilder: NotificationCompat.Builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) NotificationCompat.Builder(
                     this,
                     alarmChannelID(this)
@@ -74,7 +74,7 @@ class FirebaseMessage : FirebaseMessagingService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             when{
-                AlarmActivity.isAlive || AlarmActivity.isAlive || AlarmDialogFragment.isAlive->{
+                AlarmActivity.isAlive || AlarmActivity.isAlive || AlarmDialogActivity.isAlive->{
                     val channel = NotificationChannel(
                         notificationChannelId,
                         "Alarm channel",
