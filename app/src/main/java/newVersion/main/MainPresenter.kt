@@ -1,6 +1,10 @@
 package newVersion.main
 
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
+import androidx.core.content.ContextCompat.startActivity
+import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import moxy.InjectViewState
 import moxy.MvpPresenter
 import java.lang.Thread.sleep
@@ -120,10 +124,23 @@ class MainPresenter : MvpPresenter<MainView>(), OnAuthListener, Destroyable, Ini
     override fun onAuthDataReceived(auth: Auth) {
         if (!waitingForAuth) return
 
+        Log.d("Auth","Hello")
         if (auth.authorized) {
+
             DataStoreUtils.saveRegistrationData(authInfo = auth.authInfo!!)
             viewState.showToastMessage("Авторизация прошла успешно")
             viewState.openCommonActivity()
+            /*if(auth.authInfo?.lastVersion!= BuildConfig.VERSION_NAME)
+            {
+                //OpenDialog
+                //TODO сделать диалоговое окно для отправки в магазин
+                //TODO сделать диалоговое окно для ЧТО нового
+            }
+            else
+            {
+
+            }*/
+
         } else {
             val protocol = RubegProtocol.sharedInstance
             if (protocol.isStarted) {

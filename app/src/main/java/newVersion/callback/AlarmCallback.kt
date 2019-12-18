@@ -2,6 +2,6 @@ package newVersion.callback
 
 import newVersion.utils.Alarm
 
-interface CommonCallback {
+interface AlarmCallback {
     fun applyAlarm(alarm: Alarm)
 }

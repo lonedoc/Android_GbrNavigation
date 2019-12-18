@@ -17,7 +17,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import kobramob.rubeg38.ru.gbrnavigation.R
-import newVersion.callback.CommonCallback
+import newVersion.callback.AlarmCallback
 import newVersion.utils.Alarm
 
 class AlarmDialogFragment : DialogFragment() {
@@ -27,10 +27,10 @@ class AlarmDialogFragment : DialogFragment() {
 
     companion object {
         var isAlive = false
-        var callback: CommonCallback? = null
+        var callback: AlarmCallback? = null
         var activeSound = true
 
-        fun newInstance(alarm: Alarm, callback: CommonCallback, activeSound: Boolean): AlarmDialogFragment {
+        fun newInstance(alarm: Alarm, callback: AlarmCallback, activeSound: Boolean): AlarmDialogFragment {
             this.callback = callback
             this.activeSound = activeSound
             val frag = AlarmDialogFragment()

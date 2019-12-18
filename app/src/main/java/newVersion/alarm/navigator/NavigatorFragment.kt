@@ -220,7 +220,7 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
             val info = activity!!.intent.getSerializableExtra("info") as Alarm
 
             if(presenter.haveCoordinate(info)){
-                val uri: Uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=55.70&lon_to=37.64")
+                val uri: Uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=${info.lat}&lon_to=${info.lon}")
                 val intent = Intent(Intent.ACTION_VIEW,uri)
                 intent.setPackage("ru.yandex.yandexnavi")
                 val packageManager = activity!!.packageManager

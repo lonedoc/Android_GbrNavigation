@@ -14,6 +14,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import rubegprotocol.RubegProtocol
+import java.lang.Thread.sleep
 
 @InjectViewState
 class PlanPresenter : MvpPresenter<PlanView>(), OnImageListener,Init,Destroyable {
@@ -79,16 +80,28 @@ class PlanPresenter : MvpPresenter<PlanView>(), OnImageListener,Init,Destroyable
         this.imageApi?.onImageListener = this
 
         for(i in 0 until imageName.count()){
-            imageApi?.sendImageRequest(imageName[i]){
-                if(!it){
-                    viewState.showToastMessage("Невозможно скачать изображение ${imageName[i]}")
-                }
-            }
+
+            imageDownload(image = imageName[i],count = imageName.count())
             countQueueImageInDownload++
         }
         imageName.clear()
     }
 
+    private var imageDownloadStart = false
+    private fun imageDownload(image:String,count:Int){
+        if(imageDownloadStart) return
+
+        imageApi?.sendImageRequest(image){
+            if(!it){
+                sleep(1000)
+                imageDownloadStart = false
+            }
+        }
+
+        if(countQueueImageInDownload == count)
+            imageDownloadStart = true
+
+    }
     override fun isInit(): Boolean {
         return init
     }

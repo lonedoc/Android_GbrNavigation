@@ -73,24 +73,27 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
             connectionLost = true
             when {
                 isConnected(applicationContext) -> {
-                    val remoteMessage1 = RemoteMessage.Builder("Status")
-                        .addData("command", "disconnectServer")
-                        .build()
-                    createNotification(remoteMessage1, applicationContext)
+                    thread{
+                        val remoteMessage1 = RemoteMessage.Builder("Status")
+                            .addData("command", "disconnectServer")
+                            .build()
+                        createNotification(remoteMessage1, applicationContext)
+                    }
                 }
                 else -> {
+                    thread{
+                        val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
+                            .addData("command", "disconnectInternet")
+                            .build()
+                        createNotification(remoteMessage, applicationContext)
 
-                    val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
-                        .addData("command", "disconnectInternet")
-                        .build()
-                    createNotification(remoteMessage, applicationContext)
+                        sleep(1_000)
 
-                    sleep(1_000)
-
-                    val remoteMessage1 = RemoteMessage.Builder("Status")
-                        .addData("command", "disconnectServer")
-                        .build()
-                    createNotification(remoteMessage1, applicationContext)
+                        val remoteMessage1 = RemoteMessage.Builder("Status")
+                            .addData("command", "disconnectServer")
+                            .build()
+                        createNotification(remoteMessage1, applicationContext)
+                    }
                 }
             }
         }
@@ -277,15 +280,15 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
                     if(oldSpeed == 0 && imHere?.speed!!.toInt() == 0) continue
 
+                    oldCoordinate = GeoPoint(imHere)
+                    oldSpeed = (imHere?.speed!! * 3.6).toInt()
+
                     if(!protocol.isConnected) {
 
                         coordinateQueue.add(Pair(GeoPoint(imHere),(imHere?.speed!! * 3.6).toInt()))
                         sleep(1000)
                         continue
                     }
-
-                    oldCoordinate = GeoPoint(imHere)
-                    oldSpeed = (imHere?.speed!! * 3.6).toInt()
 
                     val df = DecimalFormat("#.######")
 

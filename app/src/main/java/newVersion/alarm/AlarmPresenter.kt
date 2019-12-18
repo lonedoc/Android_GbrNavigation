@@ -79,7 +79,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
                 skipStatus = true
                  }
             name == alarmInfo?.name -> {
-                if(AlarmActivity.isAlive)
+                if(CommonActivity.isAlive)
                 {
                     viewState.showToastMessage("Тревога завершена")
                     DataStoreUtils.status = "Свободен"
@@ -109,7 +109,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
 
         if(alarm.name!=alarmInfo?.name)
             when{
-                !AlarmActivity.isAlive ->{
+                !CommonActivity.isAlive ->{
                     Log.d("AlarmPresenter","New alarm")
                     viewState.showToastMessage("Тревога завершена")
                     elapsedMillis = null
@@ -325,9 +325,9 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
 
                 if(endPoint.distanceToAsDouble(GeoPoint(imHere)) > distance) continue
 
-                if (!AlarmActivity.isAlive)
+                if (!CommonActivity.isAlive)
                 {
-                    val recallActivity = Intent( context,AlarmActivity::class.java)
+                    val recallActivity = Intent( context,CommonActivity::class.java)
                     recallActivity.putExtra("info",alarmInfo)
                     recallActivity.putExtra("elapsedMillis",elapsedMillis)
                     recallActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

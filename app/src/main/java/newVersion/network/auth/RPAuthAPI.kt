@@ -58,7 +58,8 @@ class RPAuthAPI(
                         gpsStatus = registration.gpsstatus,
                         routeServer = registration.routeserver,
                         report = registration.reports,
-                        cityCard = registration.citycard
+                        cityCard = registration.citycard,
+                        lastVersion = "1.9.4"
                     )
 
                     val auth = Auth(

@@ -80,15 +80,27 @@ class LoginActivity : MvpAppCompatActivity(), LoginView {
         }
     }
 
-    @SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission", "HardwareIds")
     private fun getImei(): String? {
         val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
 
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            telephonyMgr.imei
-        } else {
-            telephonyMgr.deviceId
+        try {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+                {
+                    telephonyMgr.subscriberId
+                }
+                else
+                    telephonyMgr.imei
+            } else {
+                telephonyMgr.deviceId
+            }
+        }catch (e:Exception)
+        {
+            showToastMessage("Приложение не работает на Андройд Q в связи с системными ограничениями, мы решим данную проблему в ближайшее время")
+            return null
         }
+
     }
 
     override fun onResume() {
@@ -150,7 +162,7 @@ class LoginActivity : MvpAppCompatActivity(), LoginView {
 
     override fun showToastMessage(message: String?) {
         runOnUiThread {
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
         }
     }
 

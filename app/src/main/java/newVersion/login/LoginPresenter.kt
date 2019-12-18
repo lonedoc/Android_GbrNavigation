@@ -3,6 +3,7 @@ package newVersion.login
 import android.util.Log
 import android.view.View
 import com.google.firebase.iid.FirebaseInstanceId
+import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import moxy.InjectViewState
 import moxy.MvpPresenter
 import java.lang.Thread.sleep
@@ -254,6 +255,17 @@ class LoginPresenter : MvpPresenter<LoginView>(), OnAuthListener, Destroyable, I
             viewState.showToastMessage("Регистрация прошла успешно")
             viewState.closeDialog()
             viewState.openCommonScreen()
+           /* if(auth.authInfo?.lastVersion!= BuildConfig.VERSION_NAME)
+            {
+                //OpenDialog
+                //TODO сделать диалоговое окно для отправки в магазин
+                //TODO сделать диалоговое окно для ЧТО нового
+            }
+                else
+            {
+
+            }*/
+
         } else {
             viewState.closeDialog()
             val protocol = RubegProtocol.sharedInstance

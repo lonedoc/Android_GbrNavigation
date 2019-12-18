@@ -5,10 +5,14 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.READ_" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -39,7 +43,6 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:targetApi="n">
 
-        <activity android:name="oldVersion.referenceactivity.ReferenceActivity" />
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
@@ -48,8 +51,6 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="default" />
-
-
 
         <service
             android:name="newVersion.servicess.NetworkService"
@@ -86,6 +87,17 @@
 
         <activity android:name="newVersion.common.directory.DirectoryActivity"
             android:keepScreenOn="true"/>
+
+        <activity android:name="newVersion.common.NewCommonActivity"
+            android:keepScreenOn="true"
+        />
+
+        <activity
+            android:name="newVersion.common.alarm.AlarmDialogActivity"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.UserDialog"
+            />
+
         <!--<service
             android:name="mad.location.manager.lib.Services.KalmanLocationService"
             android:enabled="true"

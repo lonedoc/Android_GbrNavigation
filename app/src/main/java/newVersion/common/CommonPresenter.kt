@@ -88,15 +88,15 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
             DataStoreUtils.status = status
             DataStoreUtils.call = call
             fillStatusBar()
-            val statusList = DataStoreUtils.statusList
             setTitle()
             viewState.createNotification("gbrstatus", status)
 
-            for (i in 0 until DataStoreUtils.statusList.count()) {
-                if (statusList[i].name == status && statusList[i].time != "0") {
-                    viewState.createStatusTimer(statusList[i].time.toLong())
-                }
+        val statusList = DataStoreUtils.statusList
+        for (i in 0 until DataStoreUtils.statusList.count()) {
+            if (statusList[i].name == status && statusList[i].time != "0") {
+                viewState.createStatusTimer(statusList[i].time.toLong())
             }
+        }
 
     }
 
@@ -113,11 +113,13 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
 
     fun fillStatusBar() {
         val statusList: ArrayList<GpsStatus> = ArrayList()
+
         for (i in 0 until DataStoreUtils.statusList.count()) {
             if (DataStoreUtils.statusList[i].name != "На тревоге" && DataStoreUtils.statusList[i].name != DataStoreUtils.status) {
                 statusList.add(DataStoreUtils.statusList[i])
             }
         }
+
         viewState.fillStatusBar(statusList)
     }
 
@@ -221,6 +223,4 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
     }
 }
 
-data class CurrentTime(
-    var currentTime: String
-)
+

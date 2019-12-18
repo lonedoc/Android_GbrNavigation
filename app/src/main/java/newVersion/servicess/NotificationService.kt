@@ -82,7 +82,6 @@ object NotificationService {
                 notificationManager.notify(7, notification)
             }
             "disconnectServer" -> {
-                thread {
                     sleep(3000)
                     val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                     builder.setContentTitle("Соединение с сервером")
@@ -98,10 +97,8 @@ object NotificationService {
 
                     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.notify(2, notification)
-                }.start()
             }
             "reconnectServer" -> {
-                thread {
                     sleep(3000)
                     val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
                     builder.setContentTitle("Соединение с сервером")
@@ -115,7 +112,6 @@ object NotificationService {
                     val notification = builder.build()
                     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.notify(2, notification)
-                }.start()
             }
             "connectServer" -> {
                 val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)

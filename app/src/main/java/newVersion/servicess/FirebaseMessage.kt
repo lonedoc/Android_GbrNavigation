@@ -74,7 +74,7 @@ class FirebaseMessage : FirebaseMessagingService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             when{
-                CommonActivity.isAlive || AlarmActivity.isAlive || AlarmDialogFragment.isAlive->{
+                AlarmActivity.isAlive || AlarmActivity.isAlive || AlarmDialogFragment.isAlive->{
                     val channel = NotificationChannel(
                         notificationChannelId,
                         "Alarm channel",

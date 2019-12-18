@@ -17,5 +17,6 @@ data class AuthInfo(
     var gpsStatus: ArrayList<GpsStatus>,
     var routeServer: ArrayList<String>,
     var report: ArrayList<String>,
-    var cityCard: CityCard
+    var cityCard: CityCard,
+    val lastVersion:String?
 )
