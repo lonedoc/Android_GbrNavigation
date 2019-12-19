@@ -36,8 +36,16 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
 
     private var context: Context? = null
 
+<<<<<<< HEAD
     fun getContext(context: Context?) {
         this.context = context
+=======
+        viewState.createNotification("gbrstatus", status)
+        if(status == "На тревоге")
+        {
+           onDestroy()
+        }
+>>>>>>> 52d7edf... ver. 1.9.5
     }
 
     override fun onAlarmDataReceived(alarm: Alarm) {
@@ -56,7 +64,20 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
                 unsleepActivity.putExtra("alarm",alarm)
                 context?.startActivity(unsleepActivity)
             }
+<<<<<<< HEAD
         waitApply = true
+=======
+        )
+    }
+
+    override fun onAlarmDataReceived(alarm: Alarm) {
+        alarmApi?.onDestroy()
+
+        val activity = Intent(context, AlarmDialogActivity::class.java)
+        activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        activity.putExtra("info",alarm)
+        context?.startActivity(activity)
+>>>>>>> 52d7edf... ver. 1.9.5
     }
 
     fun sendAlarmRequest(namegbr: String) {
@@ -169,6 +190,30 @@ class CommonPresenter : MvpPresenter<CommonView>(), OnStatusListener, OnAlarmLis
         }
     }
 
+<<<<<<< HEAD
+=======
+    override fun onDestroy() {
+        init = false
+        if(alarmApi != null) alarmApi?.onDestroy()
+        if(statusAPI != null) statusAPI?.onDestroy()
+        super.onDestroy()
+    }
+
+    fun setCenter(imHere: Location?) {
+        if(imHere!=null){
+            viewState.setCenter(GeoPoint(imHere))
+        }
+        else
+        {
+            viewState.showToastMessage("Ваше месторасположение не определено")
+            thread{
+                sleep(2000)
+                viewState.waitCoordinate()
+            }
+        }
+    }
+
+>>>>>>> 52d7edf... ver. 1.9.5
     fun customIcon(drawable: Int, context: Context): Bitmap? {
 
         val drawableBitmap = ContextCompat.getDrawable(context, drawable)

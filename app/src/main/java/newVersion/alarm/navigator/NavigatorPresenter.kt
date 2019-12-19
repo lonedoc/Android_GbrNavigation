@@ -130,7 +130,7 @@ class NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
             viewState.showToastMessage("Ваше месторасположение не определено, невозможно построить маршрут, приложение переходит в режим ожидания")
             thread {
                 sleep(2000)
-                viewState.setCenterLoop()
+                viewState.waitCoordinate()
             }
         }
     }

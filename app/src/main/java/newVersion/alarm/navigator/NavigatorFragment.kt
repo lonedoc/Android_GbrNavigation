@@ -118,18 +118,19 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
                         presenter.distance(road) == null
                     )
                     {
-                        showToastMessage("Невозможно проложить путь до объекта, ошибка сервера ${routeServers[i]}")
-                        continue
+                        if(i == routeServers.count() - 1)
+                        {
+                            showToastMessage("Невозможно проложить путь до объекта, не возможно подключится к серверу прокладки")
+                            return
+                        }
+
                     }
                     else
                     {
-
                         continue
                     }
                 }
             }
-
-
             routeServers.count()==1->{
                 roadManager.setService("http:" + routeServers[0] + "/route/v1/driving/")
                 roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
@@ -170,7 +171,7 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
         var isAlive = false
     }
     private var rootView:View? = null
-    private var waitLoop = false
+
 
     private var rotationGestureOverlay: RotationGestureOverlay? = null
     private var locationOverlay: MyLocationNewOverlay? = null
@@ -196,12 +197,11 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
                 followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.viewBackground))
                 followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.colorPrimary))
             }
-            if (locationOverlay?.lastFix != null) {
-                presenter.setCenter(locationOverlay?.lastFix!!)
-            } else {
-                showToastMessage("Ваше месторасположение не определено")
-            }
+
+            presenter.setCenter(locationOverlay?.lastFix!!)
+
         }
+
         followMe.setOnClickListener {
             when {
                 locationOverlay?.isFollowLocationEnabled!! -> {
@@ -216,6 +216,7 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
                 }
             }
         }
+
         yandex.setOnClickListener {
             val info = activity!!.intent.getSerializableExtra("info") as Alarm
 
@@ -275,30 +276,41 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
         mMapView?.controller?.animateTo(geoPoint)
         mMapView?.controller?.setZoom(15.0)
 
-        val info = activity!!.intent.getSerializableExtra("info") as Alarm
-        presenter.startTrack(info)
+        if(mMapView!!.overlays.size<3){
+            val info = activity!!.intent.getSerializableExtra("info") as Alarm
+            presenter.startTrack(info)
+        }
+
     }
 
-    override fun setCenterLoop() {
+    private var waitCoordinate = false
+    override fun waitCoordinate() {
+        if (waitCoordinate) return
+        waitCoordinate = true
+
         thread {
-            if (waitLoop) return@thread
-            waitLoop = true
-            while (imHere == null && isAlive) {
-                // wait
-                sleep(2000)
+            while(locationOverlay!!.lastFix == null)
+            {
+                if(!isAlive)
+                {
+                    waitCoordinate = false
+                    return@thread
+                }
+                sleep(5000)
+
             }
-            if(!isAlive)
-                return@thread
 
             activity!!.runOnUiThread {
+                mMapView!!.invalidate()
+                presenter.setCenter(locationOverlay!!.lastFix)
 
-                presenter.setCenter(imHere)
-
-                waitLoop = false
+                waitCoordinate = false
                 showToastMessage("Удалось определить ваше последнее месторасположение")
 
-                val info = activity!!.intent.getSerializableExtra("info") as Alarm
-                presenter.startTrack(info)
+                if(mMapView!!.overlays.size<3){
+                    val info = activity!!.intent.getSerializableExtra("info") as Alarm
+                    presenter.startTrack(info)
+                }
             }
         }
     }

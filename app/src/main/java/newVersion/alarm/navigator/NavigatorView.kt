@@ -17,7 +17,7 @@ interface NavigatorView: MvpView {
     @StateStrategyType(value = SkipStrategy::class)
     fun setCenter(geoPoint: GeoPoint)
     @StateStrategyType(value = SkipStrategy::class)
-    fun setCenterLoop()
+    fun waitCoordinate()
 
     @StateStrategyType(value = SkipStrategy::class)
     fun buildTrack(distance: Long,waypoints:ArrayList<GeoPoint>,routeServers:ArrayList<String>)

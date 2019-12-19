@@ -124,6 +124,7 @@ class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
                 startActivity(intent)
             }
             intent.hasExtra("alarm")->{
+<<<<<<< HEAD
                 openAlarmDialog(alarm = intent.getSerializableExtra("alarm") as Alarm)
             }
             else->{
@@ -135,6 +136,13 @@ class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
         presenter.fillStatusBar()
         presenter.getContext(null)
     }
+=======
+                presenter.init()
+                val activity = Intent(applicationContext, AlarmDialogActivity::class.java)
+                activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                activity.putExtra("info",intent.getSerializableExtra("alarm") as Alarm)
+                startActivity(activity)
+>>>>>>> 52d7edf... ver. 1.9.5
 
     override fun onStop() {
         super.onStop()
@@ -232,6 +240,41 @@ class CommonActivity : MvpAppCompatActivity(), CommonView, CommonCallback {
         }
     }
 
+<<<<<<< HEAD
+=======
+    override fun setCenter(geoPoint:GeoPoint) {
+        common_mapView.controller.animateTo(geoPoint)
+        common_mapView.controller.setZoom(15.0)
+    }
+
+    var waitCoordinate:Boolean = false
+
+    override fun waitCoordinate() {
+        if(waitCoordinate) return
+        waitCoordinate = true
+        thread{
+            while(locationOverlay!!.lastFix == null)
+            {
+                if(AlarmActivity.isAlive)
+                {
+                    waitCoordinate = false
+                    return@thread
+                }
+                sleep(5000)
+            }
+
+            runOnUiThread {
+                common_mapView.invalidate()
+
+                presenter.setCenter(locationOverlay!!.lastFix)
+
+                waitCoordinate = false
+                showToastMessage("Удалось определить ваше последнее месторасположение")
+            }
+        }
+    }
+
+>>>>>>> 52d7edf... ver. 1.9.5
     override fun fillStatusBar(statusList: ArrayList<GpsStatus>) {
         runOnUiThread {
             when (resources.configuration.orientation) {
