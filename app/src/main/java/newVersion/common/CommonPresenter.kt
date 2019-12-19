@@ -48,6 +48,10 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
         }
 
         viewState.createNotification("gbrstatus", status)
+        if(status == "На тревоге")
+        {
+           onDestroy()
+        }
     }
 
     private fun fillStatusBar() {
@@ -75,7 +79,7 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
     }
 
     override fun onAlarmDataReceived(alarm: Alarm) {
-        onDestroy()
+        alarmApi?.onDestroy()
 
         val activity = Intent(context, AlarmDialogActivity::class.java)
         activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -176,7 +180,7 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
         {
             viewState.showToastMessage("Ваше месторасположение не определено")
             thread{
-                sleep(5000)
+                sleep(2000)
                 viewState.waitCoordinate()
             }
         }

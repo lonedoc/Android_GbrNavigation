@@ -99,8 +99,7 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
                 startActivity(intent)
             }
             intent.hasExtra("alarm")->{
-                presenter.setTitle()
-
+                presenter.init()
                 val activity = Intent(applicationContext, AlarmDialogActivity::class.java)
                 activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 activity.putExtra("info",intent.getSerializableExtra("alarm") as Alarm)
@@ -194,10 +193,9 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
                     waitCoordinate = false
                     return@thread
                 }
-
-
                 sleep(5000)
             }
+
             runOnUiThread {
                 common_mapView.invalidate()
 

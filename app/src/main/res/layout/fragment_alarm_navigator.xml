@@ -19,7 +19,6 @@
         android:focusable="true"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="8dp"
-        app:fabSize="mini"
         android:layout_alignTop="@+id/alarm_navigator_mapView"
         android:layout_alignEnd="@+id/alarm_navigator_mapView"
         app:srcCompat="@drawable/ic_gps_fixed"
@@ -31,7 +30,6 @@
         android:layout_height="wrap_content"
         android:clickable="true"
         android:focusable="true"
-        app:fabSize="mini"
         android:layout_marginEnd="8dp"
         android:layout_marginTop="24dp"
         android:layout_alignEnd="@+id/alarm_navigator_mapView"
@@ -53,7 +51,6 @@
         android:clickable="true"
         android:focusable="true"
         app:backgroundTint="@color/viewBackground"
-        app:fabSize="mini"
         app:rippleColor="@color/colorAccent"
         app:srcCompat="@drawable/ic_yandex" />
 
