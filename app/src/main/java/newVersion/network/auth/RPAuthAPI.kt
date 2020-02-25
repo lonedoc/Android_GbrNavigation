@@ -41,9 +41,14 @@ class RPAuthAPI(
 
         val gson = Gson()
 
-        if (!JSONObject(message).has("\$c$")) {
+        try{
+            if (!JSONObject(message).has("\$c$")) {
+                return
+            }
+        }catch (e:Exception){
             return
         }
+
 
         when (JSONObject(message).getString("\$c$")) {
             "regok" ->

@@ -88,10 +88,6 @@
         <activity android:name="newVersion.common.directory.DirectoryActivity"
             android:keepScreenOn="true"/>
 
-        <activity android:name="newVersion.common.CommonActivity"
-            android:keepScreenOn="true"
-        />
-
         <activity
             android:name="newVersion.common.alarm.AlarmDialogActivity"
             android:excludeFromRecents="true"

@@ -2,6 +2,7 @@ package newVersion.alarm.plan
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -33,6 +34,7 @@ class AdapterImage(
                 holder.planImage.visibility = View.GONE
             }
             else->{
+                Log.d("ImageAdapter","${plan.count()}")
                 holder.planImage.setImageBitmap(plan[position])
                 holder.planImage.visibility = View.VISIBLE
                 holder.progressBar.visibility = View.GONE

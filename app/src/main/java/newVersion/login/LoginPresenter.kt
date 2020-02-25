@@ -34,6 +34,7 @@ class LoginPresenter : MvpPresenter<LoginView>(), OnAuthListener, Destroyable, I
     var authAPI: AuthAPI? = null
     var waitingForAuth = false
     lateinit var credentials: Credentials
+
     fun init(preferences: Preferences?) {
         init = true
         this.preferences = preferences

@@ -33,6 +33,7 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.lang.Exception
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 
@@ -273,13 +274,18 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
     }
 
     override fun setCenter(geoPoint: GeoPoint) {
-        mMapView?.controller?.animateTo(geoPoint)
-        mMapView?.controller?.setZoom(15.0)
+        try {
+            mMapView?.controller?.animateTo(geoPoint)
+            mMapView?.controller?.setZoom(15.0)
 
-        if(mMapView!!.overlays.size<3){
-            val info = activity!!.intent.getSerializableExtra("info") as Alarm
-            presenter.startTrack(info)
+            if(mMapView!!.overlays.size<3){
+                val info = activity!!.intent.getSerializableExtra("info") as Alarm
+                presenter.startTrack(info)
+            }
+        }catch (e:Exception){
+            Toast.makeText(activity,"Произошла ошибка",Toast.LENGTH_LONG).show()
         }
+
 
     }
 
@@ -303,7 +309,6 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
             activity!!.runOnUiThread {
                 mMapView!!.invalidate()
                 presenter.setCenter(locationOverlay!!.lastFix)
-
                 waitCoordinate = false
                 showToastMessage("Удалось определить ваше последнее месторасположение")
 

@@ -10,6 +10,7 @@ import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlinx.android.synthetic.main.fragment_alarm_dialog.*
 import newVersion.alarm.AlarmActivity
 import newVersion.utils.Alarm
+import java.lang.Exception
 
 class AlarmDialogActivity:AppCompatActivity() {
 
@@ -31,10 +32,11 @@ class AlarmDialogActivity:AppCompatActivity() {
         alertSound?.start()
 
         apply_alarm.setOnClickListener {
-            if(alertSound != null && alertSound.isPlaying)
-            {
-                alertSound.stop()
-                alertSound.release()
+            try{
+                    alertSound?.stop()
+                    alertSound?.release()
+            }catch (e:Exception){
+                e.printStackTrace()
             }
 
             val alarmActivity = Intent(this, AlarmActivity::class.java)

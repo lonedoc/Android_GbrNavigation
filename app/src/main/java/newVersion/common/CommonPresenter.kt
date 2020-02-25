@@ -1,10 +1,12 @@
 package newVersion.common
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.Location
+import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
@@ -20,11 +22,11 @@ import newVersion.network.status.OnStatusListener
 import newVersion.network.status.RPStatusAPI
 import newVersion.network.status.StatusAPI
 import newVersion.servicess.NetworkService
-import newVersion.utils.Alarm
-import newVersion.utils.DataStoreUtils
+import newVersion.utils.*
 import newVersion.utils.DataStoreUtils.statusList
-import newVersion.utils.GpsStatus
-import newVersion.utils.PrefsUtil
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol
 import java.lang.Thread.sleep
@@ -32,6 +34,12 @@ import kotlin.concurrent.thread
 
 @InjectViewState
 class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAlarmListener {
+    override var init:Boolean = false
+
+    private var statusAPI: StatusAPI? = null
+    private var alarmApi: AlarmAPI? = null
+
+    private var context:Context? = null
 
     override fun onStatusDataReceived(status: String, call: String) {
         if(DataStoreUtils.status == status) return
@@ -103,12 +111,7 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
         return init
     }
 
-    override var init:Boolean = false
 
-    private var statusAPI: StatusAPI? = null
-    private var alarmApi: AlarmAPI? = null
-
-    private var context:Context? = null
 
     fun init(){
         setTitle()
@@ -155,8 +158,42 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
         sleep(100)
 
         alarmCheck(DataStoreUtils.namegbr!!)
+
+        if(!EventBus.getDefault().isRegistered(this))
+        EventBus.getDefault().register(this)
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
+    fun onEnableLocation(event: providerStatus){
+        Log.d("CommonPresenter", event.status)
+        when(event.status)
+        {
+            "disable"->{
+                viewState.showToastMessage("GPS был отключен")
+                AlertDialog.Builder(context)
+                    .setMessage("GPS отключен (Приложение не работает без GPS)")
+                    .setCancelable(false)
+                    .setPositiveButton("Включить"){
+                            _,_ ->
+                        context?.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                    }
+                    .create()
+                    .show()
+            }
+            "enable"->{
+                viewState.setCenter()
+            }
+            "notInitialized"->{
+                viewState.showToastMessage("Ваше месторасположение не определено")
+            }
+        }
+
+    }
+
+   /* @Subscribe(threadMode = ThreadMode.BACKGROUND)
+    fun getArrived(event:location) {
+        viewState.scrollMap(GeoPoint(event.lat,event.lon))
+    }*/
     fun setTitle() {
         if (DataStoreUtils.call != "") {
             viewState.setTitle("${DataStoreUtils.call} ( ${DataStoreUtils.status} ) ver. ${BuildConfig.VERSION_NAME}")
@@ -166,6 +203,9 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
     }
 
     override fun onDestroy() {
+        if(EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().unregister(this)
+
         init = false
         if(alarmApi != null) alarmApi?.onDestroy()
         if(statusAPI != null) statusAPI?.onDestroy()
@@ -179,10 +219,6 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
         else
         {
             viewState.showToastMessage("Ваше месторасположение не определено")
-            thread{
-                sleep(2000)
-                viewState.waitCoordinate()
-            }
         }
     }
 

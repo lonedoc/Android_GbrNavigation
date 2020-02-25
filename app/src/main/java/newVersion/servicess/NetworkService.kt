@@ -31,15 +31,14 @@ import newVersion.models.HostPool
 import newVersion.network.auth.AuthAPI
 import newVersion.network.auth.OnAuthListener
 import newVersion.network.auth.RPAuthAPI
-import newVersion.servicess.LocationListener.Companion.imHere
 import newVersion.servicess.NotificationService.createNotification
+import newVersion.utils.location
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import org.osmdroid.util.GeoPoint
 import ru.rubeg38.rubegprotocol.ConnectionWatcher
 import rubegprotocol.RubegProtocol
-import java.math.RoundingMode
 import java.text.DecimalFormat
 import kotlin.collections.ArrayList
 
@@ -71,17 +70,17 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
         if (!connectionLost && protocol.isStarted && !LoginActivity.isAlive && !MainActivity.isAlive) {
             connectionLost = true
+            thread{
             when {
                 isConnected(applicationContext) -> {
-                    thread{
+
                         val remoteMessage1 = RemoteMessage.Builder("Status")
                             .addData("command", "disconnectServer")
                             .build()
                         createNotification(remoteMessage1, applicationContext)
-                    }
+
                 }
                 else -> {
-                    thread{
                         val remoteMessage: RemoteMessage = RemoteMessage.Builder("Status")
                             .addData("command", "disconnectInternet")
                             .build()
@@ -93,8 +92,8 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
                             .addData("command", "disconnectServer")
                             .build()
                         createNotification(remoteMessage1, applicationContext)
-                    }
                 }
+            }
             }
         }
 
@@ -146,7 +145,57 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
         authAPI.onAuthListener = this
     }
 
+    private var coordinateQueue:ArrayList<Triple<GeoPoint,Int,Float>> = ArrayList()
+    var oldLocation:GeoPoint? = null
+
+
+    @Subscribe(threadMode = ThreadMode.BACKGROUND)
+    fun onLocationLoop(event:location){
+        if(GeoPoint(event.lat,event.lon) == oldLocation) return
+
+        oldLocation = GeoPoint(event.lat,event.lon)
+
+        val df = DecimalFormat("#.######")
+
+        if(credentials == null) return
+
+        if(!protocol.isConnected)
+        {
+            coordinateQueue.add(Triple(GeoPoint(event.lat,event.lon),(event.speed * 3.6).toInt(),event.accuracy))
+            return
+        }
+
+        while(coordinateQueue.isNotEmpty()){
+            val jsonMessage = JsonObject()
+            jsonMessage.addProperty("\$c$", "gbrkobra")
+            jsonMessage.addProperty("command", "location")
+            jsonMessage.addProperty("id",credentials?.imei )
+            jsonMessage.addProperty("lon", df.format(coordinateQueue[0].first.longitude))
+            jsonMessage.addProperty("lat", df.format(coordinateQueue[0].first.latitude))
+            jsonMessage.addProperty("speed", coordinateQueue[0].second)
+            jsonMessage.addProperty("accuracy",coordinateQueue[0].third)
+            val request = jsonMessage.toString()
+
+            protocol.send(request){}
+
+            coordinateQueue.removeAt(0)
+        }
+
+        val jsonMessage = JsonObject()
+        jsonMessage.addProperty("\$c$", "gbrkobra")
+        jsonMessage.addProperty("command", "location")
+        jsonMessage.addProperty("id",credentials?.imei )
+        jsonMessage.addProperty("lon", df.format(event.lon))
+        jsonMessage.addProperty("lat", df.format(event.lat))
+        jsonMessage.addProperty("speed", (event.speed * 3.6).toInt())
+        jsonMessage.addProperty("accuracy",event.accuracy)
+        val request = jsonMessage.toString()
+
+        protocol.send(request){}
+    }
     lateinit var hostPool: HostPool
+    var credentials:Credentials? = null
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         assert(intent != null)
@@ -186,8 +235,7 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
         authAPI.onAuthListener = this
 
-
-        coordinateLoop(credentials)
+        this.credentials = credentials
 
         wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager).run {
             newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "EndlessService:lock").apply {
@@ -262,93 +310,6 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
         }
     }
 
-    private var coordinateQueue:ArrayList<Pair<GeoPoint,Int>> = ArrayList()
-
-    private fun coordinateLoop(credentials: Credentials) {
-        var oldCoordinate:GeoPoint? = GeoPoint(0.0,0.0)
-        var oldSpeed = 1
-        thread {
-            while(isServiceStarted)
-            {
-                sleep(2000)
-                Log.d("NetworkService","Loop")
-                try{
-
-                    if(imHere == null) continue
-
-                    if(oldCoordinate == GeoPoint(imHere)) continue
-
-                    if(oldSpeed == 0 && imHere?.speed!!.toInt() == 0) continue
-
-                    oldCoordinate = GeoPoint(imHere)
-                    oldSpeed = (imHere?.speed!! * 3.6).toInt()
-
-                    if(!protocol.isConnected) {
-
-                        coordinateQueue.add(Pair(GeoPoint(imHere),(imHere?.speed!! * 3.6).toInt()))
-                        sleep(1000)
-                        continue
-                    }
-
-                    val df = DecimalFormat("#.######")
-
-                    if(coordinateQueue.count()!= 0)
-                    {
-                        Log.d("Coordinate","Send loop")
-                        for(i in 0 until coordinateQueue.count())
-                        {
-                            val jsonMessage = JsonObject()
-                            jsonMessage.addProperty("\$c$", "gbrkobra")
-                            jsonMessage.addProperty("command", "location")
-                            jsonMessage.addProperty("id",credentials.imei )
-                            jsonMessage.addProperty("lon", df.format(coordinateQueue[i].first.longitude))
-                            jsonMessage.addProperty("lat", df.format((coordinateQueue[i].first.latitude)))
-                            jsonMessage.addProperty("speed",  coordinateQueue[i].second)
-                            val request = jsonMessage.toString()
-
-                            protocol.send(request){
-                                if(it){
-                                    Log.d("Coordinate","Send")
-                                }
-                                else
-                                {
-                                    Log.d("Coordinate","NotSend")
-                                }
-                            }
-                            Log.d("Coordinate","Send")
-                        }
-                        coordinateQueue.clear()
-                        continue
-                    }
-
-                    val jsonMessage = JsonObject()
-                    jsonMessage.addProperty("\$c$", "gbrkobra")
-                    jsonMessage.addProperty("command", "location")
-                    jsonMessage.addProperty("id",credentials.imei )
-                    jsonMessage.addProperty("lon", df.format((imHere?.longitude)))
-                    jsonMessage.addProperty("lat", df.format((imHere?.latitude)))
-                    jsonMessage.addProperty("speed", (imHere?.speed!! * 3.6).toInt())
-                    val request = jsonMessage.toString()
-
-                    protocol.send(request){
-                        if(it){
-                            Log.d("Coordinate","Send")
-                        }
-                        else
-                        {
-                            Log.d("Coordinate","NotSend")
-                            coordinateQueue.add(Pair(GeoPoint(imHere),(imHere?.speed!! * 3.6).toInt()))
-                        }
-                    }
-
-                }catch (e:java.lang.Exception){
-                    e.printStackTrace()
-                }
-
-
-            }
-        }
-    }
     override fun onDestroy() {
         Log.d("NetworkService", "Destroy")
         stopService()

@@ -75,6 +75,7 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
         }
             true
         }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -140,6 +141,7 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
         alarm_timer.setOnChronometerTickListener {
             elapsedMillis = (SystemClock.elapsedRealtime() - it.base)
         }
+
         alarm_timer.start()
     }
 

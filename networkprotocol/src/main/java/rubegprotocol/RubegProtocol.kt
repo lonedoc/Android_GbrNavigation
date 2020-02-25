@@ -275,7 +275,7 @@ class RubegProtocol {
                 connected = true
                 lastResponseTime = System.currentTimeMillis()
 
-                val packet = PacketUtils.decode(buffer.array())
+                val packet:Packet = PacketUtils.decode(buffer.array()) ?: continue
 
                 // Debug
                 println("<- { content type: ${packet.headers.contentType}, message number: ${packet.headers.messageNumber}, packet number: ${packet.headers.packetNumber} }")

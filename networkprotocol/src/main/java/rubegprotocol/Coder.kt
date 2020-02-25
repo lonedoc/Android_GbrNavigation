@@ -1,5 +1,6 @@
 package ru.rubeg38.rubegprotocol
 
+import java.lang.Exception
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.experimental.xor
@@ -93,8 +94,8 @@ class Coder {
         return headersArray + dataArray
     }
 
-    fun decode(data: ByteArray): Pair<Headers, ByteArray?> {
-        var headersArray: ByteArray = data.sliceArray(0 until HEADERS_SIZE + 2)
+    fun decode(data: ByteArray): Pair<Headers?, ByteArray?> {
+        val headersArray: ByteArray = data.sliceArray(0 until HEADERS_SIZE + 2)
         code(headersArray, VECTOR)
 
         val headersBuffer = ByteBuffer.allocate(headersArray.count())
@@ -102,7 +103,14 @@ class Coder {
         headersBuffer.put(headersArray)
 
         val contentTypeCode = headersBuffer.get(4)
-        val contentType = ContentType.values().find { it.code == contentTypeCode }!!
+        val contentType: ContentType?
+
+        try {
+           contentType = ContentType.values().find { it.code == contentTypeCode }!!
+        }catch (e:Exception){
+            return Pair(null,null)
+        }
+
         val packetSize = headersBuffer.getInt(5)
         val firstSize = headersBuffer.getInt(9)
         val secondSize = headersBuffer.getInt(13)

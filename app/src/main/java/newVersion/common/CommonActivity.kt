@@ -1,18 +1,12 @@
 package newVersion.common
 
-import android.app.AlertDialog
-import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Configuration
+import android.graphics.Point
 import android.location.LocationManager
 import android.os.Bundle
-import android.provider.Settings
-import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.WindowManager
+import android.view.*
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -22,7 +16,6 @@ import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlinx.android.synthetic.main.activity_common.*
 import moxy.MvpAppCompatActivity
 import moxy.presenter.InjectPresenter
-import newVersion.alarm.AlarmActivity
 import newVersion.common.alarm.AlarmDialogActivity
 import newVersion.common.directory.DirectoryActivity
 import newVersion.common.serverSetting.ServerSettingFragment
@@ -30,7 +23,6 @@ import newVersion.common.status.StatusFragment
 import newVersion.main.MainActivity
 import newVersion.models.Credentials
 import newVersion.models.HostPool
-import newVersion.servicess.LocationListener.Companion.imHere
 import newVersion.servicess.NetworkService
 import newVersion.servicess.NotificationService
 import newVersion.utils.Alarm
@@ -43,13 +35,16 @@ import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
-import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 
 class CommonActivity:MvpAppCompatActivity(),CommonView{
 
     @InjectPresenter
     lateinit var presenter:NewCommonPresenter
+
+    private var rotationGestureOverlay: RotationGestureOverlay? = null
+    private var locationOverlay: MyLocationNewOverlay? = null
+    private var scaleBarOverlay: ScaleBarOverlay? = null
 
     companion object{
         var isAlive = false
@@ -92,43 +87,30 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
 
     override fun onResume() {
         super.onResume()
-        when{
-            DataStoreUtils.call == null && DataStoreUtils.namegbr == null ->{
+        when {
+            DataStoreUtils.call == null && DataStoreUtils.namegbr == null -> {
                 showToastMessage("Ошибка приложения, автоматическая перезагрузка")
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
             }
-            intent.hasExtra("alarm")->{
+            intent.hasExtra("alarm") -> {
                 presenter.init()
                 val activity = Intent(applicationContext, AlarmDialogActivity::class.java)
                 activity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                activity.putExtra("info",intent.getSerializableExtra("alarm") as Alarm)
+                activity.putExtra("info", intent.getSerializableExtra("alarm") as Alarm)
                 startActivity(activity)
 
             }
-            DataStoreUtils.namegbr!=null && presenter.isInit()-> {
-                Log.d("AlarmCheck","Not null")
+            DataStoreUtils.namegbr != null && presenter.isInit() -> {
                 presenter.init()
                 presenter.alarmCheck(DataStoreUtils.namegbr!!)
             }
-            else->{
-                val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            else -> {
                 val preferences = PrefsUtil(applicationContext)
 
-                if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-                    callSettingGPS(locationManager)
+                presenter.init()
+                presenter.initData(preferences, this)
 
-                thread{
-                    while(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-                    {
-                        //Wait while user enable GPS
-                        sleep(1000)
-                    }
-                    runOnUiThread {
-                        presenter.init()
-                        presenter.initData(preferences,this)
-                    }
-                }
             }
         }
     }
@@ -180,33 +162,36 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
         common_mapView.controller.setZoom(15.0)
     }
 
-    var waitCoordinate:Boolean = false
-
-    override fun waitCoordinate() {
-        if(waitCoordinate) return
-        waitCoordinate = true
+    override fun setCenter(){
         thread{
-            while(locationOverlay!!.lastFix == null)
-            {
-                if(AlarmActivity.isAlive)
-                {
-                    waitCoordinate = false
-                    return@thread
-                }
-                sleep(5000)
+            while (locationOverlay?.myLocation==null){
+                //wait
             }
-
             runOnUiThread {
-                common_mapView.invalidate()
+                val point = GeoPoint(locationOverlay?.myLocation)
 
-                presenter.setCenter(locationOverlay!!.lastFix)
-
-                waitCoordinate = false
-                showToastMessage("Удалось определить ваше последнее месторасположение")
+                common_mapView.controller.animateTo(point)
+                common_mapView.controller.setZoom(15.0)
             }
         }
     }
 
+  /*  override fun scrollMap(location:GeoPoint)
+    {
+        runOnUiThread {
+            val display: Display = windowManager.defaultDisplay
+            val size = Point()
+            display.getSize(size)
+            val width: Int = size.x
+            val height: Int = size.y
+
+            val center = common_mapView.mapCenter
+            if(location.distanceToAsDouble(center) > width/2)
+            {
+                common_mapView.controller.animateTo(location)
+            }
+        }
+    }*/
     override fun fillStatusBar(statusList: ArrayList<GpsStatus>) {
         runOnUiThread {
             when (resources.configuration.orientation) {
@@ -293,10 +278,6 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
         dialog.show(supportFragmentManager, "StatusTimer")
     }
 
-    private var rotationGestureOverlay: RotationGestureOverlay? = null
-    private var locationOverlay: MyLocationNewOverlay? = null
-    private var scaleBarOverlay: ScaleBarOverlay? = null
-
     override fun initMapView() {
 
         org.osmdroid.config.Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
@@ -312,6 +293,8 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
 
         common_mapView.overlays.add(initLocationOverlay())
         locationOverlay?.enableMyLocation()
+
+        if(locationOverlay!!.lastFix!=null)
         presenter.setCenter(locationOverlay!!.lastFix)
 
         common_mapView.overlays.add(initRotationGestureOverlay())
@@ -344,29 +327,6 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
         scaleBarOverlay?.setCentred(true)
         scaleBarOverlay?.setScaleBarOffset(resources.displayMetrics.widthPixels / 2, 10)
         return scaleBarOverlay!!
-    }
-
-    override fun callSettingGPS(locationManager: LocationManager) {
-        AlertDialog.Builder(this)
-            .setMessage("GPS отключен (Приложение не работает без GPS)")
-            .setCancelable(false)
-            .setPositiveButton("Включить"){
-                    _,_ ->
-                startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-            }
-            .create()
-            .show()
-
-        thread{
-            while(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-            {
-                //Wait while user enable GPS
-                sleep(1000)
-            }
-            runOnUiThread {
-                newVersion.servicess.LocationListener(locationManager)
-            }
-        }
     }
 
     override fun startService(credentials: Credentials, hostPool: HostPool) {

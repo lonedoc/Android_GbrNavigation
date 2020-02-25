@@ -3,8 +3,10 @@ package newVersion.servicess
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.RingtoneManager
@@ -15,6 +17,9 @@ import androidx.core.content.ContextCompat
 import com.google.firebase.messaging.RemoteMessage
 import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
+import newVersion.alarm.AlarmActivity
+import newVersion.common.CommonActivity
+import newVersion.login.LoginActivity
 import kotlin.concurrent.thread
 
 object NotificationService {
@@ -30,23 +35,22 @@ object NotificationService {
             alarmChannelID(context)
         ) else NotificationCompat.Builder(context)
 
+        val serverBuilder: NotificationCompat.Builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) NotificationCompat.Builder(
+            context,
+            serverChannelID(context)
+        ) else NotificationCompat.Builder(context)
+
         val pendingIntent = when {
-        /*    LoginActivity.isAlive -> {
+            LoginActivity.isAlive -> {
                 val i = Intent(context, LoginActivity::class.java)
                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT)
             }
-           *//* CommonActivity.isAlive -> {
+           CommonActivity.isAlive -> {
                 val i = Intent(context, CommonActivity::class.java)
                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT)
-            }*//*
-            ObjectActivity.isAlive || ObjectActivity.saveAlarm != null -> {
-                val i = Intent(context, ObjectActivity::class.java)
-                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                i.putExtra("objectInfo", ObjectActivity.saveAlarm)
-                PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT)
-            }*/
+            }
             else -> {
                 null
             }
@@ -84,7 +88,7 @@ object NotificationService {
             "disconnectServer" -> {
                     sleep(3000)
                     val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                    builder.setContentTitle("Соединение с сервером")
+                    serverBuilder.setContentTitle("Соединение с сервером")
                         .setContentText("Соединение с сервером потеряно")
                         .setContentIntent(pendingIntent)
                         .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
@@ -93,7 +97,7 @@ object NotificationService {
                         .setSound(alarmSound)
                         .setSmallIcon(R.drawable.ic_disconnect).color = ContextCompat.getColor(context, R.color.colorPrimary)
                     builder.build().flags = Notification.FLAG_AUTO_CANCEL
-                    val notification = builder.build()
+                    val notification = serverBuilder.build()
 
                     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.notify(2, notification)
@@ -101,84 +105,80 @@ object NotificationService {
             "reconnectServer" -> {
                     sleep(3000)
                     val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                    builder.setContentTitle("Соединение с сервером")
+                    serverBuilder.setContentTitle("Соединение с сервером")
                         .setContentIntent(pendingIntent)
                         .setContentText("Соединение с сервером восстановлено")
                         .setSound(statusSound)
                         .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
-                        .setCategory(NotificationCompat.CATEGORY_ALARM)
                         .setAutoCancel(true)
+                        .setCategory(NotificationCompat.CATEGORY_ALARM)
                         .setSmallIcon(R.drawable.ic_connect).color = ContextCompat.getColor(context, R.color.colorPrimary)
-                    val notification = builder.build()
+                    val notification = serverBuilder.build()
                     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.notify(2, notification)
             }
             "connectServer" -> {
                 val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                builder.setContentTitle("Соединение с сервером")
+                serverBuilder.setContentTitle("Соединение с сервером")
                     .setContentIntent(pendingIntent)
                     .setContentText("Соединение с сервером установлено")
                     .setSound(statusSound)
                     .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
-                    .setCategory(NotificationCompat.CATEGORY_ALARM)
                     .setAutoCancel(true)
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
                     .setSmallIcon(R.drawable.ic_connect).color = ContextCompat.getColor(context, R.color.colorPrimary)
-                val notification = builder.build()
+                val notification = serverBuilder.build()
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.notify(2, notification)
             }
             "serverNotResponse" -> {
                 val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                builder.setContentTitle("Соединение с сервером")
+                serverBuilder.setContentTitle("Соединение с сервером")
                     .setContentIntent(pendingIntent)
                     .setContentText("Соединение с сервером не было установлено")
                     .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
-                    .setCategory(NotificationCompat.CATEGORY_ALARM)
                     .setAutoCancel(true)
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
                     .setSound(statusSound)
                     .setSmallIcon(R.drawable.ic_disconnect).color = ContextCompat.getColor(context, R.color.colorPrimary)
                 builder.build().flags = Notification.FLAG_AUTO_CANCEL
-                val notification = builder.build()
+                val notification = serverBuilder.build()
 
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.notify(2, notification)
             }
             "disconnectInternet" -> {
-                thread {
                     sleep(3000)
                     val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                    builder.setContentTitle("Интернет")
+                    serverBuilder.setContentTitle("Интернет")
                         .setContentIntent(pendingIntent)
                         .setContentText("Проблемы с сетью интернет")
                         .setSound(statusSound)
                         .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
-                        .setCategory(NotificationCompat.CATEGORY_ALARM)
                         .setAutoCancel(true)
+                        .setCategory(NotificationCompat.CATEGORY_ALARM)
                         .setSmallIcon(R.drawable.ic_disconnect).color = ContextCompat.getColor(context, R.color.colorPrimary)
-                    val notification = builder.build()
+                    val notification = serverBuilder.build()
                     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.notify(3, notification)
-                }.start()
             }
             "reconnectInternet" -> {
-                thread {
                     sleep(3000)
                     val statusSound =
                         RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-                    builder.setContentTitle("Интернет")
+                    serverBuilder.setContentTitle("Интернет")
                         .setContentIntent(pendingIntent)
                         .setContentText("Работа сети интернет восстановлена")
                         .setSound(statusSound)
                         .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility
-                        .setCategory(NotificationCompat.CATEGORY_ALARM)
                         .setAutoCancel(true)
+                        .setCategory(NotificationCompat.CATEGORY_ALARM)
                         .setSmallIcon(R.drawable.ic_connect).color =
                         ContextCompat.getColor(context, R.color.colorPrimary)
-                    val notification = builder.build()
+                    val notification = serverBuilder.build()
                     val notificationManager =
                         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.notify(3, notification)
-                }.start()
             }
         }
     }
@@ -211,8 +211,8 @@ object NotificationService {
         return notificationChannelId
     }
 
-    private fun channelID(context: Context): String {
-        val notificationChannelId = "Notifications channel"
+    private fun serverChannelID(context:Context):String{
+        val notificationChannelId = "Server channel"
 
         val audioAttributes = AudioAttributes.Builder()
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -224,10 +224,37 @@ object NotificationService {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val channel = NotificationChannel(
                 notificationChannelId,
-                "Notifications channel",
+                "Serveer channel",
                 NotificationManager.IMPORTANCE_HIGH
             ).let {
-                it.description = "Notifications channel"
+                it.description = "Server channel"
+                it.enableLights(true)
+                it.lightColor = Color.RED
+                it.enableVibration(true)
+                it.setSound(statusSound, audioAttributes)
+                it
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+        return notificationChannelId
+    }
+    private fun channelID(context: Context): String {
+        val notificationChannelId = "Status channel"
+
+        val audioAttributes = AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+            .build()
+
+        val statusSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val channel = NotificationChannel(
+                notificationChannelId,
+                "Status channel",
+                NotificationManager.IMPORTANCE_HIGH
+            ).let {
+                it.description = "Status channel"
                 it.enableLights(true)
                 it.lightColor = Color.RED
                 it.enableVibration(true)

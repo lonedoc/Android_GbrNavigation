@@ -21,24 +21,22 @@ interface CommonView:MvpView {
     fun setTitle(title:String)
 
     @StateStrategyType(value = SkipStrategy::class)
-    fun callSettingGPS(locationManager: LocationManager)
-
-    @StateStrategyType(value = SkipStrategy::class)
     fun startService(credentials: Credentials, hostPool: HostPool)
 
     @StateStrategyType(value = SkipStrategy::class)
     fun showToastMessage(message:String)
-
     fun setCenter(geoPoint: GeoPoint)
 
-    @StateStrategyType(value = SkipStrategy::class)
-    fun waitCoordinate()
+    fun setCenter()
 
     @StateStrategyType(value = SkipStrategy::class)
     fun createStatusTimer(time: Long)
 
-
+    @StateStrategyType(value = SkipStrategy::class)
     fun initMapView()
-
+    @StateStrategyType(value = SkipStrategy::class)
     fun addOverlays()
+
+/*    @StateStrategyType(value = SkipStrategy::class)
+    fun scrollMap(location:GeoPoint)*/
 }

@@ -33,10 +33,10 @@ class PlanFragment : MvpAppCompatFragment(), PlanView {
 
     override fun onResume() {
         super.onResume()
-        if(!presenter.isInit()){
-            val imageInfo = activity!!.intent.getSerializableExtra("info") as? Alarm
-            presenter.init(imageInfo!!)
-        }
+
+        val imageInfo = activity!!.intent.getSerializableExtra("info") as? Alarm
+        presenter.init(imageInfo!!)
+
     }
     override fun initRecyclerView(plan:ArrayList<Bitmap?>){
         recyclerView = rootView?.findViewById(R.id.alarm_plan_recyclerView)!!

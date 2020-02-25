@@ -122,20 +122,23 @@ class ConnectionPacket: Packet {
 
 class PacketUtils {
     companion object {
-        fun decode(data: ByteArray): Packet {
+        fun decode(data: ByteArray): Packet? {
             val coder = Coder()
 
             val (headers, body) = coder.decode(data)
 
-            if (headers.contentType == ContentType.ACKNOWLEDGEMENT) {
+            if(headers==null && body == null)
+                return null
+
+            if (headers?.contentType == ContentType.ACKNOWLEDGEMENT) {
                 return AcknowledgementPacket(headers)
             }
 
-            if (headers.contentType == ContentType.CONNECTION) {
+            if (headers?.contentType == ContentType.CONNECTION) {
                 return ConnectionPacket(headers)
             }
 
-            return DataPacket(body!!, headers)
+            return DataPacket(body!!, headers!!)
         }
     }
 }

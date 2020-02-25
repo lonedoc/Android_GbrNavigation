@@ -1,15 +1,16 @@
 package newVersion.alarm
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.provider.Settings
 import android.util.Log
 import moxy.InjectViewState
 import moxy.MvpPresenter
 import newVersion.utils.DataStoreUtils
 import java.lang.Thread.sleep
-import kotlin.concurrent.thread
 import newVersion.alarm.pager.AlarmTabFragment
 import newVersion.commonInterface.Destroyable
 import newVersion.commonInterface.Init
@@ -21,7 +22,6 @@ import newVersion.network.alarm.RPAlarmAPI
 import newVersion.network.complete.CompleteAPI
 import newVersion.network.complete.OnCompleteListener
 import newVersion.network.complete.RPCompleteAPI
-import newVersion.servicess.LocationListener.Companion.imHere
 import newVersion.utils.Alarm
 import newVersion.alarm.AlarmActivity.Companion.elapsedMillis
 import newVersion.alarm.plan.PlanPresenter.Companion.plan
@@ -34,6 +34,8 @@ import newVersion.network.image.RPImageAPI
 import newVersion.network.status.OnStatusListener
 import newVersion.network.status.RPStatusAPI
 import newVersion.network.status.StatusAPI
+import newVersion.utils.providerStatus
+import newVersion.utils.location
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -44,6 +46,18 @@ import java.util.*
 
 @InjectViewState
 class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListener, OnAlarmListener, OnCompleteListener, Destroyable, Init {
+
+    override var init: Boolean = false
+    private var alarmInfo: Alarm? = null
+    private var context:Context? = null
+    private var arrived = false
+    private var imageApi: ImageAPI? = null
+    private var alarmApi: AlarmAPI? = null
+    private var completeApi: CompleteAPI? = null
+    private var statusApi:StatusAPI? = null
+    private var lat:String?= ""
+    private var lon:String?= ""
+    var skipStatus = false
 
     override fun onStatusDataReceived(status: String, call: String) {
         if(status == "Свободен" && !skipStatus)
@@ -70,10 +84,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
 
     }
 
-    var skipStatus = false
     override fun onCompleteDataReceived(name: String) {
-        Log.d("AlarmPresenter", name)
-        Log.d("AlarmPresenter","${name == alarmInfo?.name}")
         when {
             name != alarmInfo?.name -> {
                 skipStatus = true
@@ -105,12 +116,9 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
     }
 
     override fun onAlarmDataReceived(alarm: Alarm) {
-        Log.d("AlarmPresenter", "$alarm")
-
         if(alarm.name!=alarmInfo?.name)
             when{
                 !CommonActivity.isAlive ->{
-                    Log.d("AlarmPresenter","New alarm")
                     viewState.showToastMessage("Тревога завершена")
                     elapsedMillis = null
                     val intent = Intent(context, CommonActivity::class.java)
@@ -127,45 +135,16 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
 
     }
 
-    override var init: Boolean = false
-
-    private var alarmInfo: Alarm? = null
-    private var context:Context? = null
-    private var checkArrivedAlive = false
-
-    private var imageApi: ImageAPI? = null
-    private var alarmApi: AlarmAPI? = null
-    private var completeApi: CompleteAPI? = null
-    private var statusApi:StatusAPI? = null
-
     override fun isInit(): Boolean {
         return init
     }
 
-    fun sendAlarmApplyRequest(alarm: Alarm) {
-        alarmApi?.sendAlarmApplyRequest(
-            alarm.number!!,
-            complete = {
-                if (it) {
-                    val currentTime: String = SimpleDateFormat(
-                        "HH:mm:ss",
-                        Locale.getDefault()
-                    ).format(Date())
-                    viewState.showToastMessage("Тревога принята в $currentTime")
-                    EventBus.getDefault().postSticky(CurrentTime(currentTime))
-                } else {
-                    viewState.showToastMessage("Во время отправки сообщения о принятие тревоги произошел сбой, сообщение будет отправлено еще раз")
-                    sendAlarmApplyRequest(alarm)
-                }
-            }
-        )
-    }
-
     fun init(info: Alarm?, applicationContext: Context) {
-
-        Log.d("AlarmPResenter","$info")
-
         this.context = applicationContext
+
+        this.lat = info?.lat!!
+
+        this.lon = info?.lon!!
 
         this.alarmInfo = info
 
@@ -177,7 +156,6 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
         this.imageApi = RPImageAPI(protocol = protocol)
         this.imageApi?.onImageListener = this
         sleep(2)
-
 
         if(this.statusApi != null) statusApi?.onDestroy()
         this.statusApi = RPStatusAPI(protocol = protocol)
@@ -202,21 +180,97 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
         EventBus.getDefault().register(this)
 
         changeStateButton(enableArrived = false,enableReport = false)
-        arrivedCheck(DataStoreUtils.cityCard?.pcsinfo?.dist, info?.lon, info?.lat)
+    }
+
+    @Subscribe(threadMode = ThreadMode.BACKGROUND,sticky = true)
+    fun onEnableLocation(event: providerStatus){
+        when(event.status)
+        {
+            "disable"->{
+                viewState.showToastMessage("GPS был отключен")
+                AlertDialog.Builder(context)
+                    .setMessage("GPS отключен (Приложение не работает без GPS)")
+                    .setCancelable(false)
+                    .setPositiveButton("Включить"){
+                            _,_ ->
+                        context?.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                    }
+                    .create()
+                    .show()
+            }
+            "enable"->{
+                viewState.showToastMessage("Месторасположение было определенно")
+            }
+            "notInitialized"->{
+                viewState.showToastMessage("Ваше месторасположение не определено, приложение переходит в автоматический режим")
+                changeStateButton(enableArrived = true, enableReport = false)
+            }
+        }
+
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun getEvent(event: CardEvent){
-        when{
-            event.action == "Arrived"->{
+        when (event.action) {
+            "Arrived" -> {
                 changeStateButton(enableArrived = true, enableReport = false)
                 viewState.showArrivedDialog()
             }
-            event.action == "Report"->{
+            "Report" -> {
                 changeStateButton(enableArrived = false, enableReport = true)
                 viewState.showReportDialog()
             }
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.BACKGROUND)
+    fun getArrived(event:location){
+        if(arrived) return
+
+        val distance = if(DataStoreUtils.cityCard?.pcsinfo?.dist!=null)
+            if(DataStoreUtils.cityCard?.pcsinfo?.dist=="")
+                50
+            else
+                DataStoreUtils.cityCard?.pcsinfo?.dist!!.toLong()
+        else{
+            viewState.showToastMessage("Ошибка: Дистанция для прибытия не была указана, автоматическое прибытие отключено")
+            changeStateButton(enableArrived = true, enableReport = false)
+            return
+        }
+
+        if(lon==null || lat == null)
+        {
+            viewState.showToastMessage("Ошибка: Не указаны координаты до объекта, автоматическое прибытие отменено")
+            changeStateButton(enableArrived = true, enableReport = false)
+            return
+        }
+
+        if(lon=="0" || lat=="0")
+        {
+            viewState.showToastMessage("Ошибка: Не указаны координаты до объекта, автоматическое прибытие отменено")
+            changeStateButton(enableArrived = true, enableReport = false)
+            return
+        }
+
+        val endPoint = GeoPoint(lat!!.toDouble(), lon!!.toDouble())
+
+        if(endPoint.distanceToAsDouble(GeoPoint(event.lat,event.lon)) > distance) return
+
+        changeStateButton(enableArrived = true, enableReport = false)
+
+        viewState.showArrivedDialog()
+
+        arrived = true
+
+        /*if (!AlarmActivity.isAlive)
+        {
+            val recallActivity = Intent( context,AlarmActivity::class.java)
+            recallActivity.putExtra("info",alarmInfo)
+            recallActivity.putExtra("elapsedMillis",elapsedMillis)
+            recallActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context?.startActivity(recallActivity)
+            return@thread
+        }*/
     }
 
     fun sendArrived() {
@@ -280,66 +334,23 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
         }
     }
 
-    private fun arrivedCheck(strDistance: String?, lon:String?, lat:String?){
-        if(checkArrivedAlive) return
-
-        checkArrivedAlive = true
-
-        val distance = if(strDistance!=null)
-            if(strDistance=="")
-                50
-            else
-                strDistance.toLong()
-        else{
-            viewState.showToastMessage("Ошибка: Дистанция для прибытия не была указана, автоматическое прибытие отключено")
-            changeStateButton(enableArrived = true, enableReport = false)
-            return
-        }
-
-        if(lon==null || lat == null)
-        {
-            viewState.showToastMessage("Ошибка: Не указаны координаты до объекта, автоматическое прибытие отменено")
-            changeStateButton(enableArrived = true, enableReport = false)
-            return
-        }
-
-        if(lon=="0" || lat=="0")
-        {
-            viewState.showToastMessage("Ошибка: Не указаны координаты до объекта, автоматическое прибытие отменено")
-            changeStateButton(enableArrived = true, enableReport = false)
-            return
-        }
-
-        if(imHere==null)
-        {
-            viewState.showToastMessage("Не удалось определить ваше месторасположение по GPS, система находится в режиме ожидания ваших координат")
-            changeStateButton(enableArrived = true, enableReport = false)
-        }
-
-
-        val endPoint = GeoPoint(lat.toDouble(),lon.toDouble())
-        thread{
-            while(checkArrivedAlive){
-                sleep(5000)
-                if(imHere == null) continue
-
-                if(endPoint.distanceToAsDouble(GeoPoint(imHere)) > distance) continue
-
-                if (!CommonActivity.isAlive)
-                {
-                    val recallActivity = Intent( context,CommonActivity::class.java)
-                    recallActivity.putExtra("info",alarmInfo)
-                    recallActivity.putExtra("elapsedMillis",elapsedMillis)
-                    recallActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    context?.startActivity(recallActivity)
-                    return@thread
+    fun sendAlarmApplyRequest(alarm: Alarm) {
+        alarmApi?.sendAlarmApplyRequest(
+            alarm.number!!,
+            complete = {
+                if (it) {
+                    val currentTime: String = SimpleDateFormat(
+                        "HH:mm:ss",
+                        Locale.getDefault()
+                    ).format(Date())
+                    viewState.showToastMessage("Тревога принята в $currentTime")
+                    EventBus.getDefault().postSticky(CurrentTime(currentTime))
+                } else {
+                    viewState.showToastMessage("Во время отправки сообщения о принятие тревоги произошел сбой, сообщение будет отправлено еще раз")
+                    sendAlarmApplyRequest(alarm)
                 }
-                changeStateButton(enableArrived = true, enableReport = false)
-                viewState.showArrivedDialog()
-
-                checkArrivedAlive = false
             }
-        }
+        )
     }
 
     fun changeStateButton(enableArrived: Boolean, enableReport: Boolean) {
@@ -358,7 +369,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
 
         init = false
 
-        checkArrivedAlive = false
+        arrived = false
 
         alarmApi?.onDestroy()
         completeApi?.onDestroy()

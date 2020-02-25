@@ -18,6 +18,7 @@ import java.lang.Thread.sleep
 
 @InjectViewState
 class PlanPresenter : MvpPresenter<PlanView>(), OnImageListener,Init,Destroyable {
+
     override fun onImageDataReceived(imageByte: ByteArray) {
     }
 

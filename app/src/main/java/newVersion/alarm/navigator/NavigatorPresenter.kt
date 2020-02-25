@@ -18,7 +18,7 @@ import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 
 @InjectViewState
-class NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
+class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
     override var init: Boolean = false
 
     fun init(){
