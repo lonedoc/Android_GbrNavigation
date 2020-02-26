@@ -8,19 +8,17 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import newVersion.utils.providerStatus
-import newVersion.utils.location
+import newVersion.utils.ProviderStatus
 import org.greenrobot.eventbus.EventBus
-import java.lang.Thread.sleep
 
 
 class LocationListener @SuppressLint("MissingPermission") constructor(locationManager: LocationManager) : LocationListener {
     var mGnssStatusCallback: GnssStatus.Callback? = null
-
+    var satelliteCount:Int? = null
 
     companion object {
         var imHere: Location? = null
-        var satelliteCount:Int? = null
+
     }
 
     init {
@@ -41,11 +39,11 @@ class LocationListener @SuppressLint("MissingPermission") constructor(locationMa
         )
 
         if(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null){
-            EventBus.getDefault().postSticky(providerStatus("enable"))
+            EventBus.getDefault().postSticky(ProviderStatus("enable"))
         }
         else
         {
-            EventBus.getDefault().postSticky(providerStatus("notInitialized"))
+            EventBus.getDefault().postSticky(ProviderStatus("notInitialized"))
         }
 
     }
@@ -53,11 +51,12 @@ class LocationListener @SuppressLint("MissingPermission") constructor(locationMa
         if(myLocation!=null)
         {
             EventBus.getDefault().post(
-                location(
+                newVersion.utils.Location(
                     myLocation.latitude,
                     myLocation.longitude,
                     myLocation.accuracy,
-                    myLocation.speed
+                    myLocation.speed,
+                    satelliteCount
                 )
             )
         }
@@ -70,12 +69,12 @@ class LocationListener @SuppressLint("MissingPermission") constructor(locationMa
     override fun onProviderEnabled(p0: String?) {
         // Провайдер включен
         Log.d("ProviderEnable", "true")
-        EventBus.getDefault().postSticky(providerStatus("enable"))
+        EventBus.getDefault().postSticky(ProviderStatus("enable"))
     }
 
     override fun onProviderDisabled(p0: String?) {
         // Провайдер выключен
         Log.d("ProviderEnable", "false")
-        EventBus.getDefault().postSticky(providerStatus("disable"))
+        EventBus.getDefault().postSticky(ProviderStatus("disable"))
     }
 }

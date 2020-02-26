@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.provider.Settings
-import android.util.Log
 import moxy.InjectViewState
 import moxy.MvpPresenter
 import newVersion.utils.DataStoreUtils
@@ -34,8 +33,8 @@ import newVersion.network.image.RPImageAPI
 import newVersion.network.status.OnStatusListener
 import newVersion.network.status.RPStatusAPI
 import newVersion.network.status.StatusAPI
-import newVersion.utils.providerStatus
-import newVersion.utils.location
+import newVersion.utils.ProviderStatus
+import newVersion.utils.Location
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -183,7 +182,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
     }
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND,sticky = true)
-    fun onEnableLocation(event: providerStatus){
+    fun onEnableLocation(event: ProviderStatus){
         when(event.status)
         {
             "disable"->{
@@ -224,7 +223,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
     }
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun getArrived(event:location){
+    fun getArrived(event:Location){
         if(arrived) return
 
         val distance = if(DataStoreUtils.cityCard?.pcsinfo?.dist!=null)

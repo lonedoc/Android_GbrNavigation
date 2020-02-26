@@ -1,17 +1,13 @@
 package newVersion.main
 
-import android.content.Intent
-import android.net.Uri
 import android.util.Log
-import androidx.core.content.ContextCompat.startActivity
-import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import moxy.InjectViewState
 import moxy.MvpPresenter
 import java.lang.Thread.sleep
 import javax.security.auth.Destroyable
 import kotlin.concurrent.thread
 import newVersion.utils.DataStoreUtils
-import newVersion.utils.newCredetials
+import newVersion.utils.NewCredentials
 import newVersion.commonInterface.Init
 import newVersion.models.Auth
 import newVersion.models.Credentials
@@ -84,7 +80,7 @@ class MainPresenter : MvpPresenter<MainView>(), OnAuthListener, Destroyable, Ini
         Log.d("MainPresenter","${preferences.serverAddress}")
         viewState.startService(credentials, hostPool)
         sleep(1000)
-        EventBus.getDefault().post(newCredetials(credentials))
+        EventBus.getDefault().post(NewCredentials(credentials))
 
         val protocol = RubegProtocol.sharedInstance
 

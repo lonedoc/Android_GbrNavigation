@@ -14,10 +14,8 @@ interface NavigatorView: MvpView {
     fun initMapView()
     @StateStrategyType(value = SkipStrategy::class)
     fun addOverlays()
-    @StateStrategyType(value = SkipStrategy::class)
-    fun setCenter(geoPoint: GeoPoint)
-    @StateStrategyType(value = SkipStrategy::class)
-    fun waitCoordinate()
+
+    fun setCenter()
 
     @StateStrategyType(value = SkipStrategy::class)
     fun buildTrack(distance: Long,waypoints:ArrayList<GeoPoint>,routeServers:ArrayList<String>)

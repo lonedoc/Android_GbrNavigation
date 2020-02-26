@@ -22,7 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import newVersion.utils.newCredetials
+import newVersion.utils.NewCredentials
 import newVersion.login.LoginActivity
 import newVersion.main.MainActivity
 import newVersion.models.Auth
@@ -32,7 +32,8 @@ import newVersion.network.auth.AuthAPI
 import newVersion.network.auth.OnAuthListener
 import newVersion.network.auth.RPAuthAPI
 import newVersion.servicess.NotificationService.createNotification
-import newVersion.utils.location
+import newVersion.utils.LocationInfo
+import newVersion.utils.Location
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -48,10 +49,16 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
     companion object {
         var isServiceStarted = false
     }
-
+    private var connectionLost = false
     private var wakeLock: PowerManager.WakeLock? = null
     private lateinit var protocol: RubegProtocol
     private lateinit var authAPI: AuthAPI
+
+    private var coordinateQueue:ArrayList<LocationInfo> = ArrayList()
+    var oldLocation:GeoPoint? = null
+
+    lateinit var hostPool: HostPool
+    var credentials:Credentials? = null
 
     private fun getNetworkInfo(context: Context): NetworkInfo? {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -62,8 +69,6 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
         val info = getNetworkInfo(context)
         return info != null && info.isConnected
     }
-
-    private var connectionLost = false
 
     override fun onConnectionLost() {
         Log.d("Service", "Connection lost")
@@ -136,21 +141,20 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onCredentialsChanged(event: newCredetials) {
-        Log.d("Service", "credentials received ${event.credetials}")
+    fun onCredentialsChanged(event: NewCredentials) {
+
+        //TODO NewCredential удалить
+
+        Log.d("Service", "credentials received ${event.credentials}")
 
         authAPI.onDestroy()
-        authAPI = RPAuthAPI(protocol, event.credetials)
+        authAPI = RPAuthAPI(protocol, event.credentials)
 
         authAPI.onAuthListener = this
     }
 
-    private var coordinateQueue:ArrayList<Triple<GeoPoint,Int,Float>> = ArrayList()
-    var oldLocation:GeoPoint? = null
-
-
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun onLocationLoop(event:location){
+    fun onLocationLoop(event:Location){
         if(GeoPoint(event.lat,event.lon) == oldLocation) return
 
         oldLocation = GeoPoint(event.lat,event.lon)
@@ -161,7 +165,7 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
         if(!protocol.isConnected)
         {
-            coordinateQueue.add(Triple(GeoPoint(event.lat,event.lon),(event.speed * 3.6).toInt(),event.accuracy))
+            coordinateQueue.add(LocationInfo(event.lat,event.lon,event.accuracy,(event.speed * 3.6).toInt(),event.satelliteCount))
             return
         }
 
@@ -170,10 +174,11 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
             jsonMessage.addProperty("\$c$", "gbrkobra")
             jsonMessage.addProperty("command", "location")
             jsonMessage.addProperty("id",credentials?.imei )
-            jsonMessage.addProperty("lon", df.format(coordinateQueue[0].first.longitude))
-            jsonMessage.addProperty("lat", df.format(coordinateQueue[0].first.latitude))
-            jsonMessage.addProperty("speed", coordinateQueue[0].second)
-            jsonMessage.addProperty("accuracy",coordinateQueue[0].third)
+            jsonMessage.addProperty("lon", df.format(coordinateQueue[0].lon))
+            jsonMessage.addProperty("lat", df.format(coordinateQueue[0].lat))
+            jsonMessage.addProperty("speed", coordinateQueue[0].speed)
+            jsonMessage.addProperty("accuracy",coordinateQueue[0].accuracy)
+            jsonMessage.addProperty("gpsCount",coordinateQueue[0].satelliteCount)
             val request = jsonMessage.toString()
 
             protocol.send(request){}
@@ -189,12 +194,11 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
         jsonMessage.addProperty("lat", df.format(event.lat))
         jsonMessage.addProperty("speed", (event.speed * 3.6).toInt())
         jsonMessage.addProperty("accuracy",event.accuracy)
+        jsonMessage.addProperty("gpsCount",event.satelliteCount)
         val request = jsonMessage.toString()
 
         protocol.send(request){}
     }
-    lateinit var hostPool: HostPool
-    var credentials:Credentials? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 

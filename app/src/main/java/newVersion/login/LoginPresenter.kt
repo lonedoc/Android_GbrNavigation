@@ -3,13 +3,12 @@ package newVersion.login
 import android.util.Log
 import android.view.View
 import com.google.firebase.iid.FirebaseInstanceId
-import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import moxy.InjectViewState
 import moxy.MvpPresenter
 import java.lang.Thread.sleep
 import javax.security.auth.Destroyable
 import newVersion.utils.DataStoreUtils
-import newVersion.utils.newCredetials
+import newVersion.utils.NewCredentials
 import newVersion.commonInterface.Init
 import newVersion.login.resource.AdapterIpAddress
 import newVersion.models.Auth
@@ -172,7 +171,7 @@ class LoginPresenter : MvpPresenter<LoginView>(), OnAuthListener, Destroyable, I
 
         viewState.startService(credentials = credentials, hostPool = hostPool)
         sleep(1000)
-        EventBus.getDefault().post(newCredetials(credentials))
+        EventBus.getDefault().post(NewCredentials(credentials))
         val protocol = RubegProtocol.sharedInstance
 
         if (authAPI != null) authAPI!!.onDestroy()

@@ -30,7 +30,6 @@ import org.greenrobot.eventbus.ThreadMode
 import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol
 import java.lang.Thread.sleep
-import kotlin.concurrent.thread
 
 @InjectViewState
 class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAlarmListener {
@@ -111,8 +110,6 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
         return init
     }
 
-
-
     fun init(){
         setTitle()
         fillStatusBar()
@@ -164,7 +161,7 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
-    fun onEnableLocation(event: providerStatus){
+    fun onEnableLocation(event: ProviderStatus){
         Log.d("CommonPresenter", event.status)
         when(event.status)
         {
@@ -190,10 +187,6 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
 
     }
 
-   /* @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun getArrived(event:location) {
-        viewState.scrollMap(GeoPoint(event.lat,event.lon))
-    }*/
     fun setTitle() {
         if (DataStoreUtils.call != "") {
             viewState.setTitle("${DataStoreUtils.call} ( ${DataStoreUtils.status} ) ver. ${BuildConfig.VERSION_NAME}")

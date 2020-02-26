@@ -3,7 +3,7 @@ package newVersion.alarm.navigator
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.location.Location
+import android.util.Log
 import androidx.core.content.ContextCompat
 import moxy.InjectViewState
 import moxy.MvpPresenter
@@ -11,6 +11,10 @@ import newVersion.utils.Alarm
 import newVersion.utils.DataStoreUtils
 import newVersion.commonInterface.Init
 import newVersion.servicess.LocationListener.Companion.imHere
+import newVersion.utils.ProviderStatus
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.util.GeoPoint
@@ -19,13 +23,33 @@ import kotlin.concurrent.thread
 
 @InjectViewState
 class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
-    override var init: Boolean = false
 
-    fun init(){
+    override var init: Boolean = false
+    private var info:Alarm? = null
+
+    fun init(info: Alarm?){
+
+        this.info = info
 
         viewState.initMapView()
 
         viewState.addOverlays()
+
+        if(!EventBus.getDefault().isRegistered(this))
+        {
+            EventBus.getDefault().register(this)
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.BACKGROUND,sticky = true)
+    fun onEnableLocation(event: ProviderStatus){
+        when(event.status)
+        {
+            "enable"->{
+                viewState.setCenter()
+            }
+        }
+
     }
 
     fun haveCoordinate(info:Alarm):Boolean{
@@ -44,7 +68,7 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
         return true
     }
 
-    fun startTrack(info:Alarm) {
+    fun startTrack(info: Alarm, myLocation: GeoPoint) {
 
         if( info.lat==null || info.lon == null)
         {
@@ -60,7 +84,6 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
 
         val strDistance = DataStoreUtils.cityCard?.pcsinfo?.dist
 
-
         val distance = if(strDistance!=null) {
             if (strDistance == "")
                 50
@@ -71,17 +94,8 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
             50
         }
 
-        if(imHere == null)
-        {
-            viewState.showToastMessage("Ваше месторасположение не определено, невозможно построить маршрут, приложение переходит в режим ожидания")
-            return
-        }
-
         val lat = info.lat
         val lon = info.lon
-        val startPoint = GeoPoint(imHere)
-
-
 
         val endPoint = GeoPoint(lat?.toDouble()!!,lon?.toDouble()!!)
 
@@ -89,55 +103,23 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
 
         val routeServers = DataStoreUtils.routeServer
 
-        if(routeServers.count()==0)
-        {
+        if(routeServers.count()==0) {
             viewState.showToastMessage("Не указан сервер для прокладки маршрута, построение не возможно")
             return
         }
-        if(startPoint.distanceToAsDouble(endPoint)<distance){
+
+        if(myLocation.distanceToAsDouble(endPoint)<distance) {
             viewState.showToastMessage("Построение маршрута невозможно, вы прибыли")
             return
         }
 
-        val waypoints = ArrayList<GeoPoint>()
-        waypoints.add(startPoint)
-        waypoints.add(endPoint)
-
+        val waypoint = ArrayList<GeoPoint>()
+        waypoint.add(myLocation)
+        waypoint.add(endPoint)
+        Log.d("NavigatorPresenter","$waypoint")
         thread{
-            viewState.buildTrack(distance,waypoints,routeServers)
+            viewState.buildTrack(distance,waypoint,routeServers)
         }
-    }
-
-    fun customIcon(drawable: Int, context: Context): Bitmap? {
-
-        val drawableBitmap = ContextCompat.getDrawable(context, drawable)
-        val bitmap = Bitmap.createBitmap(
-            drawableBitmap?.intrinsicWidth!!,
-            drawableBitmap.intrinsicHeight,
-            Bitmap.Config.ARGB_8888
-        )
-        val canvas = Canvas(bitmap)
-        drawableBitmap.setBounds(0, 0, canvas.width, canvas.height)
-        drawableBitmap.draw(canvas)
-
-        return bitmap
-    }
-
-    fun setCenter(imHere: Location?) {
-        if (imHere != null) {
-            viewState.setCenter(GeoPoint(imHere))
-        } else {
-            viewState.showToastMessage("Ваше месторасположение не определено, невозможно построить маршрут, приложение переходит в режим ожидания")
-            thread {
-                sleep(2000)
-                viewState.waitCoordinate()
-            }
-        }
-    }
-
-    override fun onDestroy() {
-        init = false
-        super.onDestroy()
     }
 
     fun distance(road: Road): Double? {
@@ -201,5 +183,29 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
                 sleep(500)
             }
         }
+    }
+
+    fun customIcon(drawable: Int, context: Context): Bitmap? {
+
+        val drawableBitmap = ContextCompat.getDrawable(context, drawable)
+        val bitmap = Bitmap.createBitmap(
+            drawableBitmap?.intrinsicWidth!!,
+            drawableBitmap.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        drawableBitmap.setBounds(0, 0, canvas.width, canvas.height)
+        drawableBitmap.draw(canvas)
+
+        return bitmap
+    }
+
+    override fun onDestroy() {
+        init = false
+
+        if(EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().unregister(this)
+
+        super.onDestroy()
     }
 }

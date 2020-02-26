@@ -176,22 +176,6 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
         }
     }
 
-  /*  override fun scrollMap(location:GeoPoint)
-    {
-        runOnUiThread {
-            val display: Display = windowManager.defaultDisplay
-            val size = Point()
-            display.getSize(size)
-            val width: Int = size.x
-            val height: Int = size.y
-
-            val center = common_mapView.mapCenter
-            if(location.distanceToAsDouble(center) > width/2)
-            {
-                common_mapView.controller.animateTo(location)
-            }
-        }
-    }*/
     override fun fillStatusBar(statusList: ArrayList<GpsStatus>) {
         runOnUiThread {
             when (resources.configuration.orientation) {

@@ -1,14 +1,11 @@
 package newVersion.alarm.navigator
 
-import android.app.AlertDialog
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
 import android.content.res.ColorStateList
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -21,7 +18,6 @@ import kobramob.rubeg38.ru.gbrnavigation.R
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
 import newVersion.utils.Alarm
-import newVersion.servicess.LocationListener.Companion.imHere
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -34,10 +30,11 @@ import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.lang.Exception
-import java.lang.Thread.sleep
-import kotlin.concurrent.thread
 
 class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
+
+    private var buildTrack = false
+
     override fun addRoadOverlay(roadOverlay: Polyline?) {
         activity!!.runOnUiThread {
             mMapView!!.overlays.add(roadOverlay)
@@ -73,7 +70,7 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
             mMapView?.invalidate()
 
             val info = activity!!.intent.getSerializableExtra("info") as Alarm
-            presenter.startTrack(info)
+            locationOverlay?.myLocation?.let { presenter.startTrack(info, it) }
         }
     }
 
@@ -87,6 +84,7 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
     }
 
     override fun setMarker(name:String?,endPoint: GeoPoint) {
+        Log.d("NavigatorPresenter","Marker")
         val marker = Marker(mMapView)
         marker.textLabelBackgroundColor = R.color.viewBackground
         marker.title = name
@@ -97,17 +95,15 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
         mMapView!!.overlays.add(marker)
     }
 
-    private var buildTrack = false
+
     override fun buildTrack(distance: Long,waypoints:ArrayList<GeoPoint>,routeServers:ArrayList<String>) {
         if(buildTrack) return
-
         buildTrack = true
 
         val roadManager = OSRMRoadManager(context)
         var road: Road? = null
 
         when{
-
             routeServers.count()>1->{
                 for(i in 0 until routeServers.count())
                 {
@@ -146,17 +142,13 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
                 }
             }
         }
+
         if(road!!.mRouteHigh!!.size < 3 && presenter.distance(road)!!>distance)
         {
             buildTrack = false
             buildTrack(distance,waypoints,routeServers)
             return
         }
-
-        if(imHere==null)
-            showToastMessage("Путь проложен от последней известной точки")
-        else
-            showToastMessage("Путь проложен от вашего нынешнего месторасположения")
 
         activity!!.runOnUiThread {
             buildTrack = false
@@ -187,11 +179,16 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
         rootView = inflater.inflate(R.layout.fragment_alarm_navigator,container,false)
         mMapView = rootView?.findViewById(R.id.alarm_navigator_mapView)
 
-        val myLocation: FloatingActionButton = rootView?.findViewById(R.id.alarm_navigator_myLocation)!!
+        myLocation()
+        followMe()
+        changeNavigation()
+
+        return rootView
+    }
+
+    private fun myLocation() {
         val followMe:FloatingActionButton = rootView?.findViewById(R.id.alarm_navigator_followMe)!!
-        val yandex:FloatingActionButton = rootView?.findViewById(R.id.alarm_navigator_yandex)!!
-
-
+        val myLocation:FloatingActionButton = rootView?.findViewById(R.id.alarm_navigator_myLocation)!!
         myLocation.setOnClickListener {
             if (locationOverlay?.isFollowLocationEnabled!!) {
                 locationOverlay?.disableFollowLocation()
@@ -199,10 +196,12 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
                 followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context!!, R.color.colorPrimary))
             }
 
-            presenter.setCenter(locationOverlay?.lastFix!!)
-
+            setCenter()
         }
+    }
 
+    private fun followMe(){
+        val followMe:FloatingActionButton = rootView?.findViewById(R.id.alarm_navigator_followMe)!!
         followMe.setOnClickListener {
             when {
                 locationOverlay?.isFollowLocationEnabled!! -> {
@@ -217,8 +216,11 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
                 }
             }
         }
+    }
 
-        yandex.setOnClickListener {
+    private fun changeNavigation(){
+        val changeNavigator:FloatingActionButton = rootView?.findViewById(R.id.alarm_navigator_yandex)!!
+        changeNavigator.setOnClickListener {
             val info = activity!!.intent.getSerializableExtra("info") as Alarm
 
             if(presenter.haveCoordinate(info)){
@@ -240,24 +242,16 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
                 }
             }
         }
-
-        return rootView
     }
 
     override fun onResume() {
         super.onResume()
 
         isAlive = true
-        val locationManager = activity!!.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        if(!locationManager.isProviderEnabled((LocationManager.GPS_PROVIDER)))
-        {
-            createSettingGpsDialog(locationManager)
-        }
-        else
-        {
 
-            presenter.init()
-        }
+        val info = activity?.intent?.getSerializableExtra("info") as? Alarm
+
+        presenter.init(info)
     }
 
     override fun onPause() {
@@ -273,49 +267,20 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
         }
     }
 
-    override fun setCenter(geoPoint: GeoPoint) {
-        try {
-            mMapView?.controller?.animateTo(geoPoint)
+    override fun setCenter() {
+        while (locationOverlay?.myLocation==null){
+            //wait
+        }
+        activity?.runOnUiThread {
+            val point = GeoPoint(locationOverlay?.myLocation)
+
+            mMapView?.controller?.animateTo(point)
             mMapView?.controller?.setZoom(15.0)
 
-            if(mMapView!!.overlays.size<3){
+            if(mMapView!!.overlays.size<4){
+                Log.d("NavigatorPresenter","BuildTrack 1")
                 val info = activity!!.intent.getSerializableExtra("info") as Alarm
-                presenter.startTrack(info)
-            }
-        }catch (e:Exception){
-            Toast.makeText(activity,"Произошла ошибка",Toast.LENGTH_LONG).show()
-        }
-
-
-    }
-
-    private var waitCoordinate = false
-    override fun waitCoordinate() {
-        if (waitCoordinate) return
-        waitCoordinate = true
-
-        thread {
-            while(locationOverlay!!.lastFix == null)
-            {
-                if(!isAlive)
-                {
-                    waitCoordinate = false
-                    return@thread
-                }
-                sleep(5000)
-
-            }
-
-            activity!!.runOnUiThread {
-                mMapView!!.invalidate()
-                presenter.setCenter(locationOverlay!!.lastFix)
-                waitCoordinate = false
-                showToastMessage("Удалось определить ваше последнее месторасположение")
-
-                if(mMapView!!.overlays.size<3){
-                    val info = activity!!.intent.getSerializableExtra("info") as Alarm
-                    presenter.startTrack(info)
-                }
+                presenter.startTrack(info, locationOverlay?.myLocation!!)
             }
         }
     }
@@ -327,8 +292,6 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
         mMapView?.controller?.setZoom(15.0)
         mMapView?.isTilesScaledToDpi = true
         mMapView?.isFlingEnabled = true
-
-        presenter.setCenter(imHere)
     }
 
     override fun addOverlays() {
@@ -351,19 +314,14 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
             mMapView?.overlays?.add(scaleBarOverlay)
             scaleBarOverlay?.enableScaleBar()
         }
+
     }
 
     private fun initLocationOverlay(): MyLocationNewOverlay {
         val gpsMyLocationProvider = GpsMyLocationProvider(context)
-        locationOverlay = if (imHere != null) {
-            Log.d("CommonActivity", "Init locationOverlay")
-            gpsMyLocationProvider.addLocationSource(imHere!!.provider)
-            MyLocationNewOverlay(gpsMyLocationProvider, mMapView)
-        } else {
-            gpsMyLocationProvider.clearLocationSources()
-            gpsMyLocationProvider.addLocationSource(LocationManager.GPS_PROVIDER)
-            MyLocationNewOverlay(gpsMyLocationProvider, mMapView)
-        }
+        gpsMyLocationProvider.clearLocationSources()
+        gpsMyLocationProvider.addLocationSource(LocationManager.GPS_PROVIDER)
+        locationOverlay = MyLocationNewOverlay(gpsMyLocationProvider, mMapView)
         locationOverlay?.setDirectionArrow(presenter.customIcon(R.drawable.ic_navigator_icon, context!!), presenter.customIcon(R.drawable.ic_navigator_active_icon, context!!))
         locationOverlay?.isDrawAccuracyEnabled = false
         return locationOverlay!!
@@ -382,25 +340,4 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
         scaleBarOverlay?.setScaleBarOffset(resources.displayMetrics.widthPixels / 2, 10)
         return scaleBarOverlay!!
     }
-    
-    private fun createSettingGpsDialog(locationManager: LocationManager) {
-        val builder = AlertDialog.Builder(context)
-            .setMessage("GPS отключен (Приложение не работает без GPS")
-            .setCancelable(false)
-            .setPositiveButton("Включить")
-            {
-                _,_->
-                startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-            }
-            .create()
-        builder.show()
-        thread{
-            while (!locationManager.isProviderEnabled((LocationManager.GPS_PROVIDER))){
-                sleep(2_000)
-            }
-            presenter.init()
-        }
-    }
-
-
 }

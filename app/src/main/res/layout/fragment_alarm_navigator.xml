@@ -23,7 +23,8 @@
         android:layout_alignEnd="@+id/alarm_navigator_mapView"
         app:srcCompat="@drawable/ic_gps_fixed"
         app:rippleColor="@color/colorAccent"
-        app:backgroundTint="@color/viewBackground"/>
+        app:backgroundTint="@color/viewBackground"
+        />
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/alarm_navigator_followMe"
         android:layout_width="wrap_content"
@@ -37,7 +38,8 @@
         app:srcCompat="@drawable/ic_direction_walk"
         app:rippleColor="@color/colorAccent"
         app:backgroundTint="@color/viewBackground"
-        android:adjustViewBounds="false"/>
+        android:adjustViewBounds="false"
+        />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/alarm_navigator_yandex"
@@ -52,6 +54,7 @@
         android:focusable="true"
         app:backgroundTint="@color/viewBackground"
         app:rippleColor="@color/colorAccent"
-        app:srcCompat="@drawable/ic_yandex" />
+        app:srcCompat="@drawable/ic_yandex"
+        />
 
 </RelativeLayout>
