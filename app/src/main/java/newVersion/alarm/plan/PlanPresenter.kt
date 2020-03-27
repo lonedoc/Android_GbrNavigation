@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import moxy.InjectViewState
 import moxy.MvpPresenter
 import newVersion.utils.Alarm
-import newVersion.commonInterface.Destroyable
+import gbr.utils.interfaces.DestroyableAPI
 import newVersion.commonInterface.Init
 import newVersion.models.RefreshPlan
 import newVersion.network.image.ImageAPI
@@ -17,7 +17,8 @@ import rubegprotocol.RubegProtocol
 import java.lang.Thread.sleep
 
 @InjectViewState
-class PlanPresenter : MvpPresenter<PlanView>(), OnImageListener,Init,Destroyable {
+class PlanPresenter : MvpPresenter<PlanView>(), OnImageListener,Init,
+    DestroyableAPI {
 
     override fun onImageDataReceived(imageByte: ByteArray) {
     }

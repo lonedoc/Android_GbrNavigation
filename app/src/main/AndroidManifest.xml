@@ -36,7 +36,6 @@
         android:label="@string/app_name"
         android:largeHeap="true"
         android:networkSecurityConfig="@xml/networksecurityconfig"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
@@ -64,19 +63,14 @@
             </intent-filter>
         </service>
 
-
-
-        <activity android:name="newVersion.login.LoginActivity"
+        <activity android:name="newVersion.login.OldLoginActivity"
             android:keepScreenOn="true">
         </activity>
 
         <activity android:name="newVersion.main.MainActivity"
             android:keepScreenOn="true"
             >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
         </activity>
 
         <activity android:name="newVersion.common.CommonActivity"
@@ -94,13 +88,21 @@
             android:theme="@style/Theme.UserDialog"
             />
 
-        <!--<service
-            android:name="mad.location.manager.lib.Services.KalmanLocationService"
+        <activity android:name="gbr.ui.start.StartActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name="gbr.utils.servicess.ProtocolService"
             android:enabled="true"
-            android:exported="false"
-            android:stopWithTask="false" />-->
+            android:exported="false" />
 
-
+        <activity android:name="gbr.ui.login.LoginActivity"
+            android:keepScreenOn="true">
+        </activity>
     </application>
 
 </manifest>

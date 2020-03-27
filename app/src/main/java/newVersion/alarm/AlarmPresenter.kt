@@ -11,7 +11,7 @@ import moxy.MvpPresenter
 import newVersion.utils.DataStoreUtils
 import java.lang.Thread.sleep
 import newVersion.alarm.pager.AlarmTabFragment
-import newVersion.commonInterface.Destroyable
+import gbr.utils.interfaces.DestroyableAPI
 import newVersion.commonInterface.Init
 import newVersion.models.CardEvent
 import newVersion.models.EnableButtons
@@ -44,7 +44,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @InjectViewState
-class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListener, OnAlarmListener, OnCompleteListener, Destroyable, Init {
+class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListener, OnAlarmListener, OnCompleteListener,
+    DestroyableAPI, Init {
 
     override var init: Boolean = false
     private var alarmInfo: Alarm? = null

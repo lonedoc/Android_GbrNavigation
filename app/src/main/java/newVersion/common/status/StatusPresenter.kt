@@ -5,7 +5,7 @@ import android.util.Log
 import moxy.InjectViewState
 import moxy.MvpPresenter
 import newVersion.utils.DataStoreUtils
-import newVersion.commonInterface.Destroyable
+import gbr.utils.interfaces.DestroyableAPI
 import newVersion.commonInterface.Init
 import newVersion.network.status.OnStatusListener
 import newVersion.network.status.RPStatusAPI
@@ -13,7 +13,8 @@ import newVersion.network.status.StatusAPI
 import rubegprotocol.RubegProtocol
 
 @InjectViewState
-class StatusPresenter : MvpPresenter<StatusView>(), OnStatusListener, Destroyable, Init {
+class StatusPresenter : MvpPresenter<StatusView>(), OnStatusListener,
+    DestroyableAPI, Init {
     override fun onStatusDataReceived(status: String, call: String) {
         Log.d("StatusPresenter", status)
         if(status =="На тревоге") return

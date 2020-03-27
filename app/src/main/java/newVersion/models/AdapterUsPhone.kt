@@ -11,8 +11,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
+import gbr.utils.data.UsInfo
 import kobramob.rubeg38.ru.gbrnavigation.R
-import newVersion.utils.UsInfo
 
 class AdapterUsPhone(private val usInfo: ArrayList<UsInfo>, val context: Context) : RecyclerView.Adapter<AdapterUsPhone.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

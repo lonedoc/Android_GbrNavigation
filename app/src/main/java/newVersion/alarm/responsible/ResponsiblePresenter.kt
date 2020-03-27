@@ -4,11 +4,12 @@ package newVersion.alarm.responsible
 import moxy.InjectViewState
 import moxy.MvpPresenter
 import newVersion.utils.Alarm
-import newVersion.commonInterface.Destroyable
+import gbr.utils.interfaces.DestroyableAPI
 import newVersion.commonInterface.Init
 
 @InjectViewState
-class ResponsiblePresenter : MvpPresenter<ResponsibleView>(),Destroyable,Init {
+class ResponsiblePresenter : MvpPresenter<ResponsibleView>(),
+    DestroyableAPI,Init {
     override var init: Boolean = false
 
     override fun isInit(): Boolean {

@@ -20,8 +20,8 @@ android {
         applicationId "kobramob.rubeg38.ru.gbrnavigation"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 51
-        versionName "1.9.9"
+        versionCode 54
+        versionName "2.0.0"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         javaCompileOptions {
@@ -140,6 +140,12 @@ dependencies {
     kapt "com.github.moxy-community:moxy-compiler:2.1.1"
 
     implementation 'com.github.maddevsio:mad-location-manager:0.1.9'
+
+    implementation 'com.victor:lib:1.0.4'
+
+    implementation 'de.hdodenhof:circleimageview:3.1.0'
+
+    implementation "io.noties.markwon:core:4.2.2"
 
     implementation project(':networkprotocol')
 }

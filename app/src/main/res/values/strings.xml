@@ -3,15 +3,12 @@
     <string name="EnterIp">Введите ip адрес сервера</string>
     <string name="EnterPort">Введите port сервера</string>
     <string name="FIO">Фамилия Имя Отчество</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="cardObject">Карточка объекта</string>
     <string name="listFeed">Лента событий</string>
     <string name="responsible">Отвественные</string>
     <string name="plan_schem">План-схема</string>
-    <string name="inputPort">Введите PORT сервера</string>
-    <string name="inputIP">Введите IP адрес сервера</string>
+
     <string name="inputGroupName">Введите наименование группы</string>
     <string name="title_activity_permission">PermissionActivity</string>
     <string name="title_activity_test">TestActivity</string>
@@ -68,5 +65,15 @@
     <string name="es_phone">Экстренные службы:</string>
     <string name="us_phone">Коммунальный службы:</string>
     <string name="phone_service_center">Сервисный центр</string>
+
+
+    <!-- TODO: Текст для новой Версии приложения -->
+
+    <!-- TODO:StartActivity-->
+    <string name="start_icon">Стартовая иконка</string>
+    <string name="testMessage">Тестовое сообщение</string>
+    <string name="inputPort">Введите PORT сервера</string>
+    <string name="inputIP">Введите IP адрес сервера</string>
+    <string name="inputImei">Введите imei</string>
 
 </resources>

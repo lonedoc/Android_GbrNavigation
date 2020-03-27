@@ -3,7 +3,7 @@ package newVersion.alarm.card
 import moxy.InjectViewState
 import moxy.MvpPresenter
 import newVersion.common.CurrentTime
-import newVersion.commonInterface.Destroyable
+import gbr.utils.interfaces.DestroyableAPI
 import newVersion.commonInterface.Init
 import newVersion.models.CardEvent
 import newVersion.models.EnableButtons
@@ -15,7 +15,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @InjectViewState
-class CardPresenter : MvpPresenter<CardView>(), Destroyable, Init {
+class CardPresenter : MvpPresenter<CardView>(),
+    DestroyableAPI, Init {
 
     override var init: Boolean = false
     override fun isInit(): Boolean {

@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kobramob.rubeg38.ru.gbrnavigation.R
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
+import newVersion.alarm.AlarmActivity
 import newVersion.utils.Alarm
 
 class PlanFragment : MvpAppCompatFragment(), PlanView {
@@ -34,7 +35,7 @@ class PlanFragment : MvpAppCompatFragment(), PlanView {
     override fun onResume() {
         super.onResume()
 
-        val imageInfo = activity!!.intent.getSerializableExtra("info") as? Alarm
+        val imageInfo = AlarmActivity.info!!
         presenter.init(imageInfo!!)
 
     }

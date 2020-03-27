@@ -1,7 +1,8 @@
 package newVersion.models
 
-import newVersion.utils.CityCard
-import newVersion.utils.GpsStatus
+import gbr.utils.data.CityCard
+import gbr.utils.data.StatusList
+
 
 data class Auth(
     var authInfo: AuthInfo?,
@@ -14,7 +15,7 @@ data class AuthInfo(
     var nameGbr: String?,
     var call: String?,
     var status: String?,
-    var gpsStatus: ArrayList<GpsStatus>,
+    var gpsStatus: ArrayList<StatusList>,
     var routeServer: ArrayList<String>,
     var report: ArrayList<String>,
     var cityCard: CityCard,

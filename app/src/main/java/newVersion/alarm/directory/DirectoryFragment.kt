@@ -12,14 +12,14 @@ import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import gbr.utils.data.EsInfo
+import gbr.utils.data.UsInfo
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlinx.android.synthetic.main.activity_directory.*
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
 import newVersion.models.AdapterEsPhone
 import newVersion.models.AdapterUsPhone
-import newVersion.utils.EsInfo
-import newVersion.utils.UsInfo
 
 class DirectoryFragment: MvpAppCompatFragment(),DirectoryFragmentView {
 

@@ -126,16 +126,7 @@ class MainPresenter : MvpPresenter<MainView>(), OnAuthListener, Destroyable, Ini
             DataStoreUtils.saveRegistrationData(authInfo = auth.authInfo!!)
             viewState.showToastMessage("Авторизация прошла успешно")
             viewState.openCommonActivity()
-            /*if(auth.authInfo?.lastVersion!= BuildConfig.VERSION_NAME)
-            {
-                //OpenDialog
-                //TODO сделать диалоговое окно для отправки в магазин
-                //TODO сделать диалоговое окно для ЧТО нового
-            }
-            else
-            {
 
-            }*/
 
         } else {
             val protocol = RubegProtocol.sharedInstance

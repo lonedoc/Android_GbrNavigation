@@ -6,14 +6,14 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import gbr.utils.data.EsInfo
+import gbr.utils.data.UsInfo
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlinx.android.synthetic.main.activity_directory.*
 import moxy.MvpAppCompatActivity
 import moxy.presenter.InjectPresenter
 import newVersion.models.AdapterEsPhone
 import newVersion.models.AdapterUsPhone
-import newVersion.utils.EsInfo
-import newVersion.utils.UsInfo
 
 class DirectoryActivity: MvpAppCompatActivity(),DirectoryView {
 

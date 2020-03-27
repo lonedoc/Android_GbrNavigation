@@ -23,7 +23,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import newVersion.utils.NewCredentials
-import newVersion.login.LoginActivity
+import newVersion.login.OldLoginActivity
 import newVersion.main.MainActivity
 import newVersion.models.Auth
 import newVersion.models.Credentials
@@ -56,7 +56,7 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
     private var coordinateQueue:ArrayList<LocationInfo> = ArrayList()
     var oldLocation:GeoPoint? = null
-
+    var oldSpeed:Int? = null
     lateinit var hostPool: HostPool
     var credentials:Credentials? = null
 
@@ -73,7 +73,7 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
     override fun onConnectionLost() {
         Log.d("Service", "Connection lost")
 
-        if (!connectionLost && protocol.isStarted && !LoginActivity.isAlive && !MainActivity.isAlive) {
+        if (!connectionLost && protocol.isStarted && !OldLoginActivity.isAlive && !MainActivity.isAlive) {
             connectionLost = true
             thread{
             when {
@@ -155,15 +155,19 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
     fun onLocationLoop(event:Location){
+
         if(GeoPoint(event.lat,event.lon) == oldLocation) return
 
+        if(oldSpeed == 0 && (event.speed * 3.6).toInt() == 0) return
+
         oldLocation = GeoPoint(event.lat,event.lon)
+        oldSpeed = (event.speed * 3.6).toInt()
 
         val df = DecimalFormat("#.######")
 
         if(credentials == null) return
 
-        if(!protocol.isConnected)
+        if(!protocol.isConnected || connectionLost )
         {
             coordinateQueue.add(LocationInfo(event.lat,event.lon,event.accuracy,(event.speed * 3.6).toInt(),event.satelliteCount))
             return

@@ -1,13 +1,13 @@
 package newVersion.common
 
 import android.location.LocationManager
+import gbr.utils.data.StatusList
 import moxy.MvpView
 import moxy.viewstate.strategy.SkipStrategy
 import moxy.viewstate.strategy.StateStrategyType
 import newVersion.models.Credentials
 import newVersion.models.HostPool
 import newVersion.utils.Alarm
-import newVersion.utils.GpsStatus
 import org.osmdroid.util.GeoPoint
 
 interface CommonView:MvpView {
@@ -15,7 +15,7 @@ interface CommonView:MvpView {
     @StateStrategyType(value = SkipStrategy::class)
     fun createNotification(command: String, status: String)
 
-    fun fillStatusBar(statusList: ArrayList<GpsStatus>)
+    fun fillStatusBar(statusList: ArrayList<StatusList>)
 
     @StateStrategyType(value = SkipStrategy::class)
     fun setTitle(title:String)
@@ -25,6 +25,7 @@ interface CommonView:MvpView {
 
     @StateStrategyType(value = SkipStrategy::class)
     fun showToastMessage(message:String)
+
     fun setCenter(geoPoint: GeoPoint)
 
     fun setCenter()

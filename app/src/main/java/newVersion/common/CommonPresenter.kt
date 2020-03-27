@@ -9,6 +9,8 @@ import android.location.Location
 import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
+import gbr.utils.PrefsUtils
+import gbr.utils.data.StatusList
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import moxy.InjectViewState
 import moxy.MvpPresenter
@@ -49,7 +51,7 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
         setTitle()
 
         for (i in 0 until statusList.count()) {
-            if (statusList[i].name == status && statusList[i].time != "0") {
+            if (statusList[i].status == status && statusList[i].time != "0") {
                 viewState.createStatusTimer(statusList[i].time.toLong())
             }
         }
@@ -62,10 +64,10 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
     }
 
     private fun fillStatusBar() {
-        val statusList: ArrayList<GpsStatus> = ArrayList()
+        val statusList: ArrayList<StatusList> = ArrayList()
 
         for (i in 0 until DataStoreUtils.statusList.count()) {
-            if (DataStoreUtils.statusList[i].name != "На тревоге" && DataStoreUtils.statusList[i].name != DataStoreUtils.status) {
+            if (DataStoreUtils.statusList[i].status != "На тревоге" && DataStoreUtils.statusList[i].status != DataStoreUtils.status) {
                 statusList.add(DataStoreUtils.statusList[i])
             }
         }
@@ -118,7 +120,7 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
     }
 
     fun initData(
-        preferences: PrefsUtil,
+        preferences: PrefsUtils,
         context: Context
     ) {
         if(isInit()) return

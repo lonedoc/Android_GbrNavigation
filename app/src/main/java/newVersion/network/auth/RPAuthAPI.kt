@@ -7,7 +7,6 @@ import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import newVersion.models.Auth
 import newVersion.models.AuthInfo
 import newVersion.models.Credentials
-import newVersion.utils.RegistrationGson
 import org.json.JSONObject
 import ru.rubeg38.rubegprotocol.TextMessageWatcher
 import rubegprotocol.RubegProtocol
@@ -53,7 +52,7 @@ class RPAuthAPI(
         when (JSONObject(message).getString("\$c$")) {
             "regok" ->
                 {
-                    val registration = gson.fromJson(message, RegistrationGson::class.java)
+                   /* val registration = gson.fromJson(message, AuthInfo::class.java)
 
                     val authInfo = AuthInfo(
                         token = registration.tid,
@@ -73,12 +72,13 @@ class RPAuthAPI(
                         accessDenied = false
                     )
 
-                    onAuthListener?.onAuthDataReceived(auth)
+                    onAuthListener?.onAuthDataReceived(auth)*/
+                    return
                 }
             "accessdenied" -> {
                 val auth = Auth(
-                    null,
-                    false,
+                    authInfo = null,
+                    authorized = false,
                     accessDenied = true
                 )
                 onAuthListener?.onAuthDataReceived(auth)
@@ -86,9 +86,9 @@ class RPAuthAPI(
             }
             "ServerNotResponse" -> {
                 val auth = Auth(
-                    null,
-                    false,
-                    false
+                    authInfo = null,
+                    authorized = false,
+                    accessDenied = false
                 )
                 onAuthListener?.onAuthDataReceived(auth)
                 return

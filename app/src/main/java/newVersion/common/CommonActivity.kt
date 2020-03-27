@@ -1,18 +1,21 @@
 package newVersion.common
 
+import android.app.NotificationManager
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.graphics.Point
 import android.location.LocationManager
 import android.os.Bundle
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.messaging.RemoteMessage
-import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
+import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kotlinx.android.synthetic.main.activity_common.*
 import moxy.MvpAppCompatActivity
 import moxy.presenter.InjectPresenter
@@ -27,8 +30,8 @@ import newVersion.servicess.NetworkService
 import newVersion.servicess.NotificationService
 import newVersion.utils.Alarm
 import newVersion.utils.DataStoreUtils
-import newVersion.utils.GpsStatus
-import newVersion.utils.PrefsUtil
+import gbr.utils.PrefsUtils
+import gbr.utils.data.StatusList
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.ScaleBarOverlay
@@ -36,6 +39,7 @@ import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import kotlin.concurrent.thread
+
 
 class CommonActivity:MvpAppCompatActivity(),CommonView{
 
@@ -87,6 +91,11 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
 
     override fun onResume() {
         super.onResume()
+
+        val ns: String = NOTIFICATION_SERVICE
+        val nMgr = getSystemService(ns) as NotificationManager
+        nMgr.cancelAll()
+
         when {
             DataStoreUtils.call == null && DataStoreUtils.namegbr == null -> {
                 showToastMessage("Ошибка приложения, автоматическая перезагрузка")
@@ -106,13 +115,17 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
                 presenter.alarmCheck(DataStoreUtils.namegbr!!)
             }
             else -> {
-                val preferences = PrefsUtil(applicationContext)
+                val preferences = PrefsUtils(applicationContext)
 
                 presenter.init()
                 presenter.initData(preferences, this)
 
             }
         }
+
+        setCenter()
+
+
     }
 
     override fun setTitle(title:String){
@@ -158,8 +171,11 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
     }
 
     override fun setCenter(geoPoint:GeoPoint) {
-        common_mapView.controller.animateTo(geoPoint)
-        common_mapView.controller.setZoom(15.0)
+        runOnUiThread{
+            common_mapView.controller.animateTo(geoPoint)
+            common_mapView.controller.setZoom(15.0)
+        }
+
     }
 
     override fun setCenter(){
@@ -176,7 +192,7 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
         }
     }
 
-    override fun fillStatusBar(statusList: ArrayList<GpsStatus>) {
+    override fun fillStatusBar(statusList: ArrayList<StatusList>) {
         runOnUiThread {
             when (resources.configuration.orientation) {
                 Configuration.ORIENTATION_LANDSCAPE -> {
@@ -219,15 +235,15 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
 
             for (i in 0 until statusList.count()) {
                 val actionButton = com.github.clans.fab.FloatingActionButton(applicationContext)
-                actionButton.labelText = statusList[i].name
+                actionButton.labelText = statusList[i].status
                 actionButton.colorNormal = ContextCompat.getColor(applicationContext, R.color.colorPrimary)
                 actionButton.setOnClickListener {
                     if (common_fab_menu.isOpened) {
-                        presenter.sendStatusRequest(statusList[i].name)
+                        presenter.sendStatusRequest(statusList[i].status)
                         common_fab_menu.close(true)
                     }
                 }
-                when (statusList[i].name) {
+                when (statusList[i].status) {
                     "Заправляется" -> { actionButton.setImageResource(R.drawable.ic_refueling) }
                     "Обед" -> { actionButton.setImageResource(R.drawable.ic_dinner) }
                     "Ремонт" -> { actionButton.setImageResource(R.drawable.ic_repairs) }

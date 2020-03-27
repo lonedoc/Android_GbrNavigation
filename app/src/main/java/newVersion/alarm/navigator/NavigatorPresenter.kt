@@ -10,7 +10,8 @@ import moxy.MvpPresenter
 import newVersion.utils.Alarm
 import newVersion.utils.DataStoreUtils
 import newVersion.commonInterface.Init
-import newVersion.servicess.LocationListener.Companion.imHere
+import gbr.utils.servicess.LocationListener.Companion.imHere
+import newVersion.utils.Location
 import newVersion.utils.ProviderStatus
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -50,6 +51,59 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
             }
         }
 
+    }
+
+    @Subscribe(threadMode = ThreadMode.BACKGROUND)
+    fun onTracking(event:Location){
+        if(!tracking||distance == null||road == null||endPoint == null) return
+
+        var distanceBetweenPoints = distance(road!!)
+        var roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
+
+        viewState.createRoad(roadOverlay = roadOverlay)
+
+        while(NavigatorFragment.isAlive){
+
+            if(endPoint?.distanceToAsDouble(GeoPoint(imHere))!! <= this.distance!! && distance(road!!) == null)
+            {
+                viewState.showToastMessage("Вы прибыли на место")
+
+                viewState.clearOverlay(roadOverlay)
+                return
+            }
+
+            if(distance(road!!)==null)
+            {
+                tracking = false
+                viewState.recreateTrack(roadOverlay)
+                return
+            }
+
+            if(distance(road!!)!! >= distanceBetweenPoints?.plus(30)!!){
+                tracking = false
+                viewState.recreateTrack(roadOverlay)
+                return
+            }
+
+            if(distance(road!!)!! < 30)
+            {
+                viewState.removeRoadOverlay(roadOverlay)
+                road!!.mRouteHigh.removeAt(1)
+                roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
+                viewState.addRoadOverlay(roadOverlay)
+                distanceBetweenPoints = distance(road!!)
+
+                continue
+            }
+
+            viewState.removeRoadOverlay(roadOverlay)
+            road!!.mRouteHigh.removeAt(0)
+            road!!.mRouteHigh.add(0,GeoPoint(imHere))
+            roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
+            viewState.addRoadOverlay(roadOverlay)
+
+            sleep(500)
+        }
     }
 
     fun haveCoordinate(info:Alarm):Boolean{
@@ -118,7 +172,7 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
         waypoint.add(endPoint)
         Log.d("NavigatorPresenter","$waypoint")
         thread{
-            viewState.buildTrack(distance,waypoint,routeServers)
+            /*viewState.buildTrack(distance,waypoint,routeServers)*/
         }
     }
 
@@ -132,57 +186,20 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
         return firstPoint.distanceToAsDouble(secondPoint)
     }
 
+    var tracking = false
+    var road:Road? = null
+    private var distance:Long? = null
+    var endPoint:GeoPoint? = null
+
     fun tracking(
         road: Road?,
         distance: Long,
         endPoint: GeoPoint
     ) {
-        thread{
-            var distanceBetweenPoints = distance(road!!)
-            var roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-
-            viewState.createRoad(roadOverlay = roadOverlay)
-
-            while(NavigatorFragment.isAlive){
-
-                if(endPoint.distanceToAsDouble(GeoPoint(imHere)) <= distance && distance(road) == null)
-                {
-                    viewState.showToastMessage("Вы прибыли на место")
-                    viewState.clearOverlay(roadOverlay)
-                    return@thread
-                }
-
-                if(distance(road)==null)
-                {
-                    viewState.recreateTrack(roadOverlay)
-                    return@thread
-                }
-
-                if(distance(road)!! >= distanceBetweenPoints?.plus(30)!!){
-                    viewState.recreateTrack(roadOverlay)
-                    return@thread
-                }
-
-                if(distance(road)!! < 30)
-                {
-                    viewState.removeRoadOverlay(roadOverlay)
-                    road.mRouteHigh.removeAt(1)
-                    roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-                    viewState.addRoadOverlay(roadOverlay)
-                    distanceBetweenPoints = distance(road)
-
-                    continue
-                }
-
-                viewState.removeRoadOverlay(roadOverlay)
-                road.mRouteHigh.removeAt(0)
-                road.mRouteHigh.add(0,GeoPoint(imHere))
-                roadOverlay = RoadManager.buildRoadOverlay(road, 0x800000FF.toInt(), 10.0f)
-                viewState.addRoadOverlay(roadOverlay)
-
-                sleep(500)
-            }
-        }
+        this.road = road
+        this.distance = distance
+        this.endPoint = endPoint
+        this.tracking = true
     }
 
     fun customIcon(drawable: Int, context: Context): Bitmap? {

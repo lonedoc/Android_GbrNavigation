@@ -1,5 +1,7 @@
 package newVersion.utils
 
+import gbr.utils.data.CityCard
+import gbr.utils.data.StatusList
 import newVersion.models.AuthInfo
 
 object DataStoreUtils {
@@ -7,7 +9,7 @@ object DataStoreUtils {
     var namegbr: String? = null
     var status: String? = null
     var cityCard: CityCard? = null
-    var statusList: ArrayList<GpsStatus> = ArrayList()
+    var statusList: ArrayList<StatusList> = ArrayList()
     var routeServer: ArrayList<String> = ArrayList()
     var reports: ArrayList<String> = ArrayList()
 
@@ -22,7 +24,7 @@ object DataStoreUtils {
                 statusList.clear()
             }
             statusList.addAll(authInfo.gpsStatus)
-            statusList.sortBy { it.name }
+            statusList.sortBy { it.status }
         }
 
         if (authInfo.routeServer.count() >= 1) {

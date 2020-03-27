@@ -10,6 +10,7 @@ import android.widget.TextView
 import kobramob.rubeg38.ru.gbrnavigation.R
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
+import newVersion.alarm.AlarmActivity
 import newVersion.utils.Alarm
 
 class CardFragment : MvpAppCompatFragment(), CardView {
@@ -44,8 +45,8 @@ class CardFragment : MvpAppCompatFragment(), CardView {
     override fun onResume() {
         super.onResume()
 
-        if (!presenter.init && activity?.intent?.hasExtra("info")!!) {
-            presenter.init(activity?.intent?.getSerializableExtra("info") as Alarm)
+        if (!presenter.init) {
+            presenter.init(AlarmActivity.info!!)
         }
         else
         {

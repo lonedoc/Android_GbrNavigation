@@ -43,6 +43,7 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
     lateinit var presenter: AlarmPresenter
 
     companion object {
+        var info:Alarm? = null
         var elapsedMillis: Long? = null
         var isAlive = false
     }
@@ -76,6 +77,8 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
             true
         }
 
+        if(intent?.getSerializableExtra("info") as? Alarm != null)
+            info = intent?.getSerializableExtra("info") as? Alarm
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -106,7 +109,8 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
         if (!presenter.init) {
             if(intent.hasExtra("info"))
             {
-                val info = intent?.getSerializableExtra("info") as? Alarm
+                val info = info
+
                 presenter.init(info,applicationContext)
                 info?.let { presenter.sendAlarmApplyRequest(it) }
             }

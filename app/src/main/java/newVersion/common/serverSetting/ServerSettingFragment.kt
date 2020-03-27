@@ -5,7 +5,7 @@ import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
-import newVersion.login.LoginActivity
+import newVersion.login.OldLoginActivity
 import newVersion.servicess.NetworkService
 
 class ServerSettingFragment : DialogFragment() {
@@ -26,7 +26,7 @@ class ServerSettingFragment : DialogFragment() {
     }
 
     private fun openLoginScreen() {
-        val loginActivity = Intent(context, LoginActivity::class.java)
+        val loginActivity = Intent(context, OldLoginActivity::class.java)
         startActivity(loginActivity)
     }
 

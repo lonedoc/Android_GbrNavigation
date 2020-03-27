@@ -20,15 +20,15 @@ import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_main.*
 import moxy.MvpAppCompatActivity
 import moxy.presenter.InjectPresenter
-import newVersion.utils.PrefsUtil
 import newVersion.common.CommonActivity
-import newVersion.login.LoginActivity
+import newVersion.login.OldLoginActivity
 import newVersion.models.Credentials
 import newVersion.models.HostPool
 import newVersion.models.Preferences
-import newVersion.servicess.LocationListener
+import gbr.utils.servicess.LocationListener
 import newVersion.servicess.NetworkService
 import newVersion.servicess.NotificationService
+import newVersion.utils.PrefsUtil
 
 class MainActivity : MvpAppCompatActivity(), MainView {
     @InjectPresenter
@@ -213,7 +213,7 @@ class MainActivity : MvpAppCompatActivity(), MainView {
     override fun openLoginActivity() {
         runOnUiThread {
             presenter.onDestroy()
-            val loginActivity = Intent(this, LoginActivity::class.java)
+            val loginActivity = Intent(this, OldLoginActivity::class.java)
             startActivity(loginActivity)
         }
     }

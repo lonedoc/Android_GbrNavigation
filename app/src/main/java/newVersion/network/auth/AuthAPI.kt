@@ -1,9 +1,9 @@
 package newVersion.network.auth
 
-import newVersion.commonInterface.Destroyable
+import gbr.utils.interfaces.DestroyableAPI
 import ru.rubeg38.rubegprotocol.TextMessageWatcher
 
-interface AuthAPI : TextMessageWatcher, Destroyable {
+interface AuthAPI : TextMessageWatcher, DestroyableAPI {
     var onAuthListener: OnAuthListener?
     fun sendAuthRequest(complete: (Boolean) -> Unit)
 }

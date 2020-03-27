@@ -9,11 +9,11 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.redmadrobot.inputmask.MaskedTextChangedListener
 import kobramob.rubeg38.ru.gbrnavigation.R
-import newVersion.login.LoginPresenter
+import newVersion.login.OldLoginPresenter
 import ru.rubeg38.technicianmobile.utils.setOnTextChanged
 
 class AdapterIpAddress(
-    private val presenter: LoginPresenter,
+    private val presenter: OldLoginPresenter,
     val address: ArrayList<String>?
 ) : RecyclerView.Adapter<AdapterIpAddress.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

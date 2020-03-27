@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kobramob.rubeg38.ru.gbrnavigation.R
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
+import newVersion.alarm.AlarmActivity
 import newVersion.utils.Alarm
 import newVersion.utils.ResponsibleList
 import newVersion.alarm.responsible.personalCard.PersonalCardFragment
@@ -70,7 +71,7 @@ class ResponsibleFragment : MvpAppCompatFragment(), ResponsibleView {
     override fun onResume() {
         super.onResume()
         if(activity?.intent?.hasExtra("info")!!){
-            val alarmInfo = activity?.intent?.getSerializableExtra("info") as Alarm
+            val alarmInfo = AlarmActivity.info!!
             if(!presenter.init){
                 presenter.init(alarmInfo)
             }

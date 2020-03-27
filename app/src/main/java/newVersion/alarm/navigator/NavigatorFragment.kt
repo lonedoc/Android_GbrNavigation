@@ -17,6 +17,7 @@ import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
+import newVersion.alarm.AlarmActivity
 import newVersion.utils.Alarm
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.Road
@@ -69,7 +70,7 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
             mMapView?.overlays?.remove(roadOverlay)
             mMapView?.invalidate()
 
-            val info = activity!!.intent.getSerializableExtra("info") as Alarm
+            val info = AlarmActivity.info!!
             locationOverlay?.myLocation?.let { presenter.startTrack(info, it) }
         }
     }
@@ -221,7 +222,7 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
     private fun changeNavigation(){
         val changeNavigator:FloatingActionButton = rootView?.findViewById(R.id.alarm_navigator_yandex)!!
         changeNavigator.setOnClickListener {
-            val info = activity!!.intent.getSerializableExtra("info") as Alarm
+            val info = AlarmActivity.info!!
 
             if(presenter.haveCoordinate(info)){
                 val uri: Uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=${info.lat}&lon_to=${info.lon}")
@@ -249,7 +250,7 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
 
         isAlive = true
 
-        val info = activity?.intent?.getSerializableExtra("info") as? Alarm
+        val info = AlarmActivity.info!!
 
         presenter.init(info)
     }
@@ -279,8 +280,14 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
 
             if(mMapView!!.overlays.size<4){
                 Log.d("NavigatorPresenter","BuildTrack 1")
-                val info = activity!!.intent.getSerializableExtra("info") as Alarm
-                presenter.startTrack(info, locationOverlay?.myLocation!!)
+                try {
+                    val info = AlarmActivity.info!!
+                    presenter.startTrack(info, locationOverlay?.myLocation!!)
+                }catch (e:Exception)
+                {
+                    e.printStackTrace()
+                }
+
             }
         }
     }

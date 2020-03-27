@@ -11,8 +11,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
+import gbr.utils.data.EsInfo
 import kobramob.rubeg38.ru.gbrnavigation.R
-import newVersion.utils.EsInfo
 import java.util.ArrayList
 
 class AdapterEsPhone(private val esInfo: ArrayList<EsInfo>, val context: Context) :

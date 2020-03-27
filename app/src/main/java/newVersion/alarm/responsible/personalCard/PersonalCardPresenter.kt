@@ -2,11 +2,12 @@ package newVersion.alarm.responsible.personalCard
 
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.commonInterface.Destroyable
+import gbr.utils.interfaces.DestroyableAPI
 import newVersion.commonInterface.Init
 
 @InjectViewState
-class PersonalCardPresenter: MvpPresenter<PersonalCardView>(),Init,Destroyable {
+class PersonalCardPresenter: MvpPresenter<PersonalCardView>(),Init,
+    DestroyableAPI {
 
     override var init: Boolean = false
 

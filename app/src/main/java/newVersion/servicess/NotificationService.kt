@@ -17,10 +17,8 @@ import androidx.core.content.ContextCompat
 import com.google.firebase.messaging.RemoteMessage
 import java.lang.Thread.sleep
 import kobramob.rubeg38.ru.gbrnavigation.R
-import newVersion.alarm.AlarmActivity
 import newVersion.common.CommonActivity
-import newVersion.login.LoginActivity
-import kotlin.concurrent.thread
+import newVersion.login.OldLoginActivity
 
 object NotificationService {
 
@@ -41,8 +39,8 @@ object NotificationService {
         ) else NotificationCompat.Builder(context)
 
         val pendingIntent = when {
-            LoginActivity.isAlive -> {
-                val i = Intent(context, LoginActivity::class.java)
+            OldLoginActivity.isAlive -> {
+                val i = Intent(context, OldLoginActivity::class.java)
                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT)
             }
@@ -224,7 +222,7 @@ object NotificationService {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val channel = NotificationChannel(
                 notificationChannelId,
-                "Serveer channel",
+                "Server channel",
                 NotificationManager.IMPORTANCE_HIGH
             ).let {
                 it.description = "Server channel"

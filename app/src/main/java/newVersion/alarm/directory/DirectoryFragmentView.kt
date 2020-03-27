@@ -1,10 +1,10 @@
 package newVersion.alarm.directory
 
+import gbr.utils.data.EsInfo
+import gbr.utils.data.UsInfo
 import moxy.MvpView
 import moxy.viewstate.strategy.SkipStrategy
 import moxy.viewstate.strategy.StateStrategyType
-import newVersion.utils.EsInfo
-import newVersion.utils.UsInfo
 
 interface DirectoryFragmentView: MvpView {
     @StateStrategyType(value = SkipStrategy::class)
