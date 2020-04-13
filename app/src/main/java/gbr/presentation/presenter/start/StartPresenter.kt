@@ -12,6 +12,7 @@ import gbr.utils.api.serverstatus.OnServerStatusListener
 import gbr.utils.api.serverstatus.RPServerStatusAPI
 import gbr.utils.api.serverstatus.ServerStatusAPI
 import gbr.utils.callbacks.GpsCallback
+import gbr.utils.data.AuthInfo
 import gbr.utils.data.ProtocolServiceInfo
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import moxy.InjectViewState
@@ -185,7 +186,7 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
     }
 
     override fun onAuthDataReceived(auth: gbr.utils.data.AuthInfo) {
-
+        Log.d("Auth",auth.call)
     }
 
     override fun onAccessDataReceiver(access: Boolean) {

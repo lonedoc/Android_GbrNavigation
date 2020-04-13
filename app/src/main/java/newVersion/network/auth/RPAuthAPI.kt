@@ -52,17 +52,17 @@ class RPAuthAPI(
         when (JSONObject(message).getString("\$c$")) {
             "regok" ->
                 {
-                   /* val registration = gson.fromJson(message, AuthInfo::class.java)
+                   val registration = gson.fromJson(message, gbr.utils.data.AuthInfo::class.java)
 
                     val authInfo = AuthInfo(
-                        token = registration.tid,
+                        token = registration.token,
                         nameGbr = registration.namegbr,
                         call = registration.call,
                         status = registration.status,
-                        gpsStatus = registration.gpsstatus,
-                        routeServer = registration.routeserver,
-                        report = registration.reports,
-                        cityCard = registration.citycard,
+                        gpsStatus = registration.statusList,
+                        routeServer = registration.routeServerList,
+                        report = registration.reportsList,
+                        cityCard = registration.cityCard,
                         lastVersion = "1.9.4"
                     )
 
@@ -72,7 +72,7 @@ class RPAuthAPI(
                         accessDenied = false
                     )
 
-                    onAuthListener?.onAuthDataReceived(auth)*/
+                    onAuthListener?.onAuthDataReceived(auth)
                     return
                 }
             "accessdenied" -> {

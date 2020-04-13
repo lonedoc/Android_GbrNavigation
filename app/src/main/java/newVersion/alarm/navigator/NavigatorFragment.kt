@@ -225,22 +225,31 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
             val info = AlarmActivity.info!!
 
             if(presenter.haveCoordinate(info)){
-                val uri: Uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=${info.lat}&lon_to=${info.lon}")
-                val intent = Intent(Intent.ACTION_VIEW,uri)
-                intent.setPackage("ru.yandex.yandexnavi")
-                val packageManager = activity!!.packageManager
-                val activities:List<ResolveInfo> = packageManager.queryIntentActivities(intent,0)
-                val isIntentSafe = activities.isNotEmpty()
-                if(isIntentSafe)
+//                val uri: Uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=${info.lat}&lon_to=${info.lon}")
+//                val intent = Intent(Intent.ACTION_VIEW,uri)
+//                intent.setPackage("ru.yandex.yandexnavi")
+//                val packageManager = activity!!.packageManager
+//                val activities:List<ResolveInfo> = packageManager.queryIntentActivities(intent,0)
+//                val isIntentSafe = activities.isNotEmpty()
+//                if(isIntentSafe)
+//                {
+//                    activity!!.startActivity(intent)
+//                }
+//                else
+//                {
+//                    val playMarket = Intent(Intent.ACTION_VIEW)
+//                    playMarket.data = Uri.parse("market://details?id=ru.yandex.yandexnavi")
+//                    startActivity(playMarket)
+//                }
+                val uri = Uri.parse("google.navigation:ll=${info.lat},${info.lon}")
+                var intent = Intent(Intent.ACTION_VIEW,uri)
+                intent.setPackage("com.navitel")
+                if(intent.resolveActivity(activity!!.packageManager) == null)
                 {
-                    activity!!.startActivity(intent)
+                    intent = Intent(Intent.ACTION_VIEW)
+                    intent.data = Uri.parse("market://details?id=com.navitel")
                 }
-                else
-                {
-                    val playMarket = Intent(Intent.ACTION_VIEW)
-                    playMarket.data = Uri.parse("market://details?id=ru.yandex.yandexnavi")
-                    startActivity(playMarket)
-                }
+                activity!!.startActivity(intent)
             }
         }
     }

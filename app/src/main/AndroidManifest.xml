@@ -70,7 +70,10 @@
         <activity android:name="newVersion.main.MainActivity"
             android:keepScreenOn="true"
             >
-
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <activity android:name="newVersion.common.CommonActivity"
@@ -89,10 +92,7 @@
             />
 
         <activity android:name="gbr.ui.start.StartActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
         </activity>
 
         <service
