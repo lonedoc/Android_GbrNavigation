@@ -43,7 +43,7 @@
     <string name="sendReports">Отправить рапорт</string>
     <string name="sendArrived">Отправить прибытие</string>
     <string name="reference">Справочник</string>
-    <string name="enterToApp">Войти в приложение</string>
+
     <string name="addobject">addObject</string>
     <string name="removeobject">removeObject</string>
 
@@ -72,8 +72,10 @@
     <!-- TODO:StartActivity-->
     <string name="start_icon">Стартовая иконка</string>
     <string name="testMessage">Тестовое сообщение</string>
+    <!-- TODO:LoginActivity-->
     <string name="inputPort">Введите PORT сервера</string>
     <string name="inputIP">Введите IP адрес сервера</string>
     <string name="inputImei">Введите imei</string>
+    <string name="enterToApp">Войти в приложение</string>
 
 </resources>

@@ -2,6 +2,7 @@ package gbr.presentation.presenter.start
 
 import android.location.LocationManager
 import android.util.Log
+import android.widget.Toast
 import gbr.utils.models.Preferencess
 import gbr.presentation.view.start.StartView
 import gbr.utils.PrefsUtils
@@ -13,6 +14,7 @@ import gbr.utils.api.serverstatus.RPServerStatusAPI
 import gbr.utils.api.serverstatus.ServerStatusAPI
 import gbr.utils.callbacks.GpsCallback
 import gbr.utils.data.AuthInfo
+import gbr.utils.data.Info
 import gbr.utils.data.ProtocolServiceInfo
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import moxy.InjectViewState
@@ -61,25 +63,30 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
 
         if(this.pref.version == BuildConfig.VERSION_NAME)
         {
-            callback.gpsCheck()
+            thread {
+                sleep(2000)
+                callback.gpsCheck()
+            }
+
             return
         }
-        //TODO не забудь раскоментировать дядя
-        /*pref.version = BuildConfig.VERSION_NAME*/
+
+             pref.version = BuildConfig.VERSION_NAME
         viewState.whatNew()
 
     }
 
-    fun startGPS(locationManager: LocationManager) {
+    fun startGPS() {
+
         viewState.setText("Проверка состояния GPS...")
-        if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+        if(ProtocolService.isGPSLocationEnable || ProtocolService.isInternetLocationEnable)
         {
-            LocationListener(locationManager)
+            dataChecking()
             return
         }
 
         val message = "GPS отключен. Данное приложение не работает без GPS."
-        viewState.gpsSetting(message,locationManager)
+        viewState.gpsSetting(message)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
@@ -185,8 +192,15 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
         serverStatusAPI!!.onServerStatusListener = this
     }
 
-    override fun onAuthDataReceived(auth: gbr.utils.data.AuthInfo) {
+    override fun onAuthDataReceived(auth: AuthInfo) {
         Log.d("Auth",auth.call)
+
+        Info.status(auth.status)
+        Info.call(auth.call)
+        Info.statusList(auth.statusList)
+        Info.nameGBR(auth.namegbr)
+
+        viewState.openMainActivity()
     }
 
     override fun onAccessDataReceiver(access: Boolean) {
@@ -196,6 +210,8 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
 
     override fun onServerStatusDataReceived() {
         Log.d("ServerStatus","NotResponse")
+        viewState.errorMessage("Сервер не отвечает")
+        viewState.loginActivity()
     }
 
     override fun onDestroy() {

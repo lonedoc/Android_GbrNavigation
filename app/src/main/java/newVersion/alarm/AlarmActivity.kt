@@ -51,7 +51,7 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
     private val alarmTabFragment: AlarmTabFragment =
         AlarmTabFragment()
     private val navigatorFragment: newVersion.alarm.navigator.NavigatorFragment =
-        newVersion.alarm.navigator.NavigatorFragment ()
+        newVersion.alarm.navigator.NavigatorFragment()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

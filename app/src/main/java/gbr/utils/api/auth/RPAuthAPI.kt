@@ -28,11 +28,11 @@ class RPAuthAPI(
 
         val request = jsonObject.toString()
 
+        Log.d("Auth","$request")
         protocol.send(request, complete)
     }
 
     override fun onTextMessageReceived(message: String) {
-        Log.d("Message: ",message)
 
         try{
             if (!JSONObject(message).has("\$c$")) {

@@ -9,7 +9,6 @@ import android.location.Location
 import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
-import gbr.utils.PrefsUtils
 import gbr.utils.data.StatusList
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import moxy.InjectViewState
@@ -120,7 +119,7 @@ class NewCommonPresenter: MvpPresenter<CommonView>(),Init,OnStatusListener,OnAla
     }
 
     fun initData(
-        preferences: PrefsUtils,
+        preferences: PrefsUtil,
         context: Context
     ) {
         if(isInit()) return

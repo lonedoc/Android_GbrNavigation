@@ -15,6 +15,7 @@ import java.lang.Exception
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlin.concurrent.thread
 import kotlinx.android.synthetic.main.activity_login.*
+import kotlinx.android.synthetic.main.activity_new_login.*
 import moxy.MvpAppCompatActivity
 import moxy.presenter.InjectPresenter
 import newVersion.common.CommonActivity
@@ -41,6 +42,10 @@ class OldLoginActivity : MvpAppCompatActivity(), OldLoginView {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+
+        imeiTextView.setText(getImei())
+
+        imeiTextView.setOnTextChanged { str -> presenter.validateImei(str?.toString()) }
 
         portTextView.setOnTextChanged { str -> presenter.validatePort(str?.toString()) }
 
@@ -71,7 +76,7 @@ class OldLoginActivity : MvpAppCompatActivity(), OldLoginView {
             if (adapter.getAddresses() != null) {
                 val address = adapter.getAddresses()
                 val port = portTextView.text.toString()
-                val imei = getImei()
+                val imei = imeiTextView.text.toString()
                 presenter.submit(address, port, imei)
             } else {
                 Log.d("ActivityLogin", "Enter return")
@@ -81,26 +86,20 @@ class OldLoginActivity : MvpAppCompatActivity(), OldLoginView {
     }
 
     @SuppressLint("MissingPermission", "HardwareIds")
-    private fun getImei(): String? {
+    private fun getImei():String{
         val telephonyMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
 
-        try {
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-                {
-                    telephonyMgr.subscriberId
-                }
-                else
-                    telephonyMgr.imei
-            } else {
+        return when{
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.P ->{
+                ""
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ->{
+                telephonyMgr.imei
+            }
+            else ->{
                 telephonyMgr.deviceId
             }
-        }catch (e:Exception)
-        {
-            showToastMessage("Приложение не работает на Андройд Q в связи с системными ограничениями, мы решим данную проблему в ближайшее время")
-            return null
         }
-
     }
 
     override fun onResume() {
@@ -111,6 +110,10 @@ class OldLoginActivity : MvpAppCompatActivity(), OldLoginView {
     override fun addItem(address: java.util.ArrayList<String>) {
         address.add("")
         adapter.notifyItemInserted(address.size - 1)
+    }
+
+    override fun setImeiTextViewError(error: String?) {
+        imeiTextView.error = error
     }
 
     override fun removeItem(indexItem: Int, size: Int) {

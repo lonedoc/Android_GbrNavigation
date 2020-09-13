@@ -32,6 +32,7 @@ import newVersion.utils.Alarm
 import newVersion.utils.DataStoreUtils
 import gbr.utils.PrefsUtils
 import gbr.utils.data.StatusList
+import newVersion.utils.PrefsUtil
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.ScaleBarOverlay
@@ -115,7 +116,7 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
                 presenter.alarmCheck(DataStoreUtils.namegbr!!)
             }
             else -> {
-                val preferences = PrefsUtils(applicationContext)
+                val preferences = PrefsUtil(applicationContext)
 
                 presenter.init()
                 presenter.initData(preferences, this)
@@ -273,7 +274,7 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
         }
     }
 
-    override fun createStatusTimer(time: Long) {
+        override fun createStatusTimer(time: Long) {
         val dialog = StatusFragment.newInstance(time)
         dialog.show(supportFragmentManager, "StatusTimer")
     }

@@ -28,7 +28,6 @@
             android:inputType="number|numberDecimal"
             android:singleLine="true"
             android:textSize="18sp"
-
             />
     </com.google.android.material.textfield.TextInputLayout>
 </LinearLayout>

@@ -39,10 +39,10 @@ class PrefsUtils(context: Context) : Preferencess {
         }
 
     override var fcmtoken: String?
-        get() = prefs.getString("fcmtoken", null)
+        get() = prefs.getString("fcmToken", null)
         set(value) {
             val editor = prefs.edit()
-            editor.putString("fcmtoken", value).apply()
+            editor.putString("fcmToken", value).apply()
         }
 
     override var version:String?
@@ -76,7 +76,7 @@ class PrefsUtils(context: Context) : Preferencess {
         get() = prefs.contains("imei")
 
     override val containsFcmToken: Boolean
-        get() = prefs.contains("fcmtoken")
+        get() = prefs.contains("fcmToken")
 
     override val containsLogin:Boolean
         get() = prefs.contains("login")

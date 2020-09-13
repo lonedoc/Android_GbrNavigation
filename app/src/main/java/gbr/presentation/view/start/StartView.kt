@@ -19,7 +19,7 @@ interface StartView:MvpView {
     fun whatNew()
 
     @StateStrategyType(value = SkipStrategy::class)
-    fun gpsSetting(message: String, locationManager: LocationManager)
+    fun gpsSetting(message: String)
 
     @StateStrategyType(value = SkipStrategy::class)
     fun errorPermissionDialog(errorMessage: String)
@@ -27,6 +27,12 @@ interface StartView:MvpView {
     @StateStrategyType(value = SingleStateStrategy::class)
     fun loginActivity()
 
+    @StateStrategyType(value = SkipStrategy::class)
     fun startService()
+
+    @StateStrategyType(value = SkipStrategy::class)
+    fun openMainActivity()
+    @StateStrategyType(value = SkipStrategy::class)
+    fun errorMessage(message: String)
 
 }

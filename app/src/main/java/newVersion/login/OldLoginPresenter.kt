@@ -133,6 +133,32 @@ class OldLoginPresenter : MvpPresenter<OldLoginView>(), OnAuthListener, Destroya
         }
     }
 
+    fun validateImei(imeiStr: String?):Boolean {
+        val imei = imeiStr?.toIntOrNull()
+        return when{
+            imeiStr.isNullOrBlank()->{
+                viewState.setImeiTextViewError("Поле не должно быть пустым")
+                false
+            }
+            imeiStr.contains(Regex("[\\D]")) -> {
+                viewState.setImeiTextViewError("Поле не должно содержать ничего кроме цифр")
+                false
+            }
+            imeiStr.length>15->{
+                viewState.setImeiTextViewError("Превышено количество символом")
+                false
+            }
+            imeiStr.length<15->{
+                viewState.setImeiTextViewError("Осталось символов ${15-imeiStr.length}")
+                true
+            }
+            else->{
+                viewState.setImeiTextViewError(null)
+                true
+            }
+        }
+    }
+
     fun submit(addresses: ArrayList<String>?, portStr: String, imei: String?) {
 
         viewState.showDialog()

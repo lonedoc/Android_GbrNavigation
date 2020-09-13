@@ -37,4 +37,7 @@ interface OldLoginView : MvpView {
 
     @StateStrategyType(value = SkipStrategy::class)
     fun addItem(address: java.util.ArrayList<String>)
+
+    @StateStrategyType(value = SkipStrategy::class)
+    fun setImeiTextViewError(error: String?)
 }

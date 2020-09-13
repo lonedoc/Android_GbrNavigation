@@ -29,6 +29,7 @@ class LocationListener @SuppressLint("MissingPermission") constructor(locationMa
                 }
             }
             locationManager.registerGnssStatusCallback(mGnssStatusCallback!!)
+
         }
 
         locationManager.requestLocationUpdates(
@@ -49,8 +50,8 @@ class LocationListener @SuppressLint("MissingPermission") constructor(locationMa
     }
     override fun onLocationChanged(myLocation: Location?) {
         if(myLocation==null) return
-
-        EventBus.getDefault().post(
+        imHere = myLocation
+       /* EventBus.getDefault().post(
             gbr.utils.data.Location(
                 myLocation.latitude,
                 myLocation.longitude,
@@ -58,7 +59,7 @@ class LocationListener @SuppressLint("MissingPermission") constructor(locationMa
                 myLocation.speed,
                 satelliteCount
             )
-        )
+        )*/
     }
 
     override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {

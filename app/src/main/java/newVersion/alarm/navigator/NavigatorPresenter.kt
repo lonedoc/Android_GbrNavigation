@@ -3,7 +3,7 @@ package newVersion.alarm.navigator
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.util.Log
+
 import androidx.core.content.ContextCompat
 import moxy.InjectViewState
 import moxy.MvpPresenter
@@ -36,10 +36,9 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
 
         viewState.addOverlays()
 
-        if(!EventBus.getDefault().isRegistered(this))
-        {
+
             EventBus.getDefault().register(this)
-        }
+
     }
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND,sticky = true)
@@ -54,7 +53,7 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
     }
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun onTracking(event:Location){
+    fun onTracking(event:gbr.utils.data.Location){
         if(!tracking||distance == null||road == null||endPoint == null) return
 
         var distanceBetweenPoints = distance(road!!)
@@ -122,7 +121,7 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
         return true
     }
 
-    fun startTrack(info: Alarm, myLocation: GeoPoint) {
+    fun startTrack(info:Alarm) {
 
         if( info.lat==null || info.lon == null)
         {
@@ -138,6 +137,7 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
 
         val strDistance = DataStoreUtils.cityCard?.pcsinfo?.dist
 
+
         val distance = if(strDistance!=null) {
             if (strDistance == "")
                 50
@@ -148,8 +148,17 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
             50
         }
 
+        if(imHere == null)
+        {
+            viewState.showToastMessage("Ваше месторасположение не определено, невозможно построить маршрут, приложение переходит в режим ожидания")
+            return
+        }
+
         val lat = info.lat
         val lon = info.lon
+        val startPoint = GeoPoint(imHere)
+
+
 
         val endPoint = GeoPoint(lat?.toDouble()!!,lon?.toDouble()!!)
 
@@ -157,22 +166,22 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
 
         val routeServers = DataStoreUtils.routeServer
 
-        if(routeServers.count()==0) {
+        if(routeServers.count()==0)
+        {
             viewState.showToastMessage("Не указан сервер для прокладки маршрута, построение не возможно")
             return
         }
-
-        if(myLocation.distanceToAsDouble(endPoint)<distance) {
+        if(startPoint.distanceToAsDouble(endPoint)<distance){
             viewState.showToastMessage("Построение маршрута невозможно, вы прибыли")
             return
         }
 
-        val waypoint = ArrayList<GeoPoint>()
-        waypoint.add(myLocation)
-        waypoint.add(endPoint)
-        Log.d("NavigatorPresenter","$waypoint")
+        val waypoints = ArrayList<GeoPoint>()
+        waypoints.add(startPoint)
+        waypoints.add(endPoint)
+
         thread{
-            /*viewState.buildTrack(distance,waypoint,routeServers)*/
+            viewState.buildTrack(distance,waypoints,routeServers)
         }
     }
 

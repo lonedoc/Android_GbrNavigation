@@ -223,9 +223,10 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
         }
     }
 
+    private var noCoordinate = false
     @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun getArrived(event:Location){
-        if(arrived) return
+    fun getArrived(event:gbr.utils.data.Location){
+        if(arrived || noCoordinate) return
 
         val distance = if(DataStoreUtils.cityCard?.pcsinfo?.dist!=null)
             if(DataStoreUtils.cityCard?.pcsinfo?.dist=="")
@@ -242,6 +243,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
         {
             viewState.showToastMessage("Ошибка: Не указаны координаты до объекта, автоматическое прибытие отменено")
             changeStateButton(enableArrived = true, enableReport = false)
+            noCoordinate = true
             return
         }
 
@@ -249,6 +251,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
         {
             viewState.showToastMessage("Ошибка: Не указаны координаты до объекта, автоматическое прибытие отменено")
             changeStateButton(enableArrived = true, enableReport = false)
+            noCoordinate = true
             return
         }
 
@@ -262,15 +265,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
 
         arrived = true
 
-        /*if (!AlarmActivity.isAlive)
-        {
-            val recallActivity = Intent( context,AlarmActivity::class.java)
-            recallActivity.putExtra("info",alarmInfo)
-            recallActivity.putExtra("elapsedMillis",elapsedMillis)
-            recallActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context?.startActivity(recallActivity)
-            return@thread
-        }*/
+
     }
 
     fun sendArrived() {

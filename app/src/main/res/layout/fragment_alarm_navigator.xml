@@ -54,7 +54,7 @@
         android:focusable="true"
         app:backgroundTint="@color/viewBackground"
         app:rippleColor="@color/colorAccent"
-        app:srcCompat="@drawable/ic_navitel"
+        app:srcCompat="@drawable/ic_yandex"
         />
 
 </RelativeLayout>

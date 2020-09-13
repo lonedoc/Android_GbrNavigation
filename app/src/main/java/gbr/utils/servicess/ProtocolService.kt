@@ -4,20 +4,21 @@ import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.location.LocationListener
+import android.location.LocationManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import android.os.Bundle
 import android.os.IBinder
 import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.core.extensions.jsonBody
-import com.google.gson.JsonObject
 import gbr.utils.api.auth.AuthAPI
 import gbr.utils.api.auth.OnAuthListener
 import gbr.utils.data.AuthInfo
-import gbr.utils.data.Location
 import gbr.utils.data.ProtocolServiceInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -27,77 +28,39 @@ import newVersion.servicess.NetworkService
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import org.osmdroid.util.GeoPoint
 import ru.rubeg38.rubegprotocol.ConnectionWatcher
+import rubeg38.myalarmbutton.utils.api.coordinate.CoordinateAPI
+import gbr.utils.api.coordinate.RPCoordinateAPI
+import newVersion.utils.ProviderStatus
+import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
-
-class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
+class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListener {
 
     private lateinit var protocol: RubegProtocol
     private lateinit var unsubscribe: () -> Unit
 
+    private var credentials:newVersion.models.Credentials? = null
+
     private var authAPI:AuthAPI? = null
+    private var coordinateAPI: CoordinateAPI? = null
+
     private var wakeLock: PowerManager.WakeLock? = null
 
     companion object{
         var isStarted = false
+        var isInternetLocationEnable = false
+        var isGPSLocationEnable = false
     }
 
-    private var oldLocation:GeoPoint? = null
-    private var oldSpeed:Int? = null
-    private var coordinateQueue:ArrayList<Location> = ArrayList()
-    private var credentials:newVersion.models.Credentials? = null
-
-    @Subscribe(threadMode = ThreadMode.BACKGROUND)
-    fun onLocationSend(location: Location){
-        val speed = (location.speed * 3.6).toInt()
-        val myLocation = GeoPoint(location.lat,location.lon)
-
-        if(oldSpeed == 0 && speed == 0) return
-
-        if(myLocation == oldLocation) return
-
-        if(credentials == null) return
-
-        oldLocation = myLocation
-        oldSpeed = speed
-
-        if(!protocol.isConnected || connectionLost)
-        {
-            coordinateQueue.add(location)
-            return
-        }
-
-        if(coordinateQueue.isNotEmpty()){
-            for(i in 0 until coordinateQueue.size)
-            {
-                sendCoordinate(coordinateQueue[i])
-            }
-            coordinateQueue.clear()
-        }
-
-        sendCoordinate(location)
+    override fun onBind(p0: Intent?): IBinder? {
+        return null
     }
 
-    private fun sendCoordinate(location: Location){
-        val df = DecimalFormat("#.######")
-        val jsonMessage = JsonObject()
-        jsonMessage.addProperty("\$c$", "gbrkobra")
-        jsonMessage.addProperty("command", "location")
-        jsonMessage.addProperty("id",credentials?.imei )
-        jsonMessage.addProperty("lon", df.format(location.lon))
-        jsonMessage.addProperty("lat", df.format(location.lat))
-        jsonMessage.addProperty("speed", (location.speed * 3.6).toInt())
-        jsonMessage.addProperty("accuracy",location.accuracy)
-        jsonMessage.addProperty("gpsCount",location.satelliteCount)
-        val request = jsonMessage.toString()
-        protocol.send(request){}
-    }
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND,sticky = true)
     fun onStartService(info: ProtocolServiceInfo) {
@@ -193,6 +156,7 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
         }
     }
 
+    @SuppressLint("MissingPermission")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         if(!EventBus.getDefault().isRegistered(this))
@@ -203,6 +167,26 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
 
         protocol = RubegProtocol.sharedInstance
         unsubscribe = protocol.subscribe(this as ConnectionWatcher)
+
+        if(coordinateAPI!= null) coordinateAPI?.onDestroy()
+        coordinateAPI = RPCoordinateAPI(protocol)
+
+        isStarted = true
+
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if (locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null)
+        {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,0F,this)
+            isGPSLocationEnable = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null
+        }
+        else
+        if(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) != null)
+        {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,1000,0F,this)
+            isInternetLocationEnable = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) != null
+        }
+
+
 
         wakeLock()
 
@@ -273,7 +257,7 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
         protocol.stop()
 
         authAPI?.onDestroy()
-
+        coordinateAPI?.onDestroy()
         unsubscribe()
 
         if(EventBus.getDefault().isRegistered(this))
@@ -286,9 +270,75 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
         super.onDestroy()
     }
 
-    override fun onBind(p0: Intent?): IBinder? {
-        return null
+
+    private var oldSpeed:Float? = null
+    private val coordinateBuffer:ArrayList<Coordinate> = ArrayList()
+
+    private var lat:String? = null
+    private var lon:String? = null
+    private var oldCoordinate:GeoPoint? = null
+    private var speed:Int? = null
+    private var satelliteCount:Int? = null
+    private var accuracy:Float? = null
+
+    data class Coordinate(
+        val lat:String,
+        val lon:String,
+        val speed:Int,
+        val satelliteCount:Int,
+        val accuracy:Float
+    )
+    override fun onLocationChanged(location: android.location.Location?) {
+        if(location == null) return
+        if(coordinateAPI == null) return
+        satelliteCount = 10
+        val df = DecimalFormat("#.######")
+        lat = df.format(location.latitude)
+        lon = df.format(location.longitude)
+        speed = (location.speed * 3.6).toInt()
+
+        accuracy = location.accuracy
+
+        if(protocol.token==null) return
+
+        while (coordinateBuffer.isNotEmpty() && protocol.isConnected)
+        {
+            val lastIndex = coordinateBuffer.lastIndex
+            val coordinate = coordinateBuffer.removeAt(lastIndex)
+            coordinateAPI?.sendCoordinateRequest(
+                coordinate.lat,
+                coordinate.lon,
+                credentials!!.imei,
+                coordinate.speed,
+                satelliteCount!!,
+                coordinate.accuracy
+            )
+        }
+
+        if(oldSpeed == location.speed) return
+
+        oldSpeed = location.speed
+
+
+        if(!protocol.isConnected)
+        {
+            coordinateBuffer.add(Coordinate(lat!!,lon!!,speed!!,satelliteCount!!,accuracy!!))
+            return
+        }
+
+        coordinateAPI?.sendCoordinateRequest(lat!!,lon!!,credentials!!.imei,speed!!,satelliteCount!!,accuracy!!)
     }
 
+
+    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
+    }
+
+    override fun onProviderEnabled(provider: String?) {
+        EventBus.getDefault().postSticky(ProviderStatus("enable"))
+    }
+
+    override fun onProviderDisabled(provider: String?) {
+        EventBus.getDefault().postSticky(ProviderStatus("disable"))
+    }
 
 }

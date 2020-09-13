@@ -17,24 +17,27 @@ class AlarmDialogActivity:AppCompatActivity() {
     companion object{
         var isAlive:Boolean = false
     }
-
+    lateinit var alertSound: MediaPlayer
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.fragment_alarm_dialog)
 
         this.setFinishOnTouchOutside(false)
 
-        val alarm = intent.getSerializableExtra("info") as Alarm
+       val alarm = intent.getSerializableExtra("info") as Alarm
         object_name.text = alarm.name
         object_address.text = alarm.address
 
-        val alertSound: MediaPlayer? = MediaPlayer.create(this, Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + applicationContext?.packageName + "/" + R.raw.alarm_sound))
-        alertSound?.start()
+        alertSound = MediaPlayer.create(this, Uri.parse(
+            ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + applicationContext?.packageName + "/" + R.raw.alarm_sound))
+        if(alertSound.isPlaying)
+            alertSound.stop()
+
+        alertSound.start()
 
         apply_alarm.setOnClickListener {
             try{
-                    alertSound?.stop()
-                    alertSound?.release()
+                alertSound.stop()
             }catch (e:Exception){
                 e.printStackTrace()
             }

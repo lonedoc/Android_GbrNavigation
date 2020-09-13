@@ -11,5 +11,6 @@ data class AuthInfo(
     @SerializedName("routeserver") val routeServerList: ArrayList<String> = ArrayList(),
     @SerializedName("reports") val reportsList: ArrayList<String> = ArrayList(),
     val namegbr: String,
-    @SerializedName("citycard")val cityCard: CityCard
+    @SerializedName("citycard")val cityCard: CityCard,
+    val autoarrival:String
 )

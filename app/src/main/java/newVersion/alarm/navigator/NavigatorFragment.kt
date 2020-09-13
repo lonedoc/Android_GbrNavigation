@@ -13,12 +13,12 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import gbr.utils.servicess.LocationListener.Companion.imHere
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
 import newVersion.alarm.AlarmActivity
-import newVersion.utils.Alarm
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -71,7 +71,7 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
             mMapView?.invalidate()
 
             val info = AlarmActivity.info!!
-            locationOverlay?.myLocation?.let { presenter.startTrack(info, it) }
+            locationOverlay?.myLocation?.let { presenter.startTrack(info) }
         }
     }
 
@@ -99,9 +99,11 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
 
     override fun buildTrack(distance: Long,waypoints:ArrayList<GeoPoint>,routeServers:ArrayList<String>) {
         if(buildTrack) return
+
+        Log.d("RouteServer","$routeServers")
         buildTrack = true
 
-        val roadManager = OSRMRoadManager(context)
+        val roadManager = OSRMRoadManager(activity)
         var road: Road? = null
 
         when{
@@ -112,20 +114,18 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
                     roadManager.setUserAgent(BuildConfig.APPLICATION_ID)
                     road = roadManager.getRoad(waypoints)
 
-                    if(road?.mStatus != Road.STATUS_OK ||
-                        presenter.distance(road) == null
-                    )
+                    if(road.mRouteHigh.size<3)
                     {
                         if(i == routeServers.count() - 1)
                         {
-                            showToastMessage("Невозможно проложить путь до объекта, не возможно подключится к серверу прокладки")
+                            showToastMessage("Невозможно проложить путь до объекта, нет подключения с сервером")
                             return
                         }
 
                     }
                     else
                     {
-                        continue
+                        break
                     }
                 }
             }
@@ -143,7 +143,6 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
                 }
             }
         }
-
         if(road!!.mRouteHigh!!.size < 3 && presenter.distance(road)!!>distance)
         {
             buildTrack = false
@@ -151,10 +150,16 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
             return
         }
 
+        if(imHere==null)
+            showToastMessage("Путь проложен от последней известной точки")
+        else
+            showToastMessage("Путь проложен от вашего нынешнего месторасположения")
+
         activity!!.runOnUiThread {
             buildTrack = false
             presenter.tracking(road,distance,waypoints[1])
         }
+
     }
 
 
@@ -225,23 +230,22 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
             val info = AlarmActivity.info!!
 
             if(presenter.haveCoordinate(info)){
-//                val uri: Uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=${info.lat}&lon_to=${info.lon}")
-//                val intent = Intent(Intent.ACTION_VIEW,uri)
-//                intent.setPackage("ru.yandex.yandexnavi")
-//                val packageManager = activity!!.packageManager
-//                val activities:List<ResolveInfo> = packageManager.queryIntentActivities(intent,0)
-//                val isIntentSafe = activities.isNotEmpty()
-//                if(isIntentSafe)
-//                {
-//                    activity!!.startActivity(intent)
-//                }
-//                else
-//                {
-//                    val playMarket = Intent(Intent.ACTION_VIEW)
-//                    playMarket.data = Uri.parse("market://details?id=ru.yandex.yandexnavi")
-//                    startActivity(playMarket)
-//                }
-                val uri = Uri.parse("google.navigation:ll=${info.lat},${info.lon}")
+                val uri: Uri = Uri.parse("yandexnavi://build_route_on_map?lat_to=${info.lat}&lon_to=${info.lon}")
+               val intent = Intent(Intent.ACTION_VIEW,uri)
+                intent.setPackage("ru.yandex.yandexnavi")
+                val packageManager = activity!!.packageManager
+               val activities:List<ResolveInfo> = packageManager.queryIntentActivities(intent,0)
+                val isIntentSafe = activities.isNotEmpty()
+                if(isIntentSafe)
+               {
+                   activity!!.startActivity(intent)
+               }
+               else {
+                    val playMarket = Intent(Intent.ACTION_VIEW)
+                    playMarket.data = Uri.parse("market://details?id=ru.yandex.yandexnavi")
+                   startActivity(playMarket)
+                }
+          /*      val uri = Uri.parse("google.navigation:ll=${info.lat},${info.lon}")
                 var intent = Intent(Intent.ACTION_VIEW,uri)
                 intent.setPackage("com.navitel")
                 if(intent.resolveActivity(activity!!.packageManager) == null)
@@ -249,7 +253,7 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
                     intent = Intent(Intent.ACTION_VIEW)
                     intent.data = Uri.parse("market://details?id=com.navitel")
                 }
-                activity!!.startActivity(intent)
+                activity!!.startActivity(intent)*/
             }
         }
     }
@@ -291,7 +295,7 @@ class NavigatorFragment: MvpAppCompatFragment(),NavigatorView {
                 Log.d("NavigatorPresenter","BuildTrack 1")
                 try {
                     val info = AlarmActivity.info!!
-                    presenter.startTrack(info, locationOverlay?.myLocation!!)
+                    presenter.startTrack(info)
                 }catch (e:Exception)
                 {
                     e.printStackTrace()

@@ -1,6 +1,7 @@
 package gbr.ui.start
 
 import android.app.AlertDialog
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import gbr.presentation.presenter.start.StartPresenter
@@ -16,12 +18,14 @@ import gbr.ui.whatnew.WhatIsNewFragment
 import gbr.utils.PrefsUtils
 import gbr.presentation.view.start.StartView
 import gbr.ui.login.LoginActivity
+import gbr.ui.main.MainActivity
 import gbr.utils.callbacks.GpsCallback
 import gbr.utils.servicess.ProtocolService
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlinx.android.synthetic.main.activity_start.*
 import moxy.MvpAppCompatActivity
 import moxy.presenter.InjectPresenter
+import newVersion.common.CommonActivity
 import okhttp3.internal.wait
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
@@ -39,6 +43,12 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
         start_rotateLoading.start()
     }
 
+    override fun onResume() {
+        super.onResume()
+        val ns: String = NOTIFICATION_SERVICE
+        val nMgr = getSystemService(ns) as NotificationManager
+        nMgr.cancelAll()
+    }
     override fun setText(message: String) {
         start_text.text = message
     }
@@ -99,7 +109,6 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
         }
     }
 
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -119,20 +128,22 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
     }
 
     override fun gpsCheck() {
-        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        presenter.startGPS(locationManager)
+       // val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        runOnUiThread {
+            presenter.startGPS()
+        }
+
     }
 
     override fun gpsSetting(
-        message: String,
-        locationManager: LocationManager
+        message: String
     ) {
         AlertDialog.Builder(this)
             .setMessage(message)
             .setCancelable(false)
             .setPositiveButton("Включить"){_,_->
                 startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-                gbr.utils.servicess.LocationListener(locationManager)
+                //gbr.utils.servicess.LocationListener(locationManager)
             }
             .create().show()
     }
@@ -161,6 +172,17 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
 
         val service = Intent(this,ProtocolService::class.java)
         startService(service)
+    }
+
+    override fun openMainActivity() {
+        val main = Intent(this,MainActivity::class.java)
+        startActivity(main)
+    }
+
+    override fun errorMessage(message: String) {
+        runOnUiThread {
+            Toast.makeText(this,message,Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onDestroy() {
