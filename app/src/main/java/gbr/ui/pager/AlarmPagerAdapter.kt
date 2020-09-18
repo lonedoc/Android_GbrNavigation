@@ -1,4 +1,4 @@
-package newVersion.alarm.pager
+package gbr.ui.pager
 
 import android.content.res.Resources
 import android.util.Log
@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import gbr.ui.objectinfo.FragmentObjectInfo
+import newVersion.alarm.card.CardFragment
 
 
 class AlarmPagerAdapter(
@@ -19,30 +20,14 @@ class AlarmPagerAdapter(
         return 3
     }
 
-    private val tabTitles = arrayOf("Карточка объекта", "Ответственные", "План - схема")
+    private val tabTitles = arrayOf("Карточка объекта", "В тесте", "В тесте")
     var registeredFragments:ArrayList<Int> = ArrayList()
     override fun getItem(position: Int): Fragment {
         var fragment: Fragment? = null
-        when (position) {
-            0 ->
-                {
-                    fragment = FragmentObjectInfo()
-                    registeredFragments.add(0)
 
-                }
-/*            1 ->
-                {
-                    fragment = newVersion.alarm.responsible.ResponsibleFragment()
-                    registeredFragments.add(1)
+        fragment = FragmentObjectInfo()
+        registeredFragments.add(0)
 
-                }
-            2 ->
-                {
-                    fragment = newVersion.alarm.plan.PlanFragment()
-                    registeredFragments.add(2)
-
-                }*/
-        }
         return fragment!!
     }
 

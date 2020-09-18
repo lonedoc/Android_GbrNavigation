@@ -1,5 +1,6 @@
 package gbr.presentation.view.main
 
+import gbr.utils.data.AlarmInformation
 import gbr.utils.data.StatusList
 import moxy.MvpView
 import moxy.viewstate.strategy.SkipStrategy
@@ -27,4 +28,12 @@ interface MainView:MvpView {
 
     @StateStrategyType(value =SkipStrategy::class)
     fun showStatusTimer()
+    @StateStrategyType(value =SkipStrategy::class)
+    fun showAlarmDialog(alarmInformation: AlarmInformation)
+    @StateStrategyType(value =SkipStrategy::class)
+    fun showMobAlarmDialog(alarmInformation: AlarmInformation)
+    @StateStrategyType(value =SkipStrategy::class)
+    fun cancelAlarm()
+    @StateStrategyType(value =SkipStrategy::class)
+    fun reopenActivity()
 }

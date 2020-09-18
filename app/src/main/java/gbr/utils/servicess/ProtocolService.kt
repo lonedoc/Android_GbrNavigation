@@ -55,12 +55,13 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
         var isStarted = false
         var isInternetLocationEnable = false
         var isGPSLocationEnable = false
+
+        var coordinate:MyLocation? = null
     }
 
     override fun onBind(p0: Intent?): IBinder? {
         return null
     }
-
 
     @Subscribe(threadMode = ThreadMode.BACKGROUND,sticky = true)
     fun onStartService(info: ProtocolServiceInfo) {
@@ -136,11 +137,9 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
         {
             NotificationService().createInternetNotification(false,this)
             internetLost = true
+            return
         }
-
-
         NotificationService().createConnectNotification(false,this)
-
     }
 
     override fun onConnectionEstablished() {
@@ -159,11 +158,13 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
     @SuppressLint("MissingPermission")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
+        val notification =NotificationService().createServerNotification(applicationContext)
+        startForeground(1,notification)
+
         if(!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this)
 
-        val notification = NotificationService().createServerNotification(this)
-        startForeground(1,notification)
+
 
         protocol = RubegProtocol.sharedInstance
         unsubscribe = protocol.subscribe(this as ConnectionWatcher)
@@ -177,16 +178,14 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
         if (locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null)
         {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,0F,this)
-            isGPSLocationEnable = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null
+            isGPSLocationEnable = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         }
         else
         if(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) != null)
         {
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,1000,0F,this)
-            isInternetLocationEnable = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) != null
+            isInternetLocationEnable = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
         }
-
-
 
         wakeLock()
 
@@ -242,11 +241,10 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
         }
     }
 
-    override fun onDestroy() {
-        //TODO отправить сообщение что сервис обвалился
+    private fun stopService()
+    {
 
-        Log.d("Protocol","onDestroy")
-        isStarted = false
+        Log.d("Service","onDestroy")
 
         wakeLock?.let {
             if (it.isHeld) {
@@ -267,6 +265,11 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
 
         stopSelf()
 
+        isStarted = false
+    }
+
+    override fun onDestroy() {
+        stopService()
         super.onDestroy()
     }
 
@@ -288,11 +291,18 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
         val satelliteCount:Int,
         val accuracy:Float
     )
+
+    data class MyLocation(
+        val lat:Double,
+        val lon:Double
+    )
+
     override fun onLocationChanged(location: android.location.Location?) {
         if(location == null) return
         if(coordinateAPI == null) return
         satelliteCount = 10
         val df = DecimalFormat("#.######")
+        coordinate = MyLocation(location.latitude,location.longitude)
         lat = df.format(location.latitude)
         lon = df.format(location.longitude)
         speed = (location.speed * 3.6).toInt()

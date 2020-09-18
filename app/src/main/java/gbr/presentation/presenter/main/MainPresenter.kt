@@ -1,43 +1,43 @@
 package gbr.presentation.presenter.main
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import androidx.annotation.UiThread
 import androidx.core.content.ContextCompat
+import com.google.gson.Gson
 import gbr.presentation.view.main.MainView
+import gbr.ui.main.MainActivity
 import gbr.utils.api.alarm.AlarmAPI
 import gbr.utils.api.alarm.OnAlarmListener
 import gbr.utils.api.alarm.RPAlarmAPI
 import gbr.utils.api.status.OnStatusListener
 import gbr.utils.api.status.RPStatusAPI
 import gbr.utils.api.status.StatusAPI
+import gbr.utils.data.AlarmInfo
+import gbr.utils.data.AlarmInformation
 import gbr.utils.data.Info
 import gbr.utils.data.StatusList
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.network.image.ImageAPI
 import newVersion.network.image.OnImageListener
-import newVersion.network.image.RPImageAPI
+
 import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol
 
 @InjectViewState
-class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnImageListener {
+class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnAlarmListener {
 
     val info:Info = Info
     private var statusAPI:StatusAPI? = null
     private var alarmAPI:AlarmAPI?=null
-    private var imageApi: ImageAPI? = null
 
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
 
         val protocol = RubegProtocol.sharedInstance
-
-        if(imageApi != null) imageApi?.onDestroy()
-        imageApi = RPImageAPI(protocol = protocol)
-        imageApi?.onImageListener = this
 
 
         if(statusAPI!=null)
@@ -51,6 +51,7 @@ class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnImageListener {
             alarmAPI?.onDestroy()
 
         alarmAPI = RPAlarmAPI(protocol)
+        alarmAPI?.onAlarmListener = this
 
         viewState.initMapView()
         viewState.initOverlays()
@@ -163,21 +164,49 @@ class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnImageListener {
             }
         }
     }
+
+    override fun onAlarmDataReceived(flag: String, alarm: String) {
+            when{
+                !MainActivity.isAlive->{
+                    //Вызов активити
+                    info.status("На тревоге")
+                    val main = Intent(context,MainActivity::class.java)
+                    main.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(main)
+                    onDestroy()
+                }
+                flag == "notalarm"->{
+                    viewState.cancelAlarm()
+                }
+                flag == "alarm"->{
+                    val alarmInfo = Gson().fromJson(alarm, AlarmInformation::class.java)
+                    AlarmInfo.initAllData(alarmInfo)
+                    if(alarmInfo.name == null) return
+
+                    viewState.showAlarmDialog(alarmInfo)
+                }
+                flag == "mobalarm"->{
+                    val alarmInformation = Gson().fromJson(alarm, AlarmInformation::class.java)
+
+                    if(alarmInformation.name == null) return
+
+                    viewState.showMobAlarmDialog(alarmInformation)
+                }
+            }
+    }
+
     override fun onDestroy() {
-        super.onDestroy()
         if(statusAPI!=null)
             statusAPI!!.onDestroy()
+
+        if(alarmAPI!=null)
+            alarmAPI!!.onDestroy()
+
+        super.onDestroy()
     }
 
-    override fun onImageDataReceived(imageByte: ByteArray) {
-
-    }
-
-    fun giveImage() {
-        imageApi?.sendImageRequest("photo\\mobile\\69425C65-F502-4BF6-AA9C-A7A1C9460945.jpg"){
-            if(!it){
-                Thread.sleep(1000)
-            }
-        }
+    lateinit var context:Context
+    fun context(applicationContext: Context?) {
+        this.context = applicationContext!!
     }
 }

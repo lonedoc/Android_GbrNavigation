@@ -79,6 +79,10 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
     fun startGPS() {
 
         viewState.setText("Проверка состояния GPS...")
+
+        Log.d("GPS","${ProtocolService.isGPSLocationEnable}")
+        Log.d("Internet","${ProtocolService.isInternetLocationEnable}")
+
         if(ProtocolService.isGPSLocationEnable || ProtocolService.isInternetLocationEnable)
         {
             dataChecking()
@@ -215,9 +219,9 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         authAPI?.onDestroy()
         serverStatusAPI?.onDestroy()
         accessAPI?.onDestroy()
+        super.onDestroy()
     }
 }

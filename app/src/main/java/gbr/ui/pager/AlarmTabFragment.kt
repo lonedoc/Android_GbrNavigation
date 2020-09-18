@@ -1,4 +1,4 @@
-package newVersion.alarm.pager
+package gbr.ui.pager
 
 import android.os.Bundle
 import android.view.LayoutInflater

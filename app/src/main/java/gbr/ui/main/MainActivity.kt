@@ -2,10 +2,11 @@ package gbr.ui.main
 
 import android.app.AlertDialog
 import android.app.NotificationManager
-import android.content.ContentResolver
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.location.LocationManager
+import android.location.LocationProvider
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
@@ -14,27 +15,26 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.UiThread
 import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.gson.Gson
-import com.google.gson.JsonObject
 import gbr.presentation.presenter.main.MainPresenter
 import gbr.presentation.view.main.MainView
+import gbr.ui.alarm.AlarmActivity
 import gbr.ui.status.StatusFragment
 import gbr.utils.api.alarm.AlarmAPI
 import gbr.utils.api.alarm.OnAlarmListener
 import gbr.utils.api.alarm.RPAlarmAPI
 import gbr.utils.data.AlarmInformation
-import gbr.utils.data.Info
 import gbr.utils.data.StatusList
 import gbr.utils.servicess.ProtocolService
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
+import kotlinx.android.synthetic.main.activity_common.*
 import kotlinx.android.synthetic.main.activity_new_main.*
 import moxy.MvpAppCompatActivity
 import moxy.presenter.InjectPresenter
-import newVersion.common.CommonActivity
-import newVersion.common.alarm.AlarmDialogActivity
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.ScaleBarOverlay
@@ -43,10 +43,11 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import rubegprotocol.RubegProtocol
 import java.lang.Exception
+import java.lang.Thread.sleep
 import java.util.ArrayList
 import kotlin.concurrent.thread
 
-class MainActivity:MvpAppCompatActivity(),MainView,OnAlarmListener {
+class MainActivity:MvpAppCompatActivity(),MainView {
     @InjectPresenter
     lateinit var presenter: MainPresenter
 
@@ -62,31 +63,51 @@ class MainActivity:MvpAppCompatActivity(),MainView,OnAlarmListener {
     lateinit var gpsDialog:AlertDialog
 
     private var alarmAPI: AlarmAPI?=null
+    lateinit var alertSound: MediaPlayer
+
+    var dialog:AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_new_main)
         setSupportActionBar(main_toolbar)
 
-        val protocol = RubegProtocol.sharedInstance
+        presenter.context(applicationContext)
+        this.alertSound = MediaPlayer.create(this, Uri.parse( "android.resource://" + application.packageName + "/" + R.raw.alarm_sound))
 
-        if(alarmAPI!= null) alarmAPI?.onDestroy()
-        alarmAPI = RPAlarmAPI(protocol)
-        alarmAPI?.onAlarmListener = this
 
-        alertSound = MediaPlayer.create(this, Uri.parse(
-            ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + applicationContext?.packageName + "/" + R.raw.alarm_sound))
+        main_myLocation.setOnClickListener {
+            if(locationOverlay.myLocation == null)
+                showToastMessage("Ваше месторасположение не определенно")
+            else
+                main_mapView.controller.setCenter(locationOverlay.myLocation)
+        }
+
+        main_followMe.setOnClickListener {
+            when {
+                locationOverlay.myLocation == null -> showToastMessage("Ваше месторасположение не определенно")
+                locationOverlay.isFollowLocationEnabled -> {
+                    locationOverlay.disableFollowLocation()
+                    main_followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.viewBackground))
+                    main_followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorPrimary))
+                }
+                else -> {
+                    locationOverlay.enableAutoStop = false
+
+                    locationOverlay.enableFollowLocation()
+                    main_followMe.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorPrimary))
+                    main_followMe.imageTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.viewBackground))
+                }
+            }
+
+
+        }
     }
 
     override fun setTitle(title:String) {
         runOnUiThread {
             main_toolbar.title = title
         }
-
-    }
-
-    override fun onStart() {
-        super.onStart()
 
     }
 
@@ -125,6 +146,7 @@ class MainActivity:MvpAppCompatActivity(),MainView,OnAlarmListener {
         main_mapView.overlays.add(scaleBarOverlay)
 
         locationOverlay.enableMyLocation()
+
         scaleBarOverlay.enableScaleBar()
         Log.d("Location","${locationOverlay.myLocation}")
 
@@ -133,10 +155,12 @@ class MainActivity:MvpAppCompatActivity(),MainView,OnAlarmListener {
             .setCancelable(false)
             .setMessage("Вычисляем где вы находитесь...")
             .show()
+
         thread{
-            while(locationOverlay.myLocation == null)
+            while(locationOverlay.lastFix == null)
             {
                 //
+                sleep(100)
             }
             presenter.setCenter(locationOverlay.myLocation)
         }
@@ -245,6 +269,88 @@ class MainActivity:MvpAppCompatActivity(),MainView,OnAlarmListener {
         dialog.show(supportFragmentManager, "StatusTimer")
     }
 
+    override fun showAlarmDialog(alarmInformation: AlarmInformation) {
+        runOnUiThread {
+            alertSound.start()
+            val view = layoutInflater.inflate(R.layout.fragment_alarm_dialog,null)
+
+            val title = view.findViewById(R.id.alarm_text) as TextView
+            title.text = "Тревога на объекте"
+
+            val objectName = view.findViewById(R.id.object_name) as TextView
+            objectName.text = alarmInformation.name
+
+            val objectAddresses = view.findViewById(R.id.object_address) as TextView
+            objectAddresses.text = alarmInformation.address
+
+            val applyAlarm = view.findViewById(R.id.apply_alarm) as Button
+            applyAlarm.setOnClickListener {
+
+                dialog?.cancel()
+
+                alertSound.stop()
+
+                presenter.onDestroy()
+
+                val intentAlarm = Intent(this,AlarmActivity::class.java)
+                startActivity(intentAlarm)
+            }
+
+            dialog = AlertDialog.Builder(this)
+                .setView(view)
+                .create()
+            dialog?.show()
+        }
+    }
+
+    override fun showMobAlarmDialog(alarmInformation: AlarmInformation) {
+        runOnUiThread {
+            alertSound.start()
+            val view = layoutInflater.inflate(R.layout.fragment_alarm_dialog,null)
+
+            val title = view.findViewById(R.id.alarm_text) as TextView
+            title.text = "Тревога на мобильном объекте"
+
+            val objectName = view.findViewById(R.id.object_name) as TextView
+            objectName.text = alarmInformation.name
+
+            val objectAddresses = view.findViewById(R.id.object_address) as TextView
+            objectAddresses.visibility = View.GONE
+
+            val applyAlarm = view.findViewById(R.id.apply_alarm) as Button
+            applyAlarm.setOnClickListener {
+                dialog?.cancel()
+                alertSound.stop()
+                presenter.onDestroy()
+            }
+
+            dialog = AlertDialog.Builder(this)
+                .setView(view)
+                .create()
+            dialog?.show()
+        }
+
+    }
+
+    override fun cancelAlarm() {
+        runOnUiThread {
+            try {
+                alertSound.stop()
+            }catch (e:Exception){
+                e.printStackTrace()
+            }
+
+            dialog?.cancel()
+            this.alertSound = MediaPlayer.create(this, Uri.parse( "android.resource://" + application.packageName + "/" + R.raw.alarm_sound))
+        }
+    }
+
+    override fun reopenActivity() {
+        runOnUiThread {
+
+        }
+    }
+
     private fun initLocationOverlay(): MyLocationNewOverlay {
         val gpsMyLocationProvider = GpsMyLocationProvider(applicationContext)
 
@@ -269,92 +375,16 @@ class MainActivity:MvpAppCompatActivity(),MainView,OnAlarmListener {
         return scaleBarOverlay
     }
 
-    var dialog:AlertDialog? = null
-    lateinit var alertSound: MediaPlayer
-    override fun onAlarmDataReceived(flag:String,alarm: String) {
-        runOnUiThread {
-            if(!isAlive)
-            {
-                val activity = Intent(this, MainActivity::class.java)
-                startActivity(activity)
-                return@runOnUiThread
-            }
-            if(alertSound.isPlaying)
-                alertSound.stop()
-
-            when(flag){
-                "alarm"->{
-                    val alarmInformation = Gson().fromJson(alarm,AlarmInformation::class.java)
-
-                    if(alarmInformation.name == null) return@runOnUiThread
-
-                    alertSound.start()
-                    val view = layoutInflater.inflate(R.layout.fragment_alarm_dialog,null)
-
-                    val title = view.findViewById(R.id.alarm_text) as TextView
-                    title.text = "Тревога на объекте"
-
-                    val objectName = view.findViewById(R.id.object_name) as TextView
-                    objectName.text = alarmInformation.name
-
-                    val objectAddresses = view.findViewById(R.id.object_address) as TextView
-                    objectAddresses.text = alarmInformation.address
-
-                    val applyAlarm = view.findViewById(R.id.apply_alarm) as Button
-                    applyAlarm.setOnClickListener {
-
-
-                        dialog?.cancel()
-                        alertSound.stop()
-                    }
-                    dialog = AlertDialog.Builder(this)
-                        .setView(view)
-                        .create()
-                    dialog?.show()
-                }
-                "alarmmob"->{
-
-                    val alarmInformation = Gson().fromJson(alarm,AlarmInformation::class.java)
-                    if(alarmInformation.name == null) return@runOnUiThread
-
-                    alertSound.start()
-                    val view = layoutInflater.inflate(R.layout.fragment_alarm_dialog,null)
-
-                    val title = view.findViewById(R.id.alarm_text) as TextView
-                    title.text = "Тревога на мобильном объекте"
-
-                    val objectName = view.findViewById(R.id.object_name) as TextView
-                    objectName.text = alarmInformation.name
-
-                    val objectAddresses = view.findViewById(R.id.object_address) as TextView
-                    objectAddresses.visibility = View.GONE
-
-                    val applyAlarm = view.findViewById(R.id.apply_alarm) as Button
-                    applyAlarm.setOnClickListener {
-                        presenter.giveImage()
-                        dialog?.cancel()
-                        alertSound.stop()
-                    }
-                    dialog = AlertDialog.Builder(this)
-                        .setView(view)
-                        .create()
-                    dialog?.show()
-                }
-                "notalarm"->{
-                    try {
-                        dialog?.cancel()
-                        alertSound.stop()
-                    }catch (e:Exception){
-                        e.printStackTrace()
-                    }
-                }
-            }
-        }
-    }
-
-
     override fun onStop() {
         super.onStop()
         isAlive = false
+
+    }
+
+    override fun onBackPressed() {
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 }

@@ -206,19 +206,14 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        assert(intent != null)
-        assert(intent!!.hasExtra("credentials"))
-        assert(intent.hasExtra("hostPool"))
-        assert(intent.hasExtra("command"))
-
-        when (intent.getStringExtra("command")) {
+        when (intent?.getStringExtra("command")) {
             "start" -> {
 
                 val notification = createNotification(context = applicationContext)
                 startForeground(1, notification)
 
                 val credentials = intent.getSerializableExtra("credentials") as Credentials
-                hostPool = intent.getSerializableExtra("hostPool") as HostPool
+                hostPool = intent?.getSerializableExtra("hostPool") as HostPool
 
                 startService(credentials, hostPool)
             }

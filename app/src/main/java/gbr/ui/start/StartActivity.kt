@@ -2,10 +2,8 @@ package gbr.ui.start
 
 import android.app.AlertDialog
 import android.app.NotificationManager
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -25,9 +23,6 @@ import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlinx.android.synthetic.main.activity_start.*
 import moxy.MvpAppCompatActivity
 import moxy.presenter.InjectPresenter
-import newVersion.common.CommonActivity
-import okhttp3.internal.wait
-import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
 class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
@@ -128,7 +123,6 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
     }
 
     override fun gpsCheck() {
-       // val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         runOnUiThread {
             presenter.startGPS()
         }
@@ -169,12 +163,15 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
 
     override fun startService() {
         if(ProtocolService.isStarted) return
+        runOnUiThread {
+            val intent = Intent(this, ProtocolService::class.java)
+            startService(intent)
+        }
 
-        val service = Intent(this,ProtocolService::class.java)
-        startService(service)
     }
 
     override fun openMainActivity() {
+        Log.d("MainActivity","Intent")
         val main = Intent(this,MainActivity::class.java)
         startActivity(main)
     }
@@ -186,8 +183,9 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
-        val service = Intent(this,ProtocolService::class.java)
+        val service = Intent(applicationContext,ProtocolService::class.java)
         stopService(service)
+        System.exit(0)
+        super.onDestroy()
     }
 }

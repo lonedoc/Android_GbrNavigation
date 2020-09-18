@@ -65,7 +65,7 @@ class AlarmActivity : MvpAppCompatActivity(), AlarmView,ReportCallback {
         alarm_bottom_menu.setOnNavigationItemSelectedListener {
             item ->
             when(item.itemId){
-                R.id.cardObject->{
+                R.id.pager->{
                     openFragment(alarmTabFragment)
                     supportActionBar!!.title="Карточка объекта"
                 }

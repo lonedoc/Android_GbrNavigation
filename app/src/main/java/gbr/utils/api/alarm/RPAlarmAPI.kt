@@ -41,6 +41,38 @@ class RPAlarmAPI(
         protocol.send(request, complete)
     }
 
+    override fun sendArrivedObject(objectNumber: String, complete: (Boolean) -> Unit) {
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("\$c$", "gbrkobra")
+        jsonObject.addProperty("command", "alarmpr")
+        jsonObject.addProperty("number", objectNumber)
+
+        val request = jsonObject.toString()
+
+        protocol.send(request, complete)
+    }
+
+    override fun sendReport(
+        report: String,
+        comment: String,
+        namegbr: String,
+        objectName: String,
+        objectNumber: String,
+        complete: (Boolean) -> Unit
+    ) {
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("\$c$", "reports")
+        jsonObject.addProperty("report", report)
+        jsonObject.addProperty("comment", comment)
+        jsonObject.addProperty("namegbr", namegbr)
+        jsonObject.addProperty("name", objectName)
+        jsonObject.addProperty("number", objectNumber)
+
+        val request = jsonObject.toString()
+
+        protocol.send(request, complete)
+    }
+
     override fun onTextMessageReceived(message: String) {
 
         if(!JSONObject(message).has("command")) return
