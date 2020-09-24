@@ -70,7 +70,6 @@ class   NavigatorPresenter: MvpPresenter<NavigatorView>(),Init {
                 viewState.clearOverlay(roadOverlay)
                 return
             }
-
             if(distance(road!!)==null)
             {
                 tracking = false

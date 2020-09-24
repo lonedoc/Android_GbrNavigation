@@ -31,6 +31,8 @@ class AlarmActivity:MvpAppCompatActivity(),AlarmView {
         setContentView(R.layout.activity_new_alarm)
         setSupportActionBar(new_alarm_toolbar)
 
+        send_Arrived.setOnClickListener { presenter.sendArrived() }
+
         openFragment(FragmentObjectInfo())
 
         new_alarm_bottom_menu.menu.getItem(0).isChecked = true
@@ -74,6 +76,24 @@ class AlarmActivity:MvpAppCompatActivity(),AlarmView {
         supportActionBar!!.title=title
     }
 
+    override fun stateArrived(state: Boolean) {
+        runOnUiThread {
+            send_Arrived.isEnabled = state
+        }
+    }
+
+    override fun stateReport(state: Boolean) {
+        runOnUiThread {
+            send_Report.isEnabled = state
+        }
+    }
+
+    override fun statePhoto(state: Boolean) {
+        runOnUiThread {
+            send_Photo.isEnabled = state
+        }
+    }
+
     override fun startTimer(elapsedRealtime: Long) {
         runOnUiThread {
             new_alarm_timer.start()
@@ -91,5 +111,7 @@ class AlarmActivity:MvpAppCompatActivity(),AlarmView {
         isAlive=false
     }
 
+    override fun onBackPressed() {
+    }
 
 }

@@ -14,6 +14,7 @@ import gbr.utils.api.status.RPStatusAPI
 import gbr.utils.api.status.StatusAPI
 import gbr.utils.data.AlarmInfo
 import gbr.utils.data.Info
+import gbr.utils.servicess.ProtocolService.Companion.currentLocation
 import moxy.InjectViewState
 import moxy.MvpPresenter
 import newVersion.common.CurrentTime
@@ -37,9 +38,6 @@ class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusLis
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
 
-        if(!EventBus.getDefault().isRegistered(this))
-            EventBus.getDefault().register(this)
-
         val protocol = RubegProtocol.sharedInstance
 
         if(statusAPI!=null)
@@ -54,10 +52,15 @@ class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusLis
 
         viewState.setTitle("Карточка объекта")
 
+        viewState.statePhoto(false)
+        viewState.stateArrived(false)
+        viewState.stateReport(false)
+
         if(alarmInfo.lat=="0" && alarmInfo.lon =="0" || alarmInfo.lat==null && alarmInfo.lon==null)
         {
             viewState.showToastMessage("Нет координат объекта, автоприбытие отключено")
             viewState.showBottomBar(View.GONE)
+            viewState.stateArrived(true)
         }
         else
         {
@@ -65,14 +68,18 @@ class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusLis
         }
 
         alarmApply()
-
     }
 
     fun context(context:Context){
         this.context = context
     }
     private fun alarmApply() {
-        alarmAPI?.sendMobAlarmApplyRequest(alarmInfo.number!!) {
+        alarmAPI?.sendMobAlarmApplyRequest(
+            alarmInfo.number!!,
+            currentLocation!!.latitude,
+            currentLocation!!.longitude,
+            currentLocation!!.speed
+        ) {
             if (it) {
                 viewState.startTimer(SystemClock.elapsedRealtime())
                 val currentTime: String = SimpleDateFormat(
@@ -93,24 +100,19 @@ class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusLis
 
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun getEvent(event: CardEvent){
-        when (event.action) {
-            "Arrived" -> {
-                sendArrived()
-            }
-            "Report" -> {
-
-            }
-        }
-    }
-
     private fun sendArrived() {
-        alarmAPI?.sendMobArrivedObject(alarmInfo.number!!){
+        alarmAPI?.sendMobArrivedObject(
+            alarmInfo.number!!,
+            currentLocation!!.latitude,
+            currentLocation!!.longitude,
+            currentLocation!!.speed,
+        ){
             if(it)
             {
                 viewState.showToastMessage("Прибытие отправлено")
                 EventBus.getDefault().post(CardEvent("report"))
+                viewState.stateArrived(false)
+                viewState.stateReport(true)
             }
             else
             {

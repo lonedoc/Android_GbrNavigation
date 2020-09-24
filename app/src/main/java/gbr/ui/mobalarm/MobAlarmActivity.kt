@@ -67,6 +67,18 @@ class MobAlarmActivity:MvpAppCompatActivity(), MobAlarmView {
         supportActionBar!!.title=title
     }
 
+    override fun stateArrived(state: Boolean) {
+        sendArrived.isEnabled = state
+    }
+
+    override fun stateReport(state: Boolean) {
+        sendReport.isEnabled = state
+    }
+
+    override fun statePhoto(state: Boolean) {
+        sendPhoto.isEnabled = state
+    }
+
     override fun startTimer(elapsedRealtime: Long) {
         runOnUiThread {
             mob_alarm_timer.start()

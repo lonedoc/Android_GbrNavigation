@@ -24,7 +24,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import newVersion.utils.NewCredentials
 import newVersion.login.OldLoginActivity
-import newVersion.main.MainActivity
+import newVersion.main.OldMainActivity
 import newVersion.models.Auth
 import newVersion.models.Credentials
 import newVersion.models.HostPool
@@ -73,7 +73,7 @@ class NetworkService : Service(), ConnectionWatcher, OnAuthListener {
     override fun onConnectionLost() {
         Log.d("Service", "Connection lost")
 
-        if (!connectionLost && protocol.isStarted && !OldLoginActivity.isAlive && !MainActivity.isAlive) {
+        if (!connectionLost && protocol.isStarted && !OldLoginActivity.isAlive && !OldMainActivity.isAlive) {
             connectionLost = true
             thread{
             when {

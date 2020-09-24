@@ -151,6 +151,7 @@ class MainActivity:MvpAppCompatActivity(),MainView {
         presenter.checkAlarm()
         presenter.setTitle()
     }
+
     override fun onStop() {
         super.onStop()
 
@@ -377,8 +378,11 @@ class MainActivity:MvpAppCompatActivity(),MainView {
 
             val applyAlarm = view.findViewById(R.id.apply_alarm) as Button
             applyAlarm.setOnClickListener {
+
                 presenter.onDestroy()
+
                 dialog?.cancel()
+
                 alertSound.stop()
 
                 val intentAlarm = Intent(this, MobAlarmActivity::class.java)
@@ -418,7 +422,7 @@ class MainActivity:MvpAppCompatActivity(),MainView {
 
     private fun initLocationOverlay(): MyLocationNewOverlay {
         Log.d("LocationOverlay","Init")
-        val locationOverlay = MyLocationNewOverlay( main_mapView)
+        val locationOverlay = MyLocationNewOverlay(main_mapView)
         locationOverlay.setDirectionArrow(
             presenter.customIcon(
                 R.drawable.ic_navigator_icon,

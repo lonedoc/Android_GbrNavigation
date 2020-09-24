@@ -1,5 +1,6 @@
 package gbr.presentation.presenter.objectinfo
 
+import gbr.presentation.presenter.alarm.AlarmPresenter
 import gbr.presentation.view.objectinfo.ObjectInfoView
 import gbr.utils.api.alarm.AlarmAPI
 import gbr.utils.api.alarm.RPAlarmAPI
@@ -22,7 +23,6 @@ class ObjectInfoPresenter:MvpPresenter<ObjectInfoView>() {
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
 
-        val protocol  = RubegProtocol.sharedInstance
         if(!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this)
 
@@ -35,27 +35,17 @@ class ObjectInfoPresenter:MvpPresenter<ObjectInfoView>() {
         setAlarmTime(alarmInfo.area?.alarmtime)
         setAdditionally(alarmInfo.additionally)
 
-        if(alarmInfo.lat=="0" && alarmInfo.lon =="0" || alarmInfo.lat==null && alarmInfo.lon==null)
-        {
-            viewState.setStateArrivedButton(true)
-        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     fun takeApplyAlarmTime(time:CurrentTime){
         viewState.setObjectTimeApplyAlarm(time.currentTime)
     }
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun getEvent(event: CardEvent){
-        when (event.action) {
-            "report" -> {
-                viewState.setStateReportButton(true)
-            }
-            "reportSend"->{
-                viewState.setStateReportButton(false)
-            }
-        }
+    @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
+    fun takeArrivedTime(time: AlarmPresenter.ArrivedTime){
+        viewState.setObjectTimeArrived(time.arrivedTime)
     }
+
     private fun setName(name: String?) {
         if (name != null) {
             viewState.setObjectName(name)
@@ -109,14 +99,6 @@ class ObjectInfoPresenter:MvpPresenter<ObjectInfoView>() {
         {
             viewState.setObjectAdditionally("")
         }
-    }
-
-    private fun setAlarmTimeApply(currentTime: String) {
-        viewState.setObjectTimeApplyAlarm(currentTime)
-    }
-
-    private fun setTimeArrived(arrivedTime:String){
-        viewState.setObjectTimeArrived(arrivedTime)
     }
 
     override fun onDestroy() {

@@ -183,7 +183,6 @@ class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnAlarmListener {
                     if(alarmInfo.name == null) return
 
                     viewState.showAlarmDialog(alarmInfo)
-                    onDestroy()
                 }
                 flag == "alarmmob"->{
                     val alarmInfo = Gson().fromJson(alarm, AlarmInformation::class.java)
@@ -191,7 +190,6 @@ class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnAlarmListener {
                     if(alarmInfo.name == null) return
 
                     viewState.showMobAlarmDialog(alarmInfo)
-                    onDestroy()
                 }
             }
     }

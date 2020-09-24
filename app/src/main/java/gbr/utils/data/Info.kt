@@ -7,7 +7,7 @@ object Info {
     var status:String? = null
     var nameGBR:String? = null
     var statusList:ArrayList<StatusList>? = null
-
+    var routeServers:ArrayList<String>? = null
     fun call(call:String)
     {
         this.call = call
@@ -27,6 +27,10 @@ object Info {
 
     fun clearAllData() {
 
+    }
+
+    fun routeServers(routeServerList: ArrayList<String>) {
+        this.routeServers = routeServerList
     }
 
 

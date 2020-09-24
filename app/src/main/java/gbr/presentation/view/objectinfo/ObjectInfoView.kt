@@ -13,6 +13,4 @@ interface ObjectInfoView:MvpView {
     fun setObjectAdditionally(additionally: String)
     fun setObjectTimeApplyAlarm(currentTime: String)
     fun setObjectTimeArrived(arrivedTime: String)
-    fun setStateArrivedButton(state: Boolean)
-    fun setStateReportButton(state: Boolean)
 }

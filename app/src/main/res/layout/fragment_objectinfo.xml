@@ -269,37 +269,5 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/new_textView10" />
 
-        <Button
-            android:id="@+id/new_card_send_arrived"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="16dp"
-            android:backgroundTint="@color/button_reports_send"
-            android:enabled="false"
-            android:gravity="center"
-            android:text="@string/sendArrived"
-            android:textColor="@color/text_button_report_send"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/new_card_object_additionally" />
-
-        <Button
-            android:id="@+id/new_card_send_reports"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:backgroundTint="@color/button_reports_send"
-            android:enabled="false"
-            android:gravity="center"
-            android:layout_marginTop="8dp"
-            android:text="@string/sendReports"
-            android:textColor="@color/text_button_report_send"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="@+id/new_card_send_arrived"
-            app:layout_constraintStart_toStartOf="@+id/new_card_send_arrived"
-            app:layout_constraintTop_toBottomOf="@+id/new_card_send_arrived" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

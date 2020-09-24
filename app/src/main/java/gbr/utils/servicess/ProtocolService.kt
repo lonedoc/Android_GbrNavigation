@@ -62,7 +62,8 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
 
     data class MyLocation(
         val lat:Double,
-        val lon:Double
+        val lon:Double,
+        val speed: Int
     )
 
     private lateinit var protocol: RubegProtocol
@@ -214,12 +215,12 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
         }
         if(isInternetLocationEnable)
         {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0F,this)
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,1000,0F,this)
         }
         else
             if (isGPSLocationEnable)
             {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0F,this)
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,0F,this)
             }
 
         wakeLock()
@@ -309,20 +310,24 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
     }
 
 
+    var oldLocation:GeoPoint = GeoPoint(0.toDouble(),0.toDouble())
     override fun onLocationChanged(location: Location?) {
         if(location == null) return
         if(coordinateAPI == null) return
 
-        currentLocation = location
-
         satelliteCount = 10
         val df = DecimalFormat("#.######")
-        coordinate = MyLocation(location.latitude,location.longitude)
+
         lat = df.format(location.latitude)
         lon = df.format(location.longitude)
+
         speed = (location.speed * 3.6).toInt()
 
         accuracy = location.accuracy
+
+        coordinate = MyLocation(location.latitude,location.longitude, speed!!)
+
+        currentLocation = location
 
         if(protocol.token==null) return
 
@@ -340,10 +345,10 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
             )
         }
 
-        if(oldSpeed == location.speed) return
+        if(oldSpeed == location.speed && oldLocation == GeoPoint(location)) return
 
         oldSpeed = location.speed
-
+        oldLocation = GeoPoint(location)
 
         if(!protocol.isConnected)
         {

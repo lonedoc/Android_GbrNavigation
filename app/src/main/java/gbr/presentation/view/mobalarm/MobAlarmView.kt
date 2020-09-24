@@ -7,4 +7,10 @@ interface MobAlarmView:MvpView {
     fun startTimer(elapsedRealtime: Long)
     fun showBottomBar(view: Int)
     fun setTitle(title: String)
+
+    fun stateArrived(state: Boolean)
+
+    fun stateReport(state: Boolean)
+
+    fun statePhoto(state: Boolean)
 }

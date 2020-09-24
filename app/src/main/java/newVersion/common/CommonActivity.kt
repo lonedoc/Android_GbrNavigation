@@ -23,14 +23,13 @@ import newVersion.common.alarm.AlarmDialogActivity
 import newVersion.common.directory.DirectoryActivity
 import newVersion.common.serverSetting.ServerSettingFragment
 import newVersion.common.status.StatusFragment
-import newVersion.main.MainActivity
+import newVersion.main.OldMainActivity
 import newVersion.models.Credentials
 import newVersion.models.HostPool
 import newVersion.servicess.NetworkService
 import newVersion.servicess.NotificationService
 import newVersion.utils.Alarm
 import newVersion.utils.DataStoreUtils
-import gbr.utils.PrefsUtils
 import gbr.utils.data.StatusList
 import newVersion.utils.PrefsUtil
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -100,7 +99,7 @@ class CommonActivity:MvpAppCompatActivity(),CommonView{
         when {
             DataStoreUtils.call == null && DataStoreUtils.namegbr == null -> {
                 showToastMessage("Ошибка приложения, автоматическая перезагрузка")
-                val intent = Intent(this, MainActivity::class.java)
+                val intent = Intent(this, OldMainActivity::class.java)
                 startActivity(intent)
             }
             intent.hasExtra("alarm") -> {

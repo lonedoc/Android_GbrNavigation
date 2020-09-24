@@ -91,6 +91,8 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
                 {
                     //
                 }
+                Log.d("CurrentLocation","${currentLocation!!.latitude}")
+                Log.d("CurrentLocation","${currentLocation!!.longitude}")
                 dataChecking()
             }
             return
@@ -210,7 +212,9 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
         Info.call(auth.call)
         Info.statusList(auth.statusList)
         Info.nameGBR(auth.namegbr)
+        Info.routeServers(auth.routeServerList)
 
+        sleep(1000)
         viewState.openMainActivity()
     }
 

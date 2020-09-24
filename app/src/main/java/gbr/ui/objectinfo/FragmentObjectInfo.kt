@@ -30,7 +30,7 @@ class FragmentObjectInfo:MvpAppCompatFragment(), ObjectInfoView {
     ): View? {
         rootView = inflater.inflate(R.layout.fragment_objectinfo,container,false)
 
-        bReport = rootView.findViewById(R.id.new_card_send_reports)!!
+/*        bReport = rootView.findViewById(R.id.new_card_send_reports)!!
         bArrived = rootView.findViewById(R.id.new_card_send_arrived)!!
 
         bArrived.setOnClickListener {
@@ -41,7 +41,7 @@ class FragmentObjectInfo:MvpAppCompatFragment(), ObjectInfoView {
         bReport.setOnClickListener {
             EventBus.getDefault().post(CardEvent("Report"))
             setStateReportButton(false)
-        }
+        }*/
         return rootView
     }
 
@@ -93,13 +93,5 @@ class FragmentObjectInfo:MvpAppCompatFragment(), ObjectInfoView {
     override fun setObjectAdditionally(additionally: String) {
         val tvObjectAdditionally: TextView = rootView.findViewById(R.id.new_card_object_additionally)!!
         tvObjectAdditionally.text = additionally
-    }
-
-    override fun setStateReportButton(state: Boolean) {
-        bReport.isEnabled = state
-    }
-
-    override fun setStateArrivedButton(state: Boolean) {
-        bArrived.isEnabled = state
     }
 }

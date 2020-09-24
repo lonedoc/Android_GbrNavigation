@@ -16,4 +16,10 @@ interface AlarmView:MvpView {
 
     fun showBottomBar(view: Int)
     fun setTitle(title: String)
+
+    fun stateArrived(state: Boolean)
+
+    fun stateReport(state: Boolean)
+
+    fun statePhoto(state: Boolean)
 }

@@ -1,14 +1,11 @@
 package gbr.utils.api.alarm
 
 import android.util.Log
-import com.google.gson.Gson
 import com.google.gson.JsonObject
-import gbr.utils.data.AlarmInformation
-import newVersion.utils.Alarm
 import org.json.JSONObject
 import ru.rubeg38.rubegprotocol.TextMessageWatcher
 import rubegprotocol.RubegProtocol
-import java.lang.Exception
+import java.text.DecimalFormat
 
 class RPAlarmAPI(
     private var protocol: RubegProtocol,
@@ -31,10 +28,23 @@ class RPAlarmAPI(
     }
 
 
-    override fun sendAlarmApplyRequest(objectNumber: String, complete: (Boolean) -> Unit) {
+    override fun sendAlarmApplyRequest(
+        objectNumber: String,
+        lat: Double,
+        lon: Double,
+        speed: Float,
+        complete: (Boolean) -> Unit
+    ) {
+        val df = DecimalFormat("#.######")
+        val strLat = df.format(lat)
+        val strLon = df.format(lon)
+        val intSpeed = (speed * 3.6).toInt()
         val jsonObject = JsonObject()
         jsonObject.addProperty("\$c$", "gbrkobra")
         jsonObject.addProperty("command", "alarmp")
+        jsonObject.addProperty("lon",strLon)
+        jsonObject.addProperty("lat",strLat)
+        jsonObject.addProperty("speed",intSpeed)
         jsonObject.addProperty("number", objectNumber)
 
         val request = jsonObject.toString()
@@ -42,10 +52,25 @@ class RPAlarmAPI(
         protocol.send(request, complete)
     }
 
-    override fun sendMobAlarmApplyRequest(objectNumber: String, complete: (Boolean) -> Unit) {
+    override fun sendMobAlarmApplyRequest(
+        objectNumber: String,
+        lat: Double,
+        lon: Double,
+        speed: Float,
+        complete: (Boolean) -> Unit
+    ) {
+        val df = DecimalFormat("#.######")
+        val strLat = df.format(lat)
+        val strLon = df.format(lon)
+        val intSpeed = (speed * 3.6).toInt()
+
         val jsonObject = JsonObject()
         jsonObject.addProperty("\$c$", "gbrkobra")
+        jsonObject.addProperty("mob",1)
          jsonObject.addProperty("command", "alarmp")
+        jsonObject.addProperty("lon",strLon)
+        jsonObject.addProperty("lat",strLat)
+        jsonObject.addProperty("speed",intSpeed)
         jsonObject.addProperty("number", objectNumber)
 
         val request = jsonObject.toString()
@@ -53,10 +78,25 @@ class RPAlarmAPI(
         protocol.send(request, complete)
     }
 
-    override fun sendArrivedObject(objectNumber: String, complete: (Boolean) -> Unit) {
+    override fun sendArrivedObject(
+        objectNumber: String,
+        lat: Double,
+        lon: Double,
+        speed: Float,
+        complete: (Boolean) -> Unit
+    ) {
+        val df = DecimalFormat("#.######")
+        val strLat = df.format(lat)
+        val strLon = df.format(lon)
+        val intSpeed = (speed * 3.6).toInt()
+
+
         val jsonObject = JsonObject()
         jsonObject.addProperty("\$c$", "gbrkobra")
         jsonObject.addProperty("command", "alarmpr")
+        jsonObject.addProperty("lon",strLon)
+        jsonObject.addProperty("lat",strLat)
+        jsonObject.addProperty("speed",intSpeed)
         jsonObject.addProperty("number", objectNumber)
 
         val request = jsonObject.toString()
@@ -64,15 +104,30 @@ class RPAlarmAPI(
         protocol.send(request, complete)
     }
 
-    override fun sendMobArrivedObject(objectNumber: String, complete: (Boolean) -> Unit) {
+    override fun sendMobArrivedObject(
+        objectNumber: String,
+        lat: Double,
+        lon: Double,
+        speed: Float,
+        complete: (Boolean) -> Unit
+    ) {
+        val df = DecimalFormat("#.######")
+        val strLat = df.format(lat)
+        val strLon = df.format(lon)
+        val intSpeed = (speed * 3.6).toInt()
+
         val jsonObject = JsonObject()
         jsonObject.addProperty("\$c$", "gbrkobra")
-        jsonObject.addProperty("mob","1")
+        jsonObject.addProperty("mob",1)
         jsonObject.addProperty("command", "alarmpr")
+        jsonObject.addProperty("lon",strLon)
+        jsonObject.addProperty("lat",strLat)
+        jsonObject.addProperty("speed",intSpeed)
         jsonObject.addProperty("number", objectNumber)
 
         val request = jsonObject.toString()
 
+        Log.d("Request",request)
         protocol.send(request, complete)
     }
     override fun sendReport(

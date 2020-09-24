@@ -30,7 +30,7 @@ import newVersion.servicess.NetworkService
 import newVersion.servicess.NotificationService
 import newVersion.utils.PrefsUtil
 
-class MainActivity : MvpAppCompatActivity(), MainView {
+class OldMainActivity : MvpAppCompatActivity(), MainView {
     @InjectPresenter
     lateinit var presenter: MainPresenter
 

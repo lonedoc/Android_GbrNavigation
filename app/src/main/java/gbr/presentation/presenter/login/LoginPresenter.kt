@@ -317,6 +317,7 @@ class LoginPresenter: MvpPresenter<LoginView>(), OnServerStatusListener, OnAcces
         Info.call(auth.call)
         Info.statusList(auth.statusList)
         Info.nameGBR(auth.namegbr)
+        Info.routeServers(auth.routeServerList)
 
         viewState.mainActivity()
     }
