@@ -48,19 +48,4 @@ class RPCoordinateAPI(
         unsubscribe()
     }
 
-
-    /*    private fun sendCoordinate(location: Location){
-        val df = DecimalFormat("#.######")
-        val jsonMessage = JsonObject()
-        jsonMessage.addProperty("\$c$", "gbrkobra")
-        jsonMessage.addProperty("command", "location")
-        jsonMessage.addProperty("id",credentials?.imei )
-        jsonMessage.addProperty("lon", df.format(location.lon))
-        jsonMessage.addProperty("lat", df.format(location.lat))
-        jsonMessage.addProperty("speed", (location.speed * 3.6).toInt())
-        jsonMessage.addProperty("accuracy",location.accuracy)
-        jsonMessage.addProperty("gpsCount",location.satelliteCount)
-        val request = jsonMessage.toString()
-        protocol.send(request){}
-    }*/
 }

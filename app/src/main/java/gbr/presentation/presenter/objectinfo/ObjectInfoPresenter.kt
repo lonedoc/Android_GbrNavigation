@@ -18,17 +18,11 @@ class ObjectInfoPresenter:MvpPresenter<ObjectInfoView>() {
 
     val alarmInfo = AlarmInfo
 
-    var alarmAPI:AlarmAPI? = null
 
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
 
         val protocol  = RubegProtocol.sharedInstance
-        if(alarmAPI!=null)
-            alarmAPI?.onDestroy()
-
-        alarmAPI = RPAlarmAPI(protocol = protocol)
-
         if(!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this)
 

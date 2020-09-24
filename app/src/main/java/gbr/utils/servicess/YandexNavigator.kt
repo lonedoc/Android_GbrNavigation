@@ -45,26 +45,34 @@ class YandexNavigator {
 
     // Формирует URI с подписью и запускает Яндекс.Навигатор.
     fun buildRoute(context: Context,lat:String,lon:String) {
-        var uri: Uri = Uri.parse("yandexnavi://build_route_on_map").buildUpon()
-            .appendQueryParameter("lat_to", "$lat")
-            .appendQueryParameter("lon_to", "$lon")
-            .appendQueryParameter("client", "248").build()
-        uri = uri.buildUpon()
-            .appendQueryParameter("signature", sha256rsa(PRIVATE_KEY, uri.toString()))
-            .build()
-        val intent = Intent(Intent.ACTION_VIEW, uri)
-        intent.setPackage("ru.yandex.yandexnavi")
-        val packageManager = context.packageManager
-        val activities:List<ResolveInfo> = packageManager.queryIntentActivities(intent,0)
-        val isIntentSafe = activities.isNotEmpty()
-        if(isIntentSafe)
-        {
-            context.startActivity(intent)
-        }
-        else {
+        try {
+            var uri: Uri = Uri.parse("yandexnavi://build_route_on_map").buildUpon()
+                .appendQueryParameter("lat_to", "$lat")
+                .appendQueryParameter("lon_to", "$lon")
+                .appendQueryParameter("client", "248").build()
+            uri = uri.buildUpon()
+                .appendQueryParameter("signature", sha256rsa(PRIVATE_KEY, uri.toString()))
+                .build()
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            intent.setPackage("ru.yandex.yandexnavi")
+            val packageManager = context.packageManager
+            val activities:List<ResolveInfo> = packageManager.queryIntentActivities(intent,0)
+            val isIntentSafe = activities.isNotEmpty()
+            if(isIntentSafe)
+            {
+                context.startActivity(intent)
+            }
+            else {
+                val playMarket = Intent(Intent.ACTION_VIEW)
+                playMarket.data = Uri.parse("market://details?id=ru.yandex.yandexnavi")
+                context.startActivity(playMarket)
+            }
+        }catch (e:java.lang.Exception){
             val playMarket = Intent(Intent.ACTION_VIEW)
             playMarket.data = Uri.parse("market://details?id=ru.yandex.yandexnavi")
             context.startActivity(playMarket)
+            e.printStackTrace()
         }
+
     }
 }

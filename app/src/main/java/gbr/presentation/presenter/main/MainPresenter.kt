@@ -50,7 +50,7 @@ class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnAlarmListener {
         if(alarmAPI!=null)
             alarmAPI?.onDestroy()
 
-        alarmAPI = RPAlarmAPI(protocol)
+        alarmAPI = RPAlarmAPI(protocol,"Main")
         alarmAPI?.onAlarmListener = this
 
         viewState.initMapView()
@@ -168,7 +168,6 @@ class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnAlarmListener {
     override fun onAlarmDataReceived(flag: String, alarm: String) {
             when{
                 !MainActivity.isAlive->{
-                    //Вызов активити
                     info.status("На тревоге")
                     val main = Intent(context,MainActivity::class.java)
                     main.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -184,23 +183,25 @@ class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnAlarmListener {
                     if(alarmInfo.name == null) return
 
                     viewState.showAlarmDialog(alarmInfo)
+                    onDestroy()
                 }
-                flag == "mobalarm"->{
-                    val alarmInformation = Gson().fromJson(alarm, AlarmInformation::class.java)
+                flag == "alarmmob"->{
+                    val alarmInfo = Gson().fromJson(alarm, AlarmInformation::class.java)
+                    AlarmInfo.initAllData(alarmInfo)
+                    if(alarmInfo.name == null) return
 
-                    if(alarmInformation.name == null) return
-
-                    viewState.showMobAlarmDialog(alarmInformation)
+                    viewState.showMobAlarmDialog(alarmInfo)
+                    onDestroy()
                 }
             }
     }
 
     override fun onDestroy() {
-        if(statusAPI!=null)
-            statusAPI!!.onDestroy()
-
         if(alarmAPI!=null)
             alarmAPI!!.onDestroy()
+
+        if(statusAPI!=null)
+            statusAPI!!.onDestroy()
 
         super.onDestroy()
     }

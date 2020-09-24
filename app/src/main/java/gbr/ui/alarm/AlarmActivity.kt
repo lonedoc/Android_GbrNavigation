@@ -6,6 +6,7 @@ import android.widget.Toast
 import gbr.presentation.presenter.alarm.AlarmPresenter
 import gbr.presentation.view.alarm.AlarmView
 import gbr.ui.navigator.NavigatorFragment
+import gbr.ui.objectinfo.FragmentObjectInfo
 import gbr.ui.pager.AlarmTabFragment
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlinx.android.synthetic.main.activity_alarm.*
@@ -13,6 +14,7 @@ import kotlinx.android.synthetic.main.activity_new_alarm.*
 import moxy.MvpAppCompatActivity
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
+import kotlin.concurrent.thread
 
 class AlarmActivity:MvpAppCompatActivity(),AlarmView {
     @InjectPresenter
@@ -22,12 +24,14 @@ class AlarmActivity:MvpAppCompatActivity(),AlarmView {
 
     private val navigatorFragment: NavigatorFragment = NavigatorFragment()
     private val tabFragment:AlarmTabFragment = AlarmTabFragment()
+    private val objectFragment:FragmentObjectInfo = FragmentObjectInfo()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_new_alarm)
         setSupportActionBar(new_alarm_toolbar)
 
-       openFragment(AlarmTabFragment())
+        openFragment(FragmentObjectInfo())
 
         new_alarm_bottom_menu.menu.getItem(0).isChecked = true
 
@@ -35,12 +39,12 @@ class AlarmActivity:MvpAppCompatActivity(),AlarmView {
             item ->
             when(item.itemId){
                 R.id.pager->{
-                    openFragment(tabFragment)
-                    supportActionBar!!.title="Карточка объекта"
+                    openFragment(objectFragment)
+                    setTitle("Карточка объекта")
                 }
                 R.id.navigator->{
                     openFragment(navigatorFragment)
-                    supportActionBar!!.title="Навигатор"
+                    setTitle("Навигатор")
                 }
             }
             true
@@ -64,6 +68,10 @@ class AlarmActivity:MvpAppCompatActivity(),AlarmView {
 
     override fun showBottomBar(view: Int) {
         new_alarm_bottom_menu.visibility = view
+    }
+
+    override fun setTitle(title: String) {
+        supportActionBar!!.title=title
     }
 
     override fun startTimer(elapsedRealtime: Long) {

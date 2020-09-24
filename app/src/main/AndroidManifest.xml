@@ -87,6 +87,13 @@
             android:theme="@style/Theme.UserDialog"
             />
 
+
+
+        <service
+            android:name="gbr.utils.servicess.ProtocolService"
+            android:enabled="true"
+            android:exported="false" />
+
         <activity android:name="gbr.ui.start.StartActivity"
             android:keepScreenOn="true">
             <intent-filter>
@@ -94,24 +101,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name="gbr.ui.login.LoginActivity"
+            android:keepScreenOn="true"/>
+
         <activity android:name="gbr.ui.main.MainActivity"
             android:keepScreenOn="true"/>
 
-        <service
-            android:name="gbr.utils.servicess.ProtocolService"
-            android:enabled="true"
-            android:exported="false" />
-
-
-        <activity android:name="gbr.ui.login.LoginActivity"
-            android:keepScreenOn="true">
-
-        </activity>
-
         <activity android:name="gbr.ui.alarm.AlarmActivity"
-            android:keepScreenOn="true">
-        </activity>
+            android:keepScreenOn="true"/>
 
+        <activity android:name="gbr.ui.mobalarm.MobAlarmActivity"
+            android:keepScreenOn="true"/>
 
     </application>
 

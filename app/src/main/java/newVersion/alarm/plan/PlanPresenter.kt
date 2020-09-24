@@ -32,7 +32,7 @@ class PlanPresenter : MvpPresenter<PlanView>(), OnImageListener,Init,
     }
 
     override var init: Boolean = false
-    private var imageApi:ImageAPI? = null
+    private var imageApi: ImageAPI? = null
 
 
     companion object{

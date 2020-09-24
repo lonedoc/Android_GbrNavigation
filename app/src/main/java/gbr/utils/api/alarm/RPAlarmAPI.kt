@@ -11,7 +11,8 @@ import rubegprotocol.RubegProtocol
 import java.lang.Exception
 
 class RPAlarmAPI(
-    private var protocol: RubegProtocol
+    private var protocol: RubegProtocol,
+    private var activity:String
 ):AlarmAPI {
     override var onAlarmListener: OnAlarmListener? = null
 
@@ -41,6 +42,17 @@ class RPAlarmAPI(
         protocol.send(request, complete)
     }
 
+    override fun sendMobAlarmApplyRequest(objectNumber: String, complete: (Boolean) -> Unit) {
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("\$c$", "gbrkobra")
+         jsonObject.addProperty("command", "alarmp")
+        jsonObject.addProperty("number", objectNumber)
+
+        val request = jsonObject.toString()
+
+        protocol.send(request, complete)
+    }
+
     override fun sendArrivedObject(objectNumber: String, complete: (Boolean) -> Unit) {
         val jsonObject = JsonObject()
         jsonObject.addProperty("\$c$", "gbrkobra")
@@ -52,6 +64,17 @@ class RPAlarmAPI(
         protocol.send(request, complete)
     }
 
+    override fun sendMobArrivedObject(objectNumber: String, complete: (Boolean) -> Unit) {
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("\$c$", "gbrkobra")
+        jsonObject.addProperty("mob","1")
+        jsonObject.addProperty("command", "alarmpr")
+        jsonObject.addProperty("number", objectNumber)
+
+        val request = jsonObject.toString()
+
+        protocol.send(request, complete)
+    }
     override fun sendReport(
         report: String,
         comment: String,
@@ -77,7 +100,7 @@ class RPAlarmAPI(
 
         if(!JSONObject(message).has("command")) return
 
-        Log.d("AlarmMessage",message)
+        Log.d("AlarmMessage",message + activity)
 
         if(JSONObject(message).getString("command")!="alarm" &&
             JSONObject(message).getString("command")!="notalarm" &&

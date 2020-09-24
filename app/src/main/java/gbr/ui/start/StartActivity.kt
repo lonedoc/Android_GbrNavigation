@@ -31,11 +31,17 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
     lateinit var presenter: StartPresenter
     private val permissionGranted = PackageManager.PERMISSION_GRANTED
 
+    companion object{
+        var isAlive = false
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start)
 
         start_rotateLoading.start()
+
+        isAlive = true
     }
 
     override fun onResume() {
@@ -45,7 +51,10 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
         nMgr.cancelAll()
     }
     override fun setText(message: String) {
-        start_text.text = message
+        runOnUiThread {
+            start_text.text = message
+        }
+
     }
 
     override fun whatNew() {
@@ -157,8 +166,10 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
     }
 
     override fun loginActivity() {
-        val login = Intent(this,LoginActivity::class.java)
-        startActivity(login)
+        runOnUiThread {
+            val login = Intent(this,LoginActivity::class.java)
+            startActivity(login)
+        }
     }
 
     override fun startService() {
@@ -186,6 +197,7 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
         val service = Intent(applicationContext,ProtocolService::class.java)
         stopService(service)
         System.exit(0)
+        isAlive = false
         super.onDestroy()
     }
 }

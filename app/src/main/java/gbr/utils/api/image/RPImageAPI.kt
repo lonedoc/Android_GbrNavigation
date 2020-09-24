@@ -1,6 +1,7 @@
-package newVersion.network.image
+package gbr.utils.api.image
 
 import com.google.gson.JsonObject
+import gbr.utils.api.image.OnImageListener
 import org.json.JSONObject
 import ru.rubeg38.rubegprotocol.BinaryMessageWatcher
 import ru.rubeg38.rubegprotocol.TextMessageWatcher
@@ -9,7 +10,7 @@ import rubegprotocol.RubegProtocol
 class RPImageAPI (
     private val protocol:RubegProtocol
 ): ImageAPI {
-    override var onImageListener:OnImageListener? = null
+    override var onImageListener: OnImageListener? = null
     private var unsubscribeText = protocol.subscribe(this as TextMessageWatcher)
     private var unsubscribeBinary = protocol.subscribe(this as BinaryMessageWatcher)
 

@@ -27,14 +27,13 @@ import newVersion.alarm.plan.PlanPresenter.Companion.plan
 import newVersion.common.CommonActivity
 import newVersion.common.CurrentTime
 import newVersion.models.RefreshPlan
-import newVersion.network.image.ImageAPI
+import gbr.utils.api.image.ImageAPI
 import newVersion.network.image.OnImageListener
 import newVersion.network.image.RPImageAPI
 import newVersion.network.status.OnStatusListener
 import newVersion.network.status.RPStatusAPI
 import newVersion.network.status.StatusAPI
 import newVersion.utils.ProviderStatus
-import newVersion.utils.Location
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -51,7 +50,7 @@ class AlarmPresenter : MvpPresenter<AlarmView>(),OnStatusListener, OnImageListen
     private var alarmInfo: Alarm? = null
     private var context:Context? = null
     private var arrived = false
-    private var imageApi: ImageAPI? = null
+    private var imageApi: newVersion.network.image.ImageAPI? = null
     private var alarmApi: AlarmAPI? = null
     private var completeApi: CompleteAPI? = null
     private var statusApi:StatusAPI? = null

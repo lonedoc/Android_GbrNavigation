@@ -21,6 +21,9 @@ import moxy.InjectViewState
 import moxy.MvpPresenter
 import gbr.utils.servicess.LocationListener
 import gbr.utils.servicess.ProtocolService
+import gbr.utils.servicess.ProtocolService.Companion.currentLocation
+import gbr.utils.servicess.ProtocolService.Companion.isGPSLocationEnable
+import gbr.utils.servicess.ProtocolService.Companion.isInternetLocationEnable
 import newVersion.models.Credentials
 import newVersion.models.HostPool
 import newVersion.utils.ProviderStatus
@@ -80,12 +83,16 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
 
         viewState.setText("Проверка состояния GPS...")
 
-        Log.d("GPS","${ProtocolService.isGPSLocationEnable}")
-        Log.d("Internet","${ProtocolService.isInternetLocationEnable}")
 
-        if(ProtocolService.isGPSLocationEnable || ProtocolService.isInternetLocationEnable)
+        if(isGPSLocationEnable || isInternetLocationEnable)
         {
-            dataChecking()
+            thread {
+                while (currentLocation==null)
+                {
+                    //
+                }
+                dataChecking()
+            }
             return
         }
 

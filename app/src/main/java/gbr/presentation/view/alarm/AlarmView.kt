@@ -15,4 +15,5 @@ interface AlarmView:MvpView {
     fun openFragment(fragment: MvpAppCompatFragment)
 
     fun showBottomBar(view: Int)
+    fun setTitle(title: String)
 }

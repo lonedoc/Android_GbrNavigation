@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.net.ConnectivityManager
@@ -41,6 +42,29 @@ import kotlin.collections.ArrayList
 
 class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListener {
 
+    private var oldSpeed:Float? = null
+    private val coordinateBuffer:ArrayList<Coordinate> = ArrayList()
+
+    private var lat:String? = null
+    private var lon:String? = null
+    private var oldCoordinate:GeoPoint? = null
+    private var speed:Int? = null
+    private var satelliteCount:Int? = null
+    private var accuracy:Float? = null
+
+    data class Coordinate(
+        val lat:String,
+        val lon:String,
+        val speed:Int,
+        val satelliteCount:Int,
+        val accuracy:Float
+    )
+
+    data class MyLocation(
+        val lat:Double,
+        val lon:Double
+    )
+
     private lateinit var protocol: RubegProtocol
     private lateinit var unsubscribe: () -> Unit
 
@@ -52,10 +76,12 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
     private var wakeLock: PowerManager.WakeLock? = null
 
     companion object{
+
+        var currentLocation: Location? = null
         var isStarted = false
         var isInternetLocationEnable = false
         var isGPSLocationEnable = false
-
+        lateinit var context: Context
         var coordinate:MyLocation? = null
     }
 
@@ -158,13 +184,13 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
     @SuppressLint("MissingPermission")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
+        context = this
+
         val notification =NotificationService().createServerNotification(applicationContext)
         startForeground(1,notification)
 
         if(!EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().register(this)
-
-
 
         protocol = RubegProtocol.sharedInstance
         unsubscribe = protocol.subscribe(this as ConnectionWatcher)
@@ -175,17 +201,26 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
         isStarted = true
 
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        if (locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null)
-        {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,0F,this)
+
+        try {
             isGPSLocationEnable = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        }catch (e:java.lang.Exception){
+            e.printStackTrace()
+        }
+        try {
+            isInternetLocationEnable = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        }catch (e:java.lang.Exception){
+            e.printStackTrace()
+        }
+        if(isInternetLocationEnable)
+        {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0F,this)
         }
         else
-        if(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) != null)
-        {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,1000,0F,this)
-            isInternetLocationEnable = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-        }
+            if (isGPSLocationEnable)
+            {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0F,this)
+            }
 
         wakeLock()
 
@@ -274,32 +309,12 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
     }
 
 
-    private var oldSpeed:Float? = null
-    private val coordinateBuffer:ArrayList<Coordinate> = ArrayList()
-
-    private var lat:String? = null
-    private var lon:String? = null
-    private var oldCoordinate:GeoPoint? = null
-    private var speed:Int? = null
-    private var satelliteCount:Int? = null
-    private var accuracy:Float? = null
-
-    data class Coordinate(
-        val lat:String,
-        val lon:String,
-        val speed:Int,
-        val satelliteCount:Int,
-        val accuracy:Float
-    )
-
-    data class MyLocation(
-        val lat:Double,
-        val lon:Double
-    )
-
-    override fun onLocationChanged(location: android.location.Location?) {
+    override fun onLocationChanged(location: Location?) {
         if(location == null) return
         if(coordinateAPI == null) return
+
+        currentLocation = location
+
         satelliteCount = 10
         val df = DecimalFormat("#.######")
         coordinate = MyLocation(location.latitude,location.longitude)

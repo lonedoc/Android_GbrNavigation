@@ -59,11 +59,10 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
 
         if(alarmAPI!=null)
             alarmAPI?.onDestroy()
-        alarmAPI=RPAlarmAPI(protocol)
+        alarmAPI=RPAlarmAPI(protocol,"Alarm")
         alarmAPI?.onAlarmListener=this
 
-        Log.d("ObjectNumber","${alarmInfo.number}")
-        alarmApply()
+        viewState.setTitle("Карточка объекта")
 
         if(alarmInfo.lat=="0" && alarmInfo.lon =="0" || alarmInfo.lat==null && alarmInfo.lon==null)
         {
@@ -74,6 +73,8 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
         {
             arrivedLoop()
         }
+
+        alarmApply()
     }
 
     var arrived = false
@@ -87,9 +88,11 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
                 Log.d("Loop","Worked")
                 if(myCoordinate==null) continue
 
+                if(alarmInfo.lat==null || alarmInfo.lon == null) continue
+
                 if(myCoordinate.lat==0.toDouble() && myCoordinate.lon==0.toDouble()) continue
 
-                val distance = 50
+                val distance = 100
 
                 val endPoint = GeoPoint(alarmInfo.lat!!.toDouble(),alarmInfo.lon!!.toDouble())
 
@@ -121,7 +124,6 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
     private fun alarmApply() {
         alarmAPI?.sendAlarmApplyRequest(alarmInfo.number!!){
             if(it){
-                //Отправить данные во фрагмент, удачи брат ты проебался :D
                 viewState.startTimer(SystemClock.elapsedRealtime())
                 val currentTime: String = SimpleDateFormat(
                     "HH:mm:ss",
@@ -180,27 +182,30 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
 
     override fun onAlarmDataReceived(flag: String, alarm: String) {
 
-        val main = Intent(context,MainActivity::class.java)
-        main.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(main)
-
         when(flag){
             "notalarm"->{
                 info.status("Свободен")
+                arrived = true
                 AlarmInfo.clearData()
                 viewState.showToastMessage("Тревога завершена")
             }
             "alarm"->{
+                arrived = true
                 AlarmInfo.clearData()
                 viewState.showToastMessage("Отмена тревоги, новая тревога")
             }
-            "mobalarm"->{
+            "alarmmob"->{
+                arrived = true
                 AlarmInfo.clearData()
                 viewState.showToastMessage("Отмена тревоги, новая тревога на мобильном объекте")
             }
         }
 
         onDestroy()
+
+        val main = Intent(context,MainActivity::class.java)
+        main.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(main)
     }
 
     fun context(applicationContext: Context?) {
@@ -212,6 +217,7 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
             EventBus.getDefault().unregister(this)
         alarmAPI?.onDestroy()
         statusAPI?.onDestroy()
+        arrived = true
         super.onDestroy()
     }
 }

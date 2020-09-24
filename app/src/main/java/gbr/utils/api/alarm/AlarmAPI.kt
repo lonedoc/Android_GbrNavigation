@@ -8,5 +8,7 @@ interface AlarmAPI:TextMessageWatcher, DestroyableAPI {
     fun sendAlarmRequest(namegbr:String,complete:(Boolean)->Unit)
     fun sendAlarmApplyRequest(objectNumber:String,complete:(Boolean)->Unit)
     fun sendArrivedObject(objectNumber: String, complete: (Boolean) -> Unit)
+    fun sendMobAlarmApplyRequest(objectNumber:String,complete:(Boolean)->Unit)
+    fun sendMobArrivedObject(objectNumber: String, complete: (Boolean) -> Unit)
     fun sendReport(report: String, comment: String, namegbr: String, objectName: String, objectNumber: String, complete: (Boolean) -> Unit)
 }
