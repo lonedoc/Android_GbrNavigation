@@ -13,11 +13,10 @@ interface MainView:MvpView {
 
     fun setTitle(title:String)
 
-    @StateStrategyType(value =SkipStrategy::class)
+    @StateStrategyType(value = AddToEndStrategy::class)
     fun initMapView()
 
-    //@StateStrategyType(value = AddToEndStrategy::class)
-    @StateStrategyType(value =SkipStrategy::class)
+    @StateStrategyType(value = AddToEndStrategy::class)
     fun initOverlays()
 
     @StateStrategyType(value = AddToEndStrategy::class)

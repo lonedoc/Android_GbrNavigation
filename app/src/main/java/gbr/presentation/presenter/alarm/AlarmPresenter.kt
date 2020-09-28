@@ -145,7 +145,7 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
                     Locale.getDefault()
                 ).format(Date())
                 EventBus.getDefault().post(ArrivedTime(currentTime))
-                    //viewState.stateReport(true) TODO доделать репорты
+                viewState.stateReport(true)
             }
             else
             {

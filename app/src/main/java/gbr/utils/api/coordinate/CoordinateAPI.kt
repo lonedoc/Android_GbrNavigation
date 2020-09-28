@@ -13,4 +13,5 @@ interface CoordinateAPI:TextMessageWatcher, DestroyableAPI {
         satelliteCount: Int,
         accuracy: Float
     )
+
 }

@@ -40,8 +40,11 @@ class RPCoordinateAPI(
 
 
     override fun onTextMessageReceived(message: String) {
-        if(JSONObject(message).getString("\$c$") != "mobalarm") return
+        if(JSONObject(message).getString("\$c$") != "gbrkobra") return
 
+        if(JSONObject(message).getString("command") != "alarmpos") return
+
+        onCoordinateListener?.onCoordinateListener(JSONObject(message).getString("lat"),JSONObject(message).getString("lon"))
     }
 
     override fun onDestroy() {

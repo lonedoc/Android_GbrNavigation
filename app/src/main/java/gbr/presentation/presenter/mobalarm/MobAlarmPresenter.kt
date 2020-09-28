@@ -3,17 +3,21 @@ package gbr.presentation.presenter.mobalarm
 import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
+import android.util.Log
 import android.view.View
+import gbr.presentation.presenter.alarm.AlarmPresenter
 import gbr.presentation.view.mobalarm.MobAlarmView
 import gbr.ui.main.MainActivity
 import gbr.utils.api.alarm.AlarmAPI
 import gbr.utils.api.alarm.OnAlarmListener
 import gbr.utils.api.alarm.RPAlarmAPI
+import gbr.utils.api.coordinate.RPCoordinateAPI
 import gbr.utils.api.status.OnStatusListener
 import gbr.utils.api.status.RPStatusAPI
 import gbr.utils.api.status.StatusAPI
 import gbr.utils.data.AlarmInfo
 import gbr.utils.data.Info
+import gbr.utils.servicess.ProtocolService
 import gbr.utils.servicess.ProtocolService.Companion.currentLocation
 import moxy.InjectViewState
 import moxy.MvpPresenter
@@ -22,21 +26,30 @@ import newVersion.models.CardEvent
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import org.osmdroid.util.GeoPoint
+import rubeg38.myalarmbutton.utils.api.coordinate.CoordinateAPI
+import rubeg38.myalarmbutton.utils.api.coordinate.OnCoordinateListener
 import rubegprotocol.RubegProtocol
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.concurrent.thread
 
 @InjectViewState
-class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusListener {
+class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusListener,OnCoordinateListener {
     val info: Info = Info
     val alarmInfo: AlarmInfo = AlarmInfo
     private var statusAPI: StatusAPI? = null
     private var alarmAPI: AlarmAPI? = null
+    private var coordinateAPI:CoordinateAPI? = null
     lateinit var context: Context
 
-
+    companion object{
+        var objectLocation:GeoPoint? = null
+    }
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
+
+        objectLocation = GeoPoint(alarmInfo.lat!!.toDouble(),alarmInfo.lon!!.toDouble())
 
         val protocol = RubegProtocol.sharedInstance
 
@@ -49,6 +62,11 @@ class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusLis
             alarmAPI?.onDestroy()
         alarmAPI= RPAlarmAPI(protocol,"Alarm")
         alarmAPI?.onAlarmListener=this
+
+        if(coordinateAPI!=null)
+            coordinateAPI?.onDestroy()
+        coordinateAPI = RPCoordinateAPI(protocol)
+        coordinateAPI?.onCoordinateListener = this
 
         viewState.setTitle("Карточка объекта")
 
@@ -73,6 +91,7 @@ class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusLis
     fun context(context:Context){
         this.context = context
     }
+
     private fun alarmApply() {
         alarmAPI?.sendMobAlarmApplyRequest(
             alarmInfo.number!!,
@@ -96,7 +115,29 @@ class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusLis
     }
 
 
+    var arrived = false
     private fun arrivedLoop() {
+        thread {
+            while(!arrived)
+            {
+
+                Thread.sleep(3000)
+
+                if(currentLocation==null) continue
+
+                if(alarmInfo.lat==null || alarmInfo.lon == null) continue
+
+
+                val distance = 100
+
+
+                if(objectLocation!!.distanceToAsDouble(GeoPoint(currentLocation!!.latitude, currentLocation!!.longitude))>distance) continue
+
+                arrived = true
+
+                sendArrived()
+            }
+        }
 
     }
 
@@ -110,9 +151,12 @@ class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusLis
             if(it)
             {
                 viewState.showToastMessage("Прибытие отправлено")
-                EventBus.getDefault().post(CardEvent("report"))
                 viewState.stateArrived(false)
-                viewState.stateReport(true)
+                val currentTime: String = SimpleDateFormat(
+                    "HH:mm:ss",
+                    Locale.getDefault()
+                ).format(Date())
+                EventBus.getDefault().post(AlarmPresenter.ArrivedTime(currentTime))
             }
             else
             {
@@ -126,17 +170,17 @@ class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusLis
         when(flag){
             "notalarm"->{
                 info.status("Свободен")
-                // arrived = true
+                arrived = true
                 AlarmInfo.clearData()
                 viewState.showToastMessage("Тревога завершена")
             }
             "alarm"->{
-                // arrived = true
+                arrived = true
                 AlarmInfo.clearData()
                 viewState.showToastMessage("Отмена тревоги, новая тревога")
             }
             "alarmmob"->{
-                // arrived = true
+                arrived = true
                 AlarmInfo.clearData()
                 viewState.showToastMessage("Отмена тревоги, новая тревога на мобильном объекте")
             }
@@ -168,7 +212,13 @@ class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusLis
             EventBus.getDefault().unregister(this)
         alarmAPI?.onDestroy()
         statusAPI?.onDestroy()
+        coordinateAPI?.onDestroy()
         //arrived = true
         super.onDestroy()
+    }
+
+    override fun onCoordinateListener(lat: String, lon: String) {
+        Log.d("Coordinate","${GeoPoint(lat.toDouble(),lon.toDouble())}")
+        objectLocation = GeoPoint(lat.toDouble(),lon.toDouble())
     }
 }

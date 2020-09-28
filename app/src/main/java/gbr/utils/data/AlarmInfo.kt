@@ -7,6 +7,7 @@ import newVersion.utils.ResponsibleList
 object AlarmInfo {
     var command: String? = null
     var name: String? = null
+    var phone:String? = null
     var number: String? = null
     var lon: String? = null
     var lat: String? = null
@@ -21,6 +22,7 @@ object AlarmInfo {
 
     fun initAllData(information:AlarmInformation){
         this.name = information.name
+        this.phone = information.phone
         this.number = information.number
         this.lon = information.lon
         this.lat = information.lat
@@ -36,6 +38,7 @@ object AlarmInfo {
 
     fun clearData(){
         this.name = null
+        this.phone = null
         this.number = null
         this.lon = null
         this.lat = null

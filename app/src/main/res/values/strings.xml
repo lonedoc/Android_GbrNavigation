@@ -77,5 +77,7 @@
     <string name="inputIP">Введите IP адрес сервера</string>
     <string name="inputImei">Введите imei</string>
     <string name="enterToApp">Войти в приложение</string>
+    <string name="photo">Photo</string>
+    <string name="phone">Номер телефона:</string>
 
 </resources>

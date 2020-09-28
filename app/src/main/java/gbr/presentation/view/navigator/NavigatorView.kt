@@ -18,7 +18,7 @@ interface NavigatorView: MvpView {
     fun showToastMessage(message: String)
 
     @StateStrategyType(value = AddToEndSingleStrategy::class)
-    fun setMarket(name: String?, endPoint: GeoPoint)
+    fun setMarker(name: String?, endPoint: GeoPoint)
 
     @StateStrategyType(value = AddToEndSingleStrategy::class)
     fun buildTrack(distance: Int, waypoint: ArrayList<GeoPoint>, routeServers: ArrayList<String>)

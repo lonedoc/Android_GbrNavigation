@@ -213,7 +213,7 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
         Info.statusList(auth.statusList)
         Info.nameGBR(auth.namegbr)
         Info.routeServers(auth.routeServerList)
-
+        Info.reportList(auth.reportsList)
         sleep(1000)
         viewState.openMainActivity()
     }

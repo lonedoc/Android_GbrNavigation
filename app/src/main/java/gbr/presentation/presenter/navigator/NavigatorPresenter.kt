@@ -9,11 +9,9 @@ import gbr.presentation.view.navigator.NavigatorView
 import gbr.ui.navigator.NavigatorFragment
 import gbr.utils.data.AlarmInfo
 import gbr.utils.data.Info
-import gbr.utils.servicess.LocationListener
 import gbr.utils.servicess.ProtocolService.Companion.currentLocation
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.alarm.AlarmActivity.Companion.info
 import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.util.GeoPoint
@@ -46,7 +44,7 @@ class NavigatorPresenter:MvpPresenter<NavigatorView>() {
         val startPoint = GeoPoint(currentLocation)
         val routeServers = info.routeServers
 
-        viewState.setMarket(alarmInfo.name,endPoint)
+        viewState.setMarker(alarmInfo.name,endPoint)
 
         when{
             routeServers!!.count()<1->{
@@ -105,7 +103,6 @@ class NavigatorPresenter:MvpPresenter<NavigatorView>() {
         thread {
             while(NavigatorFragment.isAlive)
             {
-                Log.d("Arrived","$arrived")
                 when{
                     endPoint.distanceToAsDouble(GeoPoint(currentLocation)) <= distance && distance(road) == null->{
                         viewState.showToastMessage("Вы прибыли на место")

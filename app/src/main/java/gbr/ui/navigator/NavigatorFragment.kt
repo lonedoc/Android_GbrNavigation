@@ -194,7 +194,7 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
         }
     }
 
-    override fun setMarket(name: String?, endPoint: GeoPoint) {
+    override fun setMarker(name: String?, endPoint: GeoPoint) {
         val marker = Marker(mapView)
         marker.textLabelBackgroundColor = R.color.viewBackground
         marker.title = name

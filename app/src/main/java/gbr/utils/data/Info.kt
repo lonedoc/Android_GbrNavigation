@@ -8,6 +8,8 @@ object Info {
     var nameGBR:String? = null
     var statusList:ArrayList<StatusList>? = null
     var routeServers:ArrayList<String>? = null
+    var reportsList: ArrayList<String>? = null
+
     fun call(call:String)
     {
         this.call = call
@@ -33,5 +35,8 @@ object Info {
         this.routeServers = routeServerList
     }
 
+    fun reportList(reportList:ArrayList<String>){
+        this.reportsList = reportList
+    }
 
 }

@@ -8,6 +8,7 @@ import java.io.Serializable
 data class AlarmInformation (
     var command: String? = null,
     var name: String? = null,
+    var phone:String? = null,
     var number: String? = null,
     var lon: String? = null,
     var lat: String? = null,

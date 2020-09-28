@@ -56,8 +56,6 @@ class MainActivity:MvpAppCompatActivity(),MainView {
     lateinit var rotationGestureOverlay: RotationGestureOverlay
     lateinit var scaleBarOverlay: ScaleBarOverlay
 
-    lateinit var gpsDialog:AlertDialog
-
     lateinit var alertSound: MediaPlayer
 
     var dialog:AlertDialog? = null
@@ -185,11 +183,6 @@ class MainActivity:MvpAppCompatActivity(),MainView {
         main_mapView.overlays.add(scaleBarOverlay)
 
         locationOverlay.isOptionsMenuEnabled = true
-        gpsDialog = AlertDialog.Builder(this)
-            .setTitle("Поиск координат")
-            .setCancelable(false)
-            .setMessage("Вычисляем где вы находитесь...")
-            .show()
 
         thread{
             while(currentLocation == null)
@@ -306,8 +299,6 @@ class MainActivity:MvpAppCompatActivity(),MainView {
 
     override fun setCenter(center: GeoPoint) {
         runOnUiThread {
-            if(gpsDialog.isShowing)
-                gpsDialog.cancel()
 
             main_mapView.controller.animateTo(center)
             main_mapView.controller.setZoom(15.0)
