@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import gbr.ui.objectinfo.FragmentObjectInfo
+import newVersion.alarm.card.CardFragment
 
 
 class AlarmPagerAdapter(
@@ -26,11 +27,11 @@ class AlarmPagerAdapter(
         when (position) {
             0 ->
                 {
-                    fragment = FragmentObjectInfo()
+                    fragment = CardFragment()
                     registeredFragments.add(0)
 
                 }
-/*            1 ->
+            1 ->
                 {
                     fragment = newVersion.alarm.responsible.ResponsibleFragment()
                     registeredFragments.add(1)
@@ -41,7 +42,7 @@ class AlarmPagerAdapter(
                     fragment = newVersion.alarm.plan.PlanFragment()
                     registeredFragments.add(2)
 
-                }*/
+                }
         }
         return fragment!!
     }

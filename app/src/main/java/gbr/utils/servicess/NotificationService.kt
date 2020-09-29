@@ -20,8 +20,8 @@ class NotificationService {
         if(connection)
         {
             connectionBuilder
-                .setContentTitle("Соединение с сервером")
-                .setContentText("Соединение с серверов восстановлено")
+                .setContentTitle("Связь с сервером")
+                .setContentText("Связь с серверов восстановлена")
                 .setSmallIcon(R.drawable.ic_connect)
                 .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -30,8 +30,8 @@ class NotificationService {
         else
         {
             connectionBuilder
-                .setContentTitle("Соединение с сервером")
-                .setContentText("Соединение с сервером потеряно")
+                .setContentTitle("Связь с сервером")
+                .setContentText("Связь с сервером потеряна")
                 .setSmallIcon(R.drawable.ic_disconnect)
                 .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                 .setPriority(NotificationCompat.PRIORITY_HIGH) // for under android 26 compatibility

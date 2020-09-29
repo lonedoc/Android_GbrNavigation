@@ -54,12 +54,14 @@
             android:enabled="true"
             android:exported="false" />
 
+<!--
         <service android:name="gbr.utils.servicess.FCM"
             tools:ignore="ExportedService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+-->
 
         <activity android:name="newVersion.login.OldLoginActivity"
             android:keepScreenOn="true">

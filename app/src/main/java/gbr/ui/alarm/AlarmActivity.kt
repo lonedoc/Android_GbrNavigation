@@ -29,7 +29,6 @@ class AlarmActivity:MvpAppCompatActivity(),AlarmView {
 
     private val navigatorFragment: NavigatorFragment = NavigatorFragment()
     private val tabFragment:AlarmTabFragment = AlarmTabFragment()
-    private val objectFragment:FragmentObjectInfo = FragmentObjectInfo()
 
     val alarmInfo:AlarmInfo = AlarmInfo
     val info:Info = Info
@@ -78,7 +77,7 @@ class AlarmActivity:MvpAppCompatActivity(),AlarmView {
                 .show()
         }
 
-        openFragment(FragmentObjectInfo())
+        openFragment(AlarmTabFragment())
 
         new_alarm_bottom_menu.menu.getItem(0).isChecked = true
 
@@ -86,7 +85,7 @@ class AlarmActivity:MvpAppCompatActivity(),AlarmView {
             item ->
             when(item.itemId){
                 R.id.pager->{
-                    openFragment(objectFragment)
+                    openFragment(tabFragment)
                     setTitle("Карточка объекта")
                 }
                 R.id.navigator->{

@@ -22,7 +22,7 @@ class RubegProtocol {
         private const val PACKET_SIZE = 962
         private const val CONNECTION_DROP_INTERVAL = 20_000
         private const val SYNC_INTERVAL = 3000
-        private const val RETRANSMIT_INTERVAL = 10_000
+        private const val RETRANSMIT_INTERVAL = 3_000
         private const val SLEEP_INTERVAL: Long = 100
         private const val MAX_ATTEMPTS_COUNT = 3
         private const val CONGESTION_WINDOW_SIZE = 32

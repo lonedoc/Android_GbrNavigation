@@ -1,6 +1,6 @@
 package gbr.utils.data
 
-import com.google.gson.annotations.SerializedName
+import android.graphics.Bitmap
 import newVersion.utils.AreaInfo
 import newVersion.utils.ResponsibleList
 
@@ -19,6 +19,7 @@ object AlarmInfo {
     var responsibleList: ArrayList<ResponsibleList> = ArrayList()
     var plan: ArrayList<String> = ArrayList()
     var photo: ArrayList<String> = ArrayList()
+    var downloadPhoto:ArrayList<Bitmap> = ArrayList()
 
     fun initAllData(information:AlarmInformation){
         this.name = information.name
@@ -36,6 +37,10 @@ object AlarmInfo {
         this.photo = information.photo
     }
 
+    fun addPhoto(photo:Bitmap)
+    {
+        downloadPhoto.add(photo)
+    }
     fun clearData(){
         this.name = null
         this.phone = null
@@ -50,5 +55,6 @@ object AlarmInfo {
         this.responsibleList.clear()
         this.plan.clear()
         this.photo.clear()
+        this.downloadPhoto.clear()
     }
 }

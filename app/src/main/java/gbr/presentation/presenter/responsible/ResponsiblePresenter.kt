@@ -1,29 +1,18 @@
-package newVersion.alarm.responsible
+package gbr.presentation.presenter.responsible
 
-
+import gbr.presentation.view.responsible.ResponsibleView
 import gbr.utils.data.AlarmInfo
 import moxy.InjectViewState
 import moxy.MvpPresenter
 import newVersion.utils.Alarm
-import gbr.utils.interfaces.DestroyableAPI
-import newVersion.commonInterface.Init
 
 @InjectViewState
-class ResponsiblePresenter : MvpPresenter<ResponsibleView>(),
-    DestroyableAPI,Init {
-    override var init: Boolean = false
+class ResponsiblePresenter:MvpPresenter<ResponsibleView>() {
 
-    val alarmInfo:AlarmInfo = AlarmInfo
+    val alarmInfo: AlarmInfo = AlarmInfo
 
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
-
-    }
-    override fun isInit(): Boolean {
-        return init
-    }
-
-    fun init(alarmInfo:Alarm){
         when{
             alarmInfo.responsibleList.count()>0->{
                 viewState.initRecyclerView(alarmInfo.responsibleList)
@@ -34,6 +23,7 @@ class ResponsiblePresenter : MvpPresenter<ResponsibleView>(),
         }
     }
 
+
     fun showToast(message:String){
         viewState.showToastMessage(message)
     }
@@ -43,6 +33,5 @@ class ResponsiblePresenter : MvpPresenter<ResponsibleView>(),
     }
     override fun onDestroy() {
         super.onDestroy()
-        init = false
     }
 }

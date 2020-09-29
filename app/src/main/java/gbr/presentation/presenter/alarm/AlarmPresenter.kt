@@ -2,8 +2,9 @@ package gbr.presentation.presenter.alarm
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.SystemClock
-import android.util.Log
 import android.view.View
 import gbr.presentation.presenter.navigator.NavigatorPresenter
 import gbr.presentation.view.alarm.AlarmView
@@ -11,6 +12,9 @@ import gbr.ui.main.MainActivity
 import gbr.utils.api.alarm.AlarmAPI
 import gbr.utils.api.alarm.OnAlarmListener
 import gbr.utils.api.alarm.RPAlarmAPI
+import gbr.utils.api.image.ImageAPI
+import gbr.utils.api.image.OnImageListener
+import gbr.utils.api.image.RPImageAPI
 import gbr.utils.api.status.OnStatusListener
 import gbr.utils.api.status.RPStatusAPI
 import gbr.utils.api.status.StatusAPI
@@ -20,12 +24,9 @@ import gbr.utils.servicess.ProtocolService
 import gbr.utils.servicess.ProtocolService.Companion.currentLocation
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.alarm.card.ArrivedTime
 import newVersion.common.CurrentTime
-import newVersion.models.CardEvent
+import newVersion.models.RefreshPlan
 import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol
 import java.lang.Thread.sleep
@@ -34,12 +35,13 @@ import java.util.*
 import kotlin.concurrent.thread
 
 @InjectViewState
-class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener {
+class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener, OnImageListener {
 
     val info: Info = Info
     val alarmInfo:AlarmInfo = AlarmInfo
     private var statusAPI: StatusAPI? = null
     private var alarmAPI: AlarmAPI?=null
+    private var imageAPI: ImageAPI?=null
     lateinit var context: Context
 
     override fun onFirstViewAttach() {
@@ -52,6 +54,11 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
         statusAPI = RPStatusAPI(protocol)
         statusAPI?.onStatusListener = this
 
+        if(imageAPI!=null)
+            imageAPI?.onDestroy()
+        imageAPI = RPImageAPI(protocol)
+        imageAPI?.onImageListener = this
+
         if(alarmAPI!=null)
             alarmAPI?.onDestroy()
         alarmAPI=RPAlarmAPI(protocol,"Alarm")
@@ -62,6 +69,7 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
         viewState.statePhoto(false)
         viewState.stateArrived(false)
         viewState.stateReport(false)
+
 
         if(alarmInfo.lat=="0" && alarmInfo.lon =="0" || alarmInfo.lat==null && alarmInfo.lon==null)
         {
@@ -75,8 +83,30 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
         }
 
         alarmApply()
+        downloadImage()
     }
 
+    private fun downloadImage()
+    {
+        thread{
+            if(alarmInfo.photo.count() == 0)
+            {
+                viewState.showToastMessage("Нет изображений для загруки")
+                return@thread
+            }
+            for(i in 0 until alarmInfo.photo.count())
+            {
+                sendImageRequest(alarmInfo.photo[i])
+            }
+        }
+    }
+    private fun sendImageRequest(photoName: String) {
+        imageAPI?.sendImageRequest(photoName){
+            if(!it){
+                sendImageRequest(photoName)
+            }
+        }
+    }
     var arrived = false
     private fun arrivedLoop() {
         thread {
@@ -227,7 +257,19 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
     override fun onDestroy() {
         alarmAPI?.onDestroy()
         statusAPI?.onDestroy()
+        imageAPI?.onDestroy()
         arrived = true
         super.onDestroy()
+    }
+
+    override fun onImageDataReceived(imageByte: ByteArray) {
+        val bitmap: Bitmap = BitmapFactory.decodeByteArray(imageByte, 0, imageByte.count())
+        alarmInfo.downloadPhoto.add(bitmap)
+
+        EventBus.getDefault().post(
+            RefreshPlan(
+                true
+            )
+        )
     }
 }
