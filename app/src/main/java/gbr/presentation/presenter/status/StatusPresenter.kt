@@ -6,31 +6,26 @@ import gbr.presentation.view.status.StatusView
 import gbr.utils.api.status.OnStatusListener
 import gbr.utils.api.status.RPStatusAPI
 import gbr.utils.api.status.StatusAPI
+import gbr.utils.data.Info
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.utils.DataStoreUtils
 import gbr.utils.interfaces.DestroyableAPI
-import newVersion.commonInterface.Init
 import rubegprotocol.RubegProtocol
 
 @InjectViewState
-class StatusPresenter : MvpPresenter<StatusView>(), OnStatusListener,
-    DestroyableAPI, Init {
+class StatusPresenter : MvpPresenter<StatusView>(), OnStatusListener{
+
+    val info:Info = Info
     override fun onStatusDataReceived(status: String, call: String) {
         Log.d("StatusPresenter", status)
         if(status =="На тревоге") return
-            DataStoreUtils.status = status
-            DataStoreUtils.call = call
+            info.status = status
+            info.call = call
             viewState.onDismiss()
     }
 
     var statusAPI: StatusAPI? = null
 
-    override var init: Boolean = false
-
-    override fun isInit(): Boolean {
-        return init
-    }
 
     fun setTimer(time: Long) {
         val protocol = RubegProtocol.sharedInstance
@@ -38,7 +33,6 @@ class StatusPresenter : MvpPresenter<StatusView>(), OnStatusListener,
         statusAPI = RPStatusAPI(protocol)
         statusAPI?.onStatusListener = this
 
-        init = true
         var timer: CountDownTimer? = null
 
         timer?.cancel()

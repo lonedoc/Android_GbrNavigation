@@ -1,6 +1,5 @@
 package gbr.ui.navigator
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.net.Uri
@@ -19,10 +18,8 @@ import gbr.utils.servicess.ProtocolService
 import gbr.utils.servicess.YandexNavigator
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
-import kotlinx.android.synthetic.main.activity_new_main.*
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
-import newVersion.alarm.AlarmActivity
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -32,7 +29,6 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.ArrayList
 import kotlin.concurrent.thread
@@ -59,7 +55,7 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        rootView = inflater.inflate(R.layout.new_fragment_navigator,container,false)
+        rootView = inflater.inflate(R.layout.fragment_navigator,container,false)
 
         val yandexButton = rootView.findViewById<FloatingActionButton>(R.id.navigator_yandex)
 

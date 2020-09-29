@@ -2,7 +2,7 @@ package gbr.utils.api.status
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import newVersion.utils.StatusGson
+import gbr.utils.data.StatusGson
 import org.json.JSONObject
 import ru.rubeg38.rubegprotocol.TextMessageWatcher
 import rubegprotocol.RubegProtocol

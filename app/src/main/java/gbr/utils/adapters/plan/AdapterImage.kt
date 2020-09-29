@@ -13,7 +13,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import gbr.presentation.presenter.plan.PlanPresenter
 import kobramob.rubeg38.ru.gbrnavigation.R
-import newVersion.alarm.plan.ImageScaleFragment
 
 class AdapterImage(
     val plan: ArrayList<Bitmap>,

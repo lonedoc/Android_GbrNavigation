@@ -10,12 +10,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import gbr.presentation.presenter.responsible.ResponsiblePresenter
 import gbr.presentation.view.responsible.ResponsibleView
+import gbr.ui.personalcard.FragmentPersonalCard
 import gbr.utils.adapters.responsible.AdapterResponsible
+import gbr.utils.data.ResponsibleList
 import kobramob.rubeg38.ru.gbrnavigation.R
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
-import newVersion.alarm.responsible.personalCard.PersonalCardFragment
-import newVersion.utils.ResponsibleList
 
 class FragmentResponsible:MvpAppCompatFragment(),ResponsibleView {
     @InjectPresenter
@@ -29,7 +29,7 @@ class FragmentResponsible:MvpAppCompatFragment(),ResponsibleView {
         homeNumber: String
     ) {
 
-        val dialog = PersonalCardFragment.onNewInstance(name,position,mobileNumber,workNumber,homeNumber)
+        val dialog = FragmentPersonalCard.onNewInstance(name,position,mobileNumber,workNumber,homeNumber)
         dialog.show(activity!!.supportFragmentManager,"PersonalCard")
     }
 

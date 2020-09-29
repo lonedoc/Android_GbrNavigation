@@ -1,8 +1,6 @@
 package gbr.utils.data
 
 import com.google.gson.annotations.SerializedName
-import newVersion.utils.AreaInfo
-import newVersion.utils.ResponsibleList
 import java.io.Serializable
 
 data class AlarmInformation (
@@ -21,3 +19,7 @@ data class AlarmInformation (
     val plan: ArrayList<String> = ArrayList(),
     val photo: ArrayList<String> = ArrayList()
 ) : Serializable
+
+data class AreaInfo(val name: String, val alarmtime: String) : Serializable
+
+data class ResponsibleList(val name: String, val position: String, val phone: String, val phoneh: String, val phonew: String, val address: String) : Serializable

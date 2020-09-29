@@ -1,8 +1,6 @@
 package gbr.utils.data
 
 import android.graphics.Bitmap
-import newVersion.utils.AreaInfo
-import newVersion.utils.ResponsibleList
 
 object AlarmInfo {
     var command: String? = null
@@ -37,10 +35,6 @@ object AlarmInfo {
         this.photo = information.photo
     }
 
-    fun addPhoto(photo:Bitmap)
-    {
-        downloadPhoto.add(photo)
-    }
     fun clearData(){
         this.name = null
         this.phone = null

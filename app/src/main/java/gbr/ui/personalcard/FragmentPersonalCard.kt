@@ -17,7 +17,6 @@ import moxy.InjectViewState
 import moxy.MvpAppCompatDialogFragment
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
-import newVersion.alarm.responsible.personalCard.PersonalCardFragment
 
 
 class FragmentPersonalCard:MvpAppCompatDialogFragment(),PersonalCardView{
@@ -65,8 +64,8 @@ class FragmentPersonalCard:MvpAppCompatDialogFragment(),PersonalCardView{
     }
 
     companion object{
-        fun onNewInstance(name:String,position:String,mobileNumber:String,workNumber:String,homeNumber:String): PersonalCardFragment {
-            val frag = PersonalCardFragment()
+        fun onNewInstance(name:String,position:String,mobileNumber:String,workNumber:String,homeNumber:String): FragmentPersonalCard {
+            val frag = FragmentPersonalCard()
             val args = Bundle()
             args.putString("name",name)
             args.putString("position",position)

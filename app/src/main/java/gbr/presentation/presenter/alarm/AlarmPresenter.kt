@@ -19,13 +19,13 @@ import gbr.utils.api.status.OnStatusListener
 import gbr.utils.api.status.RPStatusAPI
 import gbr.utils.api.status.StatusAPI
 import gbr.utils.data.AlarmInfo
+import gbr.utils.data.CurrentTime
 import gbr.utils.data.Info
 import gbr.utils.servicess.ProtocolService
 import gbr.utils.servicess.ProtocolService.Companion.currentLocation
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.common.CurrentTime
-import newVersion.models.RefreshPlan
+import gbr.utils.data.RefreshPlan
 import org.greenrobot.eventbus.EventBus
 import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol

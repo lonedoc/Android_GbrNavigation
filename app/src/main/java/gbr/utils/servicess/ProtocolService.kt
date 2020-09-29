@@ -25,14 +25,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import newVersion.servicess.NetworkService
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import ru.rubeg38.rubegprotocol.ConnectionWatcher
 import rubeg38.myalarmbutton.utils.api.coordinate.CoordinateAPI
 import gbr.utils.api.coordinate.RPCoordinateAPI
-import newVersion.utils.ProviderStatus
+import gbr.utils.data.Credentials
+import gbr.utils.data.ProviderStatus
 import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol
 import java.text.DecimalFormat
@@ -69,7 +69,7 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
     private lateinit var protocol: RubegProtocol
     private lateinit var unsubscribe: () -> Unit
 
-    private var credentials:newVersion.models.Credentials? = null
+    private var credentials: Credentials? = null
 
     private var authAPI:AuthAPI? = null
     private var coordinateAPI: CoordinateAPI? = null
@@ -236,7 +236,7 @@ class ProtocolService: Service(),LocationListener,ConnectionWatcher,OnAuthListen
         }
 
         GlobalScope.launch(Dispatchers.IO) {
-            while (NetworkService.isServiceStarted) {
+            while (isStarted) {
                 launch(Dispatchers.IO) {
                     Log.d("Service", "process")
                     pingFakeServer()

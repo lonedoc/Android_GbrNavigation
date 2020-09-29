@@ -5,7 +5,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import gbr.utils.data.AuthInfo
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
-import newVersion.models.Credentials
+import gbr.utils.data.Credentials
 import org.json.JSONObject
 import ru.rubeg38.rubegprotocol.TextMessageWatcher
 import rubegprotocol.RubegProtocol

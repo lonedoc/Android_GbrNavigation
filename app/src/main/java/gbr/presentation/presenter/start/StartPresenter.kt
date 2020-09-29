@@ -1,11 +1,7 @@
 package gbr.presentation.presenter.start
 
-import android.location.LocationManager
 import android.util.Log
-import android.widget.Toast
-import gbr.utils.models.Preferencess
 import gbr.presentation.view.start.StartView
-import gbr.utils.PrefsUtils
 import gbr.utils.api.access.AccessAPI
 import gbr.utils.api.access.OnAccessListener
 import gbr.utils.api.access.RPAccessAPI
@@ -16,17 +12,16 @@ import gbr.utils.callbacks.GpsCallback
 import gbr.utils.data.AuthInfo
 import gbr.utils.data.Info
 import gbr.utils.data.ProtocolServiceInfo
-import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
-import moxy.InjectViewState
-import moxy.MvpPresenter
-import gbr.utils.servicess.LocationListener
-import gbr.utils.servicess.ProtocolService
+import gbr.utils.data.ProviderStatus
+import gbr.utils.models.Preferencess
 import gbr.utils.servicess.ProtocolService.Companion.currentLocation
 import gbr.utils.servicess.ProtocolService.Companion.isGPSLocationEnable
 import gbr.utils.servicess.ProtocolService.Companion.isInternetLocationEnable
-import newVersion.models.Credentials
-import newVersion.models.HostPool
-import newVersion.utils.ProviderStatus
+import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
+import moxy.InjectViewState
+import moxy.MvpPresenter
+import gbr.utils.data.Credentials
+import gbr.utils.data.HostPool
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -103,7 +98,7 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
-    fun providerStatus(event:ProviderStatus){
+    fun providerStatus(event: ProviderStatus){
         when(event.status){
             "disable"->{
                 errorMessage = "Включите GPS для продолжения работы приложения"

@@ -7,8 +7,8 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import gbr.presentation.presenter.responsible.ResponsiblePresenter
+import gbr.utils.data.ResponsibleList
 import kobramob.rubeg38.ru.gbrnavigation.R
-import newVersion.utils.ResponsibleList
 
 class AdapterResponsible internal constructor(
     private val responsibleList:ArrayList<ResponsibleList>,

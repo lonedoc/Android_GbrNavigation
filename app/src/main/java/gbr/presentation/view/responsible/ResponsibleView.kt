@@ -1,10 +1,11 @@
 package gbr.presentation.view.responsible
 
+import gbr.utils.data.ResponsibleList
 import moxy.MvpView
 import moxy.viewstate.strategy.AddToEndStrategy
 import moxy.viewstate.strategy.SkipStrategy
 import moxy.viewstate.strategy.StateStrategyType
-import newVersion.utils.ResponsibleList
+
 
 interface ResponsibleView:MvpView {
 

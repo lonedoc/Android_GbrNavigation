@@ -8,18 +8,14 @@ import android.widget.*
 import gbr.presentation.presenter.alarm.AlarmPresenter
 import gbr.presentation.view.alarm.AlarmView
 import gbr.ui.navigator.NavigatorFragment
-import gbr.ui.objectinfo.FragmentObjectInfo
 import gbr.ui.pager.AlarmTabFragment
 import gbr.utils.data.AlarmInfo
 import gbr.utils.data.Info
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlinx.android.synthetic.main.activity_alarm.*
-import kotlinx.android.synthetic.main.activity_new_alarm.*
-import kotlinx.android.synthetic.main.fragment_alarm_report_dialog.*
 import moxy.MvpAppCompatActivity
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
-import kotlin.concurrent.thread
 
 class AlarmActivity:MvpAppCompatActivity(),AlarmView {
     @InjectPresenter
@@ -35,7 +31,7 @@ class AlarmActivity:MvpAppCompatActivity(),AlarmView {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_new_alarm)
+        setContentView(R.layout.activity_alarm)
         setSupportActionBar(new_alarm_toolbar)
 
         send_Arrived.setOnClickListener { presenter.sendArrived() }

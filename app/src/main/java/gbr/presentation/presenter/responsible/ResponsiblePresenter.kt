@@ -4,7 +4,6 @@ import gbr.presentation.view.responsible.ResponsibleView
 import gbr.utils.data.AlarmInfo
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.utils.Alarm
 
 @InjectViewState
 class ResponsiblePresenter:MvpPresenter<ResponsibleView>() {

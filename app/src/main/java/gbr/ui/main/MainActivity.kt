@@ -3,12 +3,9 @@ package gbr.ui.main
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.NotificationManager
-import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import android.media.MediaPlayer
 import android.net.Uri
@@ -27,18 +24,16 @@ import gbr.ui.mobalarm.MobAlarmActivity
 import gbr.ui.status.StatusFragment
 import gbr.utils.data.AlarmInformation
 import gbr.utils.data.StatusList
-import gbr.utils.servicess.ProtocolService
 import gbr.utils.servicess.ProtocolService.Companion.currentLocation
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
-import kotlinx.android.synthetic.main.activity_new_main.*
+import kotlinx.android.synthetic.main.activity_main.*
 import moxy.MvpAppCompatActivity
 import moxy.presenter.InjectPresenter
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.ScaleBarOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.*
 import kotlin.concurrent.thread
@@ -62,7 +57,7 @@ class MainActivity:MvpAppCompatActivity(),MainView {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_new_main)
+        setContentView(R.layout.activity_main)
         setSupportActionBar(main_toolbar)
 
         presenter.context(applicationContext)

@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.telephony.TelephonyManager
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -14,14 +13,13 @@ import gbr.presentation.presenter.login.LoginPresenter
 import gbr.presentation.view.login.LoginView
 import gbr.ui.main.MainActivity
 import gbr.utils.PrefsUtils
+import gbr.utils.adapters.ProgressDialog
 import gbr.utils.adapters.login.AdapterIpAddresses
 import gbr.utils.callbacks.ValidateAddress
 import kobramob.rubeg38.ru.gbrnavigation.R
-import kotlinx.android.synthetic.main.activity_new_login.*
+import kotlinx.android.synthetic.main.activity_login.*
 import moxy.MvpAppCompatActivity
 import moxy.presenter.InjectPresenter
-import newVersion.common.CommonActivity
-import newVersion.login.resource.ProgressDialog
 import ru.rubeg38.technicianmobile.utils.setOnTextChanged
 import java.util.ArrayList
 import kotlin.concurrent.thread
@@ -35,7 +33,7 @@ class LoginActivity:MvpAppCompatActivity(),LoginView,ValidateAddress {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_new_login)
+        setContentView(R.layout.activity_login)
 
         new_login_port.setOnTextChanged { str -> presenter.validatePort(str.toString()) }
 

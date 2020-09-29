@@ -9,8 +9,8 @@ import gbr.ui.mobobjectinfo.FragmentMobObjectInfo
 import gbr.ui.objectinfo.FragmentObjectInfo
 import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlinx.android.synthetic.main.activity_mob_alarm.*
-import kotlinx.android.synthetic.main.activity_new_alarm.*
-import kotlinx.android.synthetic.main.activity_new_alarm.new_alarm_bottom_menu
+import kotlinx.android.synthetic.main.activity_alarm.*
+import kotlinx.android.synthetic.main.activity_alarm.new_alarm_bottom_menu
 import moxy.MvpAppCompatActivity
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter

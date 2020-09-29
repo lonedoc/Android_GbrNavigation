@@ -2,17 +2,13 @@ package gbr.presentation.presenter.objectinfo
 
 import gbr.presentation.presenter.alarm.AlarmPresenter
 import gbr.presentation.view.objectinfo.ObjectInfoView
-import gbr.utils.api.alarm.AlarmAPI
-import gbr.utils.api.alarm.RPAlarmAPI
 import gbr.utils.data.AlarmInfo
+import gbr.utils.data.CurrentTime
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.common.CurrentTime
-import newVersion.models.CardEvent
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
-import rubegprotocol.RubegProtocol
 
 @InjectViewState
 class ObjectInfoPresenter:MvpPresenter<ObjectInfoView>() {
@@ -38,7 +34,7 @@ class ObjectInfoPresenter:MvpPresenter<ObjectInfoView>() {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
-    fun takeApplyAlarmTime(time:CurrentTime){
+    fun takeApplyAlarmTime(time: CurrentTime){
         viewState.setObjectTimeApplyAlarm(time.currentTime)
     }
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)

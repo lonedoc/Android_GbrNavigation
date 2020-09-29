@@ -16,16 +16,12 @@ import gbr.utils.api.status.OnStatusListener
 import gbr.utils.api.status.RPStatusAPI
 import gbr.utils.api.status.StatusAPI
 import gbr.utils.data.AlarmInfo
+import gbr.utils.data.CurrentTime
 import gbr.utils.data.Info
-import gbr.utils.servicess.ProtocolService
 import gbr.utils.servicess.ProtocolService.Companion.currentLocation
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.common.CurrentTime
-import newVersion.models.CardEvent
 import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
 import org.osmdroid.util.GeoPoint
 import rubeg38.myalarmbutton.utils.api.coordinate.CoordinateAPI
 import rubeg38.myalarmbutton.utils.api.coordinate.OnCoordinateListener

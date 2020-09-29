@@ -22,7 +22,7 @@ class AlarmTabFragment : MvpAppCompatFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val rootView: View = inflater.inflate(R.layout.new_fragment_tab, container, false)
+        val rootView: View = inflater.inflate(R.layout.fragment_tab, container, false)
 
         pager = rootView.findViewById(R.id.new_alarm_pager)
         tabLayout = rootView.findViewById(R.id.new_alarm_tab)

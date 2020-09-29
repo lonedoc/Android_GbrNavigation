@@ -11,8 +11,6 @@ import gbr.presentation.view.objectinfo.ObjectInfoView
 import kobramob.rubeg38.ru.gbrnavigation.R
 import moxy.MvpAppCompatFragment
 import moxy.presenter.InjectPresenter
-import newVersion.models.CardEvent
-import org.greenrobot.eventbus.EventBus
 
 class FragmentObjectInfo:MvpAppCompatFragment(), ObjectInfoView {
     @InjectPresenter

@@ -63,33 +63,6 @@
         </service>
 -->
 
-        <activity android:name="newVersion.login.OldLoginActivity"
-            android:keepScreenOn="true">
-
-        </activity>
-
-        <activity android:name="newVersion.main.OldMainActivity"
-            android:keepScreenOn="true"
-            >
-
-        </activity>
-
-        <activity android:name="newVersion.common.CommonActivity"
-            android:keepScreenOn="true"/>
-
-        <activity android:name="newVersion.alarm.AlarmActivity"
-            android:keepScreenOn="true"/>
-
-        <activity android:name="newVersion.common.directory.DirectoryActivity"
-            android:keepScreenOn="true"/>
-
-        <activity
-            android:name="newVersion.common.alarm.AlarmDialogActivity"
-            android:excludeFromRecents="true"
-            android:theme="@style/Theme.UserDialog"
-            />
-
-
 
         <service
             android:name="gbr.utils.servicess.ProtocolService"

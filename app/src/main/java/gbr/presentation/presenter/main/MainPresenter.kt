@@ -22,7 +22,6 @@ import gbr.utils.data.StatusList
 import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.network.image.OnImageListener
 
 import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol

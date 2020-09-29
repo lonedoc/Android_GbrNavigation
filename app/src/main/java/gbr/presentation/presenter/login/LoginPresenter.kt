@@ -17,8 +17,8 @@ import gbr.utils.data.Info
 import gbr.utils.data.ProtocolServiceInfo
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.models.Credentials
-import newVersion.models.HostPool
+import gbr.utils.data.Credentials
+import gbr.utils.data.HostPool
 import org.greenrobot.eventbus.EventBus
 import rubegprotocol.RubegProtocol
 import java.lang.Thread.sleep

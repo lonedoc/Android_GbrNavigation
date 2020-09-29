@@ -5,8 +5,7 @@ import gbr.presentation.view.plan.PlanView
 import gbr.utils.data.AlarmInfo
 import moxy.InjectViewState
 import moxy.MvpPresenter
-import newVersion.alarm.plan.PlanPresenter
-import newVersion.models.RefreshPlan
+import gbr.utils.data.RefreshPlan
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
