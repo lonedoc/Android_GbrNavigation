@@ -50,6 +50,7 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
 
         isAlive = true
         createAlarmChannel()
+        createConnectionChannel()
     }
 
     override fun onResume() {
@@ -76,6 +77,28 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
             mChannel.lightColor = Color.RED
             mChannel.enableLights(true)
             mChannel.description = "Alarm"
+            val audioAttributes = AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .build()
+            mChannel.setSound(sound, audioAttributes)
+            val notificationManager =
+                applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(mChannel)
+        }
+    }
+
+    fun createConnectionChannel()
+    {
+
+        val sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val mChannel: NotificationChannel
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            mChannel =
+                NotificationChannel("Connection", "Connection after close app", NotificationManager.IMPORTANCE_HIGH)
+            mChannel.lightColor = Color.RED
+            mChannel.enableLights(true)
+            mChannel.description = "Connection"
             val audioAttributes = AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .setUsage(AudioAttributes.USAGE_ALARM)
