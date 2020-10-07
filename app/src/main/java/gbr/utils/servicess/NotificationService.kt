@@ -3,13 +3,16 @@ package gbr.utils.servicess
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import kobramob.rubeg38.ru.gbrnavigation.BuildConfig
 import kobramob.rubeg38.ru.gbrnavigation.R
 
 class NotificationService {
@@ -43,7 +46,7 @@ class NotificationService {
     }
 
     private fun connectionChannelID(context: Context): String {
-        val connectionChannelID = "Connection channel"
+        val connectionChannelID = "Connection"
 
         val audio =  AudioAttributes.Builder()
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -59,7 +62,7 @@ class NotificationService {
                 connectionChannelID,
                 NotificationManager.IMPORTANCE_HIGH
             ).let {
-                it.description = "Connection channel"
+                it.description = "Connection"
                 it.enableLights(true)
                 it.lightColor = Color.RED
                 it.enableVibration(true)
@@ -71,8 +74,36 @@ class NotificationService {
         return connectionChannelID
     }
 
+    private fun AlarmChannelID(context: Context) {
+        val connectionChannelID = "Alarm"
+
+        val audio =  AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+            .build()
+
+        val statusSound = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + BuildConfig.APPLICATION_ID + "/" + R.raw.alarm_sound);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                connectionChannelID,
+                connectionChannelID,
+                NotificationManager.IMPORTANCE_HIGH
+            ).let {
+                it.description = "Alarm"
+                it.enableLights(true)
+                it.lightColor = Color.RED
+                it.enableVibration(true)
+                it.setSound(statusSound, audio)
+                it
+            }
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
     fun createServerNotification(context: Context): Notification? {
-        val notificationChannelID = "ENDLESS SERVICE CHANNEL"
+        val notificationChannelID = "Service"
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
         {

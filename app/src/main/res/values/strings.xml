@@ -79,5 +79,6 @@
     <string name="enterToApp">Войти в приложение</string>
     <string name="photo">Photo</string>
     <string name="phone">Номер телефона:</string>
+    <string name="default_notification_channel_id">alarm</string>
 
 </resources>

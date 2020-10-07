@@ -19,7 +19,7 @@ import kotlin.concurrent.thread
 
 class RubegProtocol {
     companion object {
-        private const val PACKET_SIZE = 962
+        private const val PACKET_SIZE = 960
         private const val CONNECTION_DROP_INTERVAL = 20_000
         private const val SYNC_INTERVAL = 3000
         private const val RETRANSMIT_INTERVAL = 3_000

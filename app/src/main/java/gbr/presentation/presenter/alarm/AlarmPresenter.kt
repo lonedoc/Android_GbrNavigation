@@ -137,25 +137,29 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
     }
 
     private fun alarmApply() {
-        alarmAPI?.sendAlarmApplyRequest(
-            alarmInfo.number!!,
-            currentLocation!!.latitude,
-            currentLocation!!.longitude,
-            currentLocation!!.speed
-        ){
-            if(it){
-                viewState.startTimer(SystemClock.elapsedRealtime())
-                val currentTime: String = SimpleDateFormat(
-                    "HH:mm:ss",
-                    Locale.getDefault()
-                ).format(Date())
-                viewState.showToastMessage("Тревога принята в $currentTime")
-                EventBus.getDefault().postSticky(CurrentTime(currentTime))
+        try{
+            alarmAPI?.sendAlarmApplyRequest(
+                alarmInfo.number!!,
+                currentLocation!!.latitude,
+                currentLocation!!.longitude,
+                currentLocation!!.speed
+            ){
+                if(it){
+                    viewState.startTimer(SystemClock.elapsedRealtime())
+                    val currentTime: String = SimpleDateFormat(
+                        "HH:mm:ss",
+                        Locale.getDefault()
+                    ).format(Date())
+                    viewState.showToastMessage("Тревога принята в $currentTime")
+                    EventBus.getDefault().postSticky(CurrentTime(currentTime))
+                }
+                else{
+                    viewState.showToastMessage("Не удалось отправить принятие, повторная отправка")
+                    alarmApply()
+                }
             }
-            else{
-                viewState.showToastMessage("Не удалось отправить принятие, повторная отправка")
-                alarmApply()
-            }
+        }catch (e:Exception){
+            e.printStackTrace()
         }
     }
 
@@ -229,7 +233,7 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
                 AlarmInfo.clearData()
                 viewState.showToastMessage("Тревога завершена")
             }
-            "alarm"->{
+            "alarm_sound"->{
                 arrived = true
                 NavigatorPresenter.arrived = true
                 AlarmInfo.clearData()

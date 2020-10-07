@@ -41,27 +41,18 @@
         tools:targetApi="q">
 
 
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_color"
-            android:resource="@color/colorPrimary" />
+        <!--         <meta-data
+                   android:name="com.google.firebase.messaging.default_notification_color"
+                    android:resource="@color/colorPrimary" />
 
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="default" />
+                <meta-data
+                    android:name="com.google.firebase.messaging.default_notification_channel_id"
+                    android:value="default" />-->
 
-        <service
-            android:name="newVersion.servicess.NetworkService"
-            android:enabled="true"
-            android:exported="false" />
-
-<!--
-        <service android:name="gbr.utils.servicess.FCM"
-            tools:ignore="ExportedService">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
--->
+        <meta-data android:name=
+            "com.google.firebase.messaging.default_notification_channel_id"
+            android:value="Alarm"
+            />
 
 
         <service

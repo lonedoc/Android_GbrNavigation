@@ -24,7 +24,7 @@ class RPAuthAPI(
         jsonObject.addProperty("password", credentials.imei)
         jsonObject.addProperty("token", credentials.fcmtoken)
         jsonObject.addProperty("ver.", BuildConfig.VERSION_NAME)
-        jsonObject.addProperty("keepalive", "10")
+        jsonObject.addProperty("keepalive", "5")
 
         val request = jsonObject.toString()
 

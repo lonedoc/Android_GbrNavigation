@@ -176,7 +176,7 @@ class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnAlarmListener {
                 flag == "notalarm"->{
                     viewState.cancelAlarm()
                 }
-                flag == "alarm"->{
+                flag == "alarm_sound"->{
                     val alarmInfo = Gson().fromJson(alarm, AlarmInformation::class.java)
                     AlarmInfo.initAllData(alarmInfo)
                     if(alarmInfo.name == null) return

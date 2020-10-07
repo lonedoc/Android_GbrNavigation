@@ -157,15 +157,15 @@ class RPAlarmAPI(
 
         Log.d("AlarmMessage",message + activity)
 
-        if(JSONObject(message).getString("command")!="alarm" &&
+        if(JSONObject(message).getString("command")!="alarm_sound" &&
             JSONObject(message).getString("command")!="notalarm" &&
             JSONObject(message).getString("command")!="alarmmob") return
 
 
 
         when (JSONObject(message).getString("command")) {
-            "alarm" -> {
-                onAlarmListener?.onAlarmDataReceived("alarm",message)
+            "alarm_sound" -> {
+                onAlarmListener?.onAlarmDataReceived("alarm_sound",message)
             }
             "notalarm"->{
                 onAlarmListener?.onAlarmDataReceived("notalarm",message)
