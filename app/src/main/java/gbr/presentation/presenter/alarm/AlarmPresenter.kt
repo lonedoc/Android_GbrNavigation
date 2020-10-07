@@ -137,14 +137,14 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
     }
 
     private fun alarmApply() {
-        try{
+        if(alarmInfo.number == null) return
             alarmAPI?.sendAlarmApplyRequest(
                 alarmInfo.number!!,
                 currentLocation!!.latitude,
                 currentLocation!!.longitude,
                 currentLocation!!.speed
-            ){
-                if(it){
+            ) {
+                if (it) {
                     viewState.startTimer(SystemClock.elapsedRealtime())
                     val currentTime: String = SimpleDateFormat(
                         "HH:mm:ss",
@@ -152,15 +152,12 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
                     ).format(Date())
                     viewState.showToastMessage("Тревога принята в $currentTime")
                     EventBus.getDefault().postSticky(CurrentTime(currentTime))
-                }
-                else{
+                } else {
                     viewState.showToastMessage("Не удалось отправить принятие, повторная отправка")
                     alarmApply()
                 }
             }
-        }catch (e:Exception){
-            e.printStackTrace()
-        }
+
     }
 
     fun sendArrived(){
@@ -233,7 +230,7 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
                 AlarmInfo.clearData()
                 viewState.showToastMessage("Тревога завершена")
             }
-            "alarm_sound"->{
+            "alarm"->{
                 arrived = true
                 NavigatorPresenter.arrived = true
                 AlarmInfo.clearData()
