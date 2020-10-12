@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <org.osmdroid.views.MapView
+        android:id="@+id/mobalarm_mapView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+    </org.osmdroid.views.MapView>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/mobalarm_myLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="8dp"
+        android:layout_alignTop="@+id/mobalarm_mapView"
+        android:layout_alignEnd="@+id/mobalarm_mapView"
+        app:srcCompat="@drawable/ic_gps_fixed"
+        app:rippleColor="@color/colorAccent"
+        app:backgroundTint="@color/viewBackground"
+        />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/mobalarm_followMe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="24dp"
+        android:layout_alignEnd="@+id/mobalarm_mapView"
+        android:layout_below="@+id/mobalarm_myLocation"
+        app:srcCompat="@drawable/ic_direction_walk"
+        app:rippleColor="@color/colorAccent"
+        app:backgroundTint="@color/viewBackground"
+        android:adjustViewBounds="false"
+        />
+
+
+</RelativeLayout>

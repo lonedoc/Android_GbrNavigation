@@ -22,11 +22,10 @@ class RubegProtocol {
         private const val PACKET_SIZE = 962
         private const val CONNECTION_DROP_INTERVAL = 20_000
         private const val SYNC_INTERVAL = 3000
-        private const val RETRANSMIT_INTERVAL = 10_000
+        private const val RETRANSMIT_INTERVAL = 3_000
         private const val SLEEP_INTERVAL: Long = 100
         private const val MAX_ATTEMPTS_COUNT = 3
         private const val CONGESTION_WINDOW_SIZE = 32
-
         val sharedInstance: RubegProtocol by lazy {
             RubegProtocol()
         }
@@ -86,7 +85,9 @@ class RubegProtocol {
     fun subscribe(watcher: TextMessageWatcher): () -> Unit {
         var i = 0
 
+
         while (i < this.textMessageWatchers.count()) {
+            Log.d("Subscribe","$textMessageWatchers")
             if (this.textMessageWatchers[i] == null) {
                 this.textMessageWatchers[i] = watcher
 
@@ -100,7 +101,6 @@ class RubegProtocol {
         this.textMessageWatchers.add(watcher)
 
         return {
-
             this.textMessageWatchers[i] = null }
     }
 
@@ -197,6 +197,7 @@ class RubegProtocol {
         started = true
 
         sendLoop()
+
         readLoop()
 
         lastResponseTime = System.currentTimeMillis()
@@ -274,7 +275,7 @@ class RubegProtocol {
                 connected = true
                 lastResponseTime = System.currentTimeMillis()
 
-                val packet = PacketUtils.decode(buffer.array())
+                val packet:Packet = PacketUtils.decode(buffer.array()) ?: continue
 
                 // Debug
                 println("<- { content type: ${packet.headers.contentType}, message number: ${packet.headers.messageNumber}, packet number: ${packet.headers.packetNumber} }")
@@ -286,7 +287,9 @@ class RubegProtocol {
                     ContentType.BINARY, ContentType.STRING -> {
                         handleData(packet as DataPacket)
                     }
-                    else -> {}
+                    else -> {
+
+                    }
                 }
 
                 incomingTransmissions = HashMap(incomingTransmissions.filter { !it.value.failed })
@@ -436,6 +439,9 @@ class RubegProtocol {
 
         val messageNumber = packet.headers.messageNumber
 
+        if(packet.headers.sessionId != null)
+        Log.d("handleData",packet.headers.sessionId)
+
         val acknowledgement = AcknowledgementPacket(packet)
 
         packetsQueue.enqueue(acknowledgement, Priority.HIGH)
@@ -463,12 +469,10 @@ class RubegProtocol {
                     ContentType.STRING -> {
                         val message = String(transmission.message!!)
                         textMessageWatchers.forEach { it?.onTextMessageReceived(message) }
-                        Log.d("AlarmMessage","$textMessageWatchers")
                     }
                     ContentType.BINARY -> {
                         val message = transmission.message!!
                         binaryMessageWatchers.forEach { it?.onBinaryMessageReceived(message) }
-                        Log.d("AlarmMessage","$textMessageWatchers")
                     }
                     ContentType.CONNECTION -> TODO()
                     ContentType.ACKNOWLEDGEMENT -> TODO()

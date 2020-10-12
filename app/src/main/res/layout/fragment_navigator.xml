@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <org.osmdroid.views.MapView
+        android:id="@+id/navigator_mapView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+    </org.osmdroid.views.MapView>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/navigator_myLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_marginTop="24dp"
+<<<<<<< HEAD:app/src/main/res/layout/fragment_alarm_navigator.xml
+        android:layout_marginEnd="8dp"
+        android:layout_alignTop="@+id/alarm_navigator_mapView"
+        android:layout_alignEnd="@+id/alarm_navigator_mapView"
+=======
+        android:layout_marginEnd="16dp"
+        android:layout_alignTop="@+id/navigator_mapView"
+        android:layout_alignEnd="@+id/navigator_mapView"
+>>>>>>> development:app/src/main/res/layout/fragment_navigator.xml
+        app:srcCompat="@drawable/ic_gps_fixed"
+        app:rippleColor="@color/colorAccent"
+        app:backgroundTint="@color/viewBackground"
+        />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/navigator_followMe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+<<<<<<< HEAD:app/src/main/res/layout/fragment_alarm_navigator.xml
+        android:layout_marginEnd="8dp"
+=======
+        android:layout_marginEnd="16dp"
+>>>>>>> development:app/src/main/res/layout/fragment_navigator.xml
+        android:layout_marginTop="24dp"
+        android:layout_alignEnd="@+id/navigator_mapView"
+        android:layout_below="@+id/navigator_myLocation"
+        app:srcCompat="@drawable/ic_direction_walk"
+        app:rippleColor="@color/colorAccent"
+        app:backgroundTint="@color/viewBackground"
+        android:adjustViewBounds="false"
+        />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/navigator_yandex"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:adjustViewBounds="false"
+        android:clickable="true"
+        android:focusable="true"
+        app:backgroundTint="@color/viewBackground"
+        app:rippleColor="@color/colorAccent"
+        app:srcCompat="@drawable/ic_yandex"
+        />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/navigator_navitel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="84dp"
+        android:adjustViewBounds="false"
+        android:clickable="true"
+        android:focusable="true"
+        app:backgroundTint="@color/viewBackground"
+        app:rippleColor="@color/colorAccent"
+        app:srcCompat="@drawable/ic_navitel"
+        />
+
+</RelativeLayout>
