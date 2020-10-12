@@ -88,15 +88,16 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
 
     private fun downloadImage()
     {
+        val photo = alarmInfo.photo + alarmInfo.plan
         thread{
-            if(alarmInfo.photo.count() == 0)
+            if(photo.count() == 0)
             {
                 viewState.showToastMessage("Нет изображений для загруки")
                 return@thread
             }
-            for(i in 0 until alarmInfo.photo.count())
+            for(i in 0 until photo.count())
             {
-                sendImageRequest(alarmInfo.photo[i])
+                sendImageRequest(photo[i])
             }
         }
     }
