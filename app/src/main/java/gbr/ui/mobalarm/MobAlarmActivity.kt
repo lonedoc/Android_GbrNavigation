@@ -1,6 +1,7 @@
 package gbr.ui.mobalarm
 
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.Toast
 import gbr.presentation.presenter.mobalarm.MobAlarmPresenter
 import gbr.presentation.view.mobalarm.MobAlarmView
@@ -25,6 +26,7 @@ class MobAlarmActivity:MvpAppCompatActivity(), MobAlarmView {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mob_alarm)
         setSupportActionBar(mob_alarm_toolbar)
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         openFragment(objectInfo)
 
         mob_alarm_bottom_menu.menu.getItem(0).isChecked = true

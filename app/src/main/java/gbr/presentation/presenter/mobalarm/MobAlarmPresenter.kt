@@ -170,7 +170,7 @@ class MobAlarmPresenter:MvpPresenter<MobAlarmView>(),OnAlarmListener,OnStatusLis
                 AlarmInfo.clearData()
                 viewState.showToastMessage("Тревога завершена")
             }
-            "alarm_sound"->{
+            "alarm"->{
                 arrived = true
                 AlarmInfo.clearData()
                 viewState.showToastMessage("Отмена тревоги, новая тревога")

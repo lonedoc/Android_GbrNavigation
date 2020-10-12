@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.*
 import gbr.presentation.presenter.alarm.AlarmPresenter
 import gbr.presentation.view.alarm.AlarmView
@@ -33,6 +34,8 @@ class AlarmActivity:MvpAppCompatActivity(),AlarmView {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_alarm)
         setSupportActionBar(new_alarm_toolbar)
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         send_Arrived.setOnClickListener { presenter.sendArrived() }
 
