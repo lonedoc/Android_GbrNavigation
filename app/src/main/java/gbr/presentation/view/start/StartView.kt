@@ -35,4 +35,7 @@ interface StartView:MvpView {
     @StateStrategyType(value = SkipStrategy::class)
     fun errorMessage(message: String)
 
+    @StateStrategyType(value = SkipStrategy::class)
+    fun stopGpsSetting()
+
 }

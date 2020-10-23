@@ -9,6 +9,8 @@ interface LoginView:MvpView {
 
     fun setImei()
 
+    fun setImei(imei:String)
+
     fun setImeiTextViewError(message: String?)
 
     fun setPort(port:String)

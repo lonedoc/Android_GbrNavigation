@@ -36,7 +36,10 @@ class LoginPresenter: MvpPresenter<LoginView>(), OnServerStatusListener, OnAcces
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
 
-        viewState.setImei()
+        if(preferences.imei==null || preferences.imei=="")
+            viewState.setImei()
+        else
+            viewState.setImei(preferences.imei!!)
 
         val port = "9010"
 

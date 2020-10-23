@@ -156,6 +156,9 @@ class MainActivity:MvpAppCompatActivity(),MainView {
         locationOverlay.disableMyLocation()
 
         scaleBarOverlay.disableScaleBar()
+
+        if(alertSound.isPlaying)
+            alertSound.stop()
     }
 
     override fun initMapView() {

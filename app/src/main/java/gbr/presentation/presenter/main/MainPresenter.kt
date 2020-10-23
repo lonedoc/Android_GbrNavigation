@@ -94,14 +94,17 @@ class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnAlarmListener {
         else
             "${info.call} (${info.status}) v.${BuildConfig.VERSION_NAME}"
 
-        for(i in 0 until info.statusList!!.count())
-        {
-            if(info.statusList!![i].status == info.status && info.statusList!![i].time != "0"){
-                viewState.showStatusTimer()
-                break
+        try{
+            for(i in 0 until info.statusList!!.count())
+            {
+                if(info.statusList!![i].status == info.status && info.statusList!![i].time != "0"){
+                    viewState.showStatusTimer()
+                    break
+                }
             }
+        }catch (e:Exception){
+            e.printStackTrace()
         }
-
         viewState.setTitle(title)
     }
 

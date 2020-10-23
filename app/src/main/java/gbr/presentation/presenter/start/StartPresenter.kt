@@ -81,6 +81,7 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
 
         if(isGPSLocationEnable || isInternetLocationEnable)
         {
+            viewState.stopGpsSetting()
             thread {
                 while (currentLocation==null)
                 {

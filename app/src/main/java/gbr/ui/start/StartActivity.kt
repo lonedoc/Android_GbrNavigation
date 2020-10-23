@@ -208,17 +208,21 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
 
     }
 
+    var stop = false
     override fun gpsSetting(
         message: String
     ) {
+        if(stop) presenter.startGPS()
+
         AlertDialog.Builder(this)
             .setMessage(message)
             .setCancelable(false)
             .setPositiveButton("Включить"){ _, _->
                 startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-                //gbr.utils.servicess.LocationListener(locationManager)
+                stop = true
             }
             .create().show()
+
     }
 
     override fun errorPermissionDialog(errorMessage: String) {
@@ -263,11 +267,16 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
         }
     }
 
+    override fun stopGpsSetting() {
+        stop = false
+    }
+
     override fun onDestroy() {
         val service = Intent(applicationContext, ProtocolService::class.java)
         stopService(service)
         System.exit(0)
         isAlive = false
+        stop = false
         super.onDestroy()
     }
 }
