@@ -14,11 +14,12 @@ class WhatIsNewPresenter:MvpPresenter<WhatIsNewView>() {
         super.onFirstViewAttach()
         viewState.setTitle("Версия приложения : ${BuildConfig.VERSION_NAME}")
 
-        val changes = "#### Изменения: \n" +
-                "Звук уведомления на тревогу и потери соединения"
+        val changes = null
+        /*"#### Изменения: \n" +
+                "Звук уведомления на тревогу и потери соединения"*/
 
 
-        val add =  ""
+        val add =  null
         /*"#### Добавлено: \n" +
                 "* Выбор основной карты (OSM или Google) \n" +
                 "* Выбор дополнительного навигатор (Yandex или Navitel)\n" +
@@ -26,8 +27,8 @@ class WhatIsNewPresenter:MvpPresenter<WhatIsNewView>() {
 
 
         val fix:String = "#### Исправлено: \n" +
-                "* Ошибка при тревоге \n" +
-                "* Пустая тревога \n"
+                "* Работа GPS \n"
+
 
         viewState.setAdd(add)
 

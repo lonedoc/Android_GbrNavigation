@@ -40,7 +40,7 @@ class RubegProtocol {
     private var hosts = ArrayList<InetSocketAddress>()
     private var currentHostIndex = 0
 
-    private var socket: DatagramChannel
+    private var socket: DatagramChannel = DatagramChannel.open()
 
     private var connectionWatchers = ArrayList<ConnectionWatcher?>()
     private var textMessageWatchers = CopyOnWriteArrayList<TextMessageWatcher?>()
@@ -60,7 +60,6 @@ class RubegProtocol {
     private val sendLoopSemaphore = Semaphore(1, true)
 
     private constructor() {
-        socket = DatagramChannel.open()
         socket.configureBlocking(false)
     }
 
@@ -440,7 +439,7 @@ class RubegProtocol {
         val messageNumber = packet.headers.messageNumber
 
         if(packet.headers.sessionId != null)
-        Log.d("handleData",packet.headers.sessionId)
+        Log.d("handleData",packet.headers.sessionId.toString())
 
         val acknowledgement = AcknowledgementPacket(packet)
 

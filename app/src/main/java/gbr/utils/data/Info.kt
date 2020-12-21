@@ -1,5 +1,6 @@
 package gbr.utils.data
 
+import android.content.Context
 import java.util.ArrayList
 
 object Info {
@@ -38,5 +39,6 @@ object Info {
     fun reportList(reportList:ArrayList<String>){
         this.reportsList = reportList
     }
+
 
 }

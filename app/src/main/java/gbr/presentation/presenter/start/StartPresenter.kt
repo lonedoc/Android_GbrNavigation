@@ -1,5 +1,6 @@
 package gbr.presentation.presenter.start
 
+import android.content.Context
 import android.util.Log
 import gbr.presentation.view.start.StartView
 import gbr.utils.api.access.AccessAPI
@@ -40,6 +41,7 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
     var accessAPI:AccessAPI? = null
     var serverStatusAPI:ServerStatusAPI? = null
 
+    var context:Context? = null
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
         viewState.setText("Проверка разрешений...")
@@ -79,7 +81,7 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
         viewState.setText("Проверка состояния GPS...")
 
 
-        if(isGPSLocationEnable || isInternetLocationEnable)
+/*        if(isGPSLocationEnable || isInternetLocationEnable)
         {
             viewState.stopGpsSetting()
             thread {
@@ -89,13 +91,13 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
                 }
                 Log.d("CurrentLocation","${currentLocation!!.latitude}")
                 Log.d("CurrentLocation","${currentLocation!!.longitude}")
-                dataChecking()
+
             }
             return
-        }
-
-        val message = "GPS отключен. Данное приложение не работает без GPS."
-        viewState.gpsSetting(message)
+        }*/
+        dataChecking()
+       /* val message = "GPS отключен. Данное приложение не работает без GPS."
+        viewState.gpsSetting(message)*/
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
@@ -111,7 +113,7 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
         }
     }
 
-    private fun dataChecking() {
+    fun dataChecking() {
         if(EventBus.getDefault().isRegistered(this))
             EventBus.getDefault().unregister(this)
 

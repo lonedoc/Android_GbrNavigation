@@ -69,7 +69,6 @@ class MainActivity:MvpAppCompatActivity(),MainView {
             Uri.parse("android.resource://" + application.packageName + "/" + R.raw.alarm_sound)
         )
 
-
         main_myLocation.setOnClickListener {
             if(locationOverlay.myLocation == null)
                 showToastMessage("Ваше месторасположение не определенно")
@@ -143,9 +142,13 @@ class MainActivity:MvpAppCompatActivity(),MainView {
 
     override fun onResume() {
         super.onResume()
-
         presenter.checkAlarm()
-        presenter.setTitle()
+        try{
+            presenter.setTitle()
+        }catch (e:Exception){
+            e.printStackTrace()
+        }
+
     }
 
     override fun onStop() {

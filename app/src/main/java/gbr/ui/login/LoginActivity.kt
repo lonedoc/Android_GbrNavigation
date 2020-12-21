@@ -112,6 +112,10 @@ class LoginActivity:MvpAppCompatActivity(),LoginView,ValidateAddress {
         new_login_imei.setText(getImei())
     }
 
+    override fun setImei(imei: String) {
+        new_login_imei.setText(imei)
+    }
+
     override fun setImeiTextViewError(message: String?) {
         runOnUiThread {
             textInputImei.error = message

@@ -1,5 +1,6 @@
 package gbr.ui.start
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -17,6 +18,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.*
 import gbr.presentation.presenter.start.StartPresenter
 import gbr.presentation.view.start.StartView
 import gbr.ui.login.LoginActivity
@@ -29,6 +31,7 @@ import kobramob.rubeg38.ru.gbrnavigation.R
 import kotlinx.android.synthetic.main.activity_start.*
 import moxy.MvpAppCompatActivity
 import moxy.presenter.InjectPresenter
+import java.lang.Thread.sleep
 import kotlin.system.exitProcess
 
 
@@ -39,18 +42,22 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
     private val permissionGranted = PackageManager.PERMISSION_GRANTED
 
     companion object{
+        lateinit var context: Context
         var isAlive = false
     }
 
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start)
 
         start_rotateLoading.start()
 
+        context = this
         isAlive = true
         createAlarmChannel()
         createConnectionChannel()
+
     }
 
     override fun onResume() {
@@ -114,6 +121,7 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
         dialog.show(supportFragmentManager, "WhatNew?")
     }
 
+    private var presenterInit = false
     override fun checkPermission() {
         if(ContextCompat.checkSelfPermission(
                 applicationContext,
@@ -141,6 +149,8 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
             ) == permissionGranted
         )
         {
+            if(presenterInit) return
+            presenterInit = true
             val preferences = PrefsUtils(this)
             presenter.init(preferences, this)
         }
@@ -192,6 +202,9 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
 
         when{
             grantResults.isNotEmpty() && grantResults[1] == permissionGranted && grantResults[2] == permissionGranted && grantResults[3] == permissionGranted ->{
+                sleep(4000)
+                if(presenterInit) return
+                presenterInit = true
                 val preferences = PrefsUtils(this)
                 presenter.init(preferences, this)
             }
@@ -201,9 +214,10 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
         }
     }
 
+    @SuppressLint("MissingPermission")
     override fun gpsCheck() {
         runOnUiThread {
-            presenter.startGPS()
+            presenter.dataChecking()
         }
 
     }
@@ -239,8 +253,11 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
             .create().show()
     }
 
+    private var openLogin = false
     override fun loginActivity() {
         runOnUiThread {
+            if(openLogin) return@runOnUiThread
+            openLogin = true
             val login = Intent(this, LoginActivity::class.java)
             startActivity(login)
         }
@@ -255,8 +272,11 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
 
     }
 
+    private var openMain = false
     override fun openMainActivity() {
         Log.d("MainActivity", "Intent")
+        if(openMain) return
+        openMain = true
         val main = Intent(this, MainActivity::class.java)
         startActivity(main)
     }

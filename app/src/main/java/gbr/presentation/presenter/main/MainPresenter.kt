@@ -89,12 +89,13 @@ class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnAlarmListener {
     }
 
     fun setTitle() {
+        try{
         val title = if(info.call == null)
             "Группа не подставлена на дежурство"
         else
             "${info.call} (${info.status}) v.${BuildConfig.VERSION_NAME}"
 
-        try{
+
             for(i in 0 until info.statusList!!.count())
             {
                 if(info.statusList!![i].status == info.status && info.statusList!![i].time != "0"){
@@ -102,10 +103,10 @@ class MainPresenter:MvpPresenter<MainView>(),OnStatusListener,OnAlarmListener {
                     break
                 }
             }
+        viewState.setTitle(title)
         }catch (e:Exception){
             e.printStackTrace()
         }
-        viewState.setTitle(title)
     }
 
     fun setCenter(lastFix: GeoPoint?) {
