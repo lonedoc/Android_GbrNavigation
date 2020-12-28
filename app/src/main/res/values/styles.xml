@@ -37,6 +37,13 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="Theme.UserDialog" parent="Base.Theme.AppCompat.Light.Dialog">
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+
+    </style>
+
     <style name="MyButtonStyle" parent="ThemeOverlay.AppCompat.Dark">
         //Enable
         <item name="android:colorAccent">@color/colorAccent</item>

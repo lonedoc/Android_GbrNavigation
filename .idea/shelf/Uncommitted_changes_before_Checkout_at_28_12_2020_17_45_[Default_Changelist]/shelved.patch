@@ -1,0 +1,18 @@
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"CMakeSettings\">\r\n    <configurations>\r\n      <configuration PROFILE_NAME=\"Debug\" CONFIG_NAME=\"Debug\" />\r\n    </configurations>\r\n  </component>\r\n  <component name=\"EntryPointsManager\">\r\n    <list size=\"1\">\r\n      <item index=\"0\" class=\"java.lang.String\" itemvalue=\"org.greenrobot.eventbus.Subscribe\" />\r\n    </list>\r\n  </component>\r\n  <component name=\"ProjectInspectionProfilesVisibleTreeState\">\r\n    <entry key=\"Project Default\">\r\n      <profile-state>\r\n        <expanded-state>\r\n          <State>\r\n            <id />\r\n          </State>\r\n        </expanded-state>\r\n        <selected-state>\r\n          <State>\r\n            <id>Android</id>\r\n          </State>\r\n        </selected-state>\r\n      </profile-state>\r\n    </entry>\r\n  </component>\r\n  <component name=\"ProjectRootManager\" version=\"2\" languageLevel=\"JDK_1_8\" project-jdk-name=\"1.8\" project-jdk-type=\"JavaSDK\">\r\n    <output url=\"file://$PROJECT_DIR$/build/classes\" />\r\n  </component>\r\n  <component name=\"ProjectType\">\r\n    <option name=\"id\" value=\"Android\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/misc.xml	(revision bab56285a351e4993a7d4cbefb4aafa378cfac30)
++++ .idea/misc.xml	(date 1609148745802)
+@@ -26,7 +26,7 @@
+       </profile-state>
+     </entry>
+   </component>
+-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" project-jdk-name="1.8" project-jdk-type="JavaSDK">
++  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+     <output url="file://$PROJECT_DIR$/build/classes" />
+   </component>
+   <component name="ProjectType">

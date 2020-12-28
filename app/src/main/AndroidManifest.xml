@@ -5,13 +5,14 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -31,67 +32,44 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:largeHeap="true"
+        android:requestLegacyExternalStorage="true"
         android:networkSecurityConfig="@xml/networksecurityconfig"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning"
-        tools:targetApi="n">
-
-        <activity android:name="oldVersion.referenceactivity.ReferenceActivity" />
-
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_color"
-            android:resource="@color/colorPrimary" />
-
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="default" />
+        tools:targetApi="q">
 
 
+        <meta-data android:name=
+            "com.google.firebase.messaging.default_notification_channel_id"
+            android:value="Alarm"
+            />
 
         <service
-            android:name="newVersion.servicess.NetworkService"
+            android:name="gbr.utils.servicess.ProtocolService"
             android:enabled="true"
             android:exported="false" />
 
-        <service android:name="newVersion.servicess.FirebaseMessage"
-            tools:ignore="ExportedService">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
-
-
-
-        <activity android:name="newVersion.login.LoginActivity"
+        <activity android:name="gbr.ui.start.StartActivity"
             android:keepScreenOn="true">
-        </activity>
-
-        <activity android:name="newVersion.main.MainActivity"
-            android:keepScreenOn="true"
-            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity android:name="newVersion.common.CommonActivity"
+        <activity android:name="gbr.ui.login.LoginActivity"
             android:keepScreenOn="true"/>
 
-        <activity android:name="newVersion.alarm.AlarmActivity"
+        <activity android:name="gbr.ui.main.MainActivity"
             android:keepScreenOn="true"/>
 
-        <activity android:name="newVersion.common.directory.DirectoryActivity"
+        <activity android:name="gbr.ui.alarm.AlarmActivity"
             android:keepScreenOn="true"/>
-        <!--<service
-            android:name="mad.location.manager.lib.Services.KalmanLocationService"
-            android:enabled="true"
-            android:exported="false"
-            android:stopWithTask="false" />-->
 
+        <activity android:name="gbr.ui.mobalarm.MobAlarmActivity"
+            android:keepScreenOn="true"/>
 
     </application>
 
