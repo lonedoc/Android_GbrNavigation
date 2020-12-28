@@ -29,6 +29,7 @@ import gbr.utils.data.RefreshPlan
 import org.greenrobot.eventbus.EventBus
 import org.osmdroid.util.GeoPoint
 import rubegprotocol.RubegProtocol
+import java.lang.Exception
 import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
 import java.util.*
@@ -139,6 +140,7 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
 
     private fun alarmApply() {
         if(alarmInfo.number == null) return
+        try{
             alarmAPI?.sendAlarmApplyRequest(
                 alarmInfo.number!!,
                 currentLocation!!.latitude,
@@ -158,7 +160,10 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
                     alarmApply()
                 }
             }
-
+        }catch (e:Exception){
+            e.printStackTrace()
+            alarmApply()
+        }
     }
 
     fun sendArrived(){
