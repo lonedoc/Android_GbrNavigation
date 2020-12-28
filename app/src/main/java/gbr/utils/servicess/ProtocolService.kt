@@ -240,76 +240,12 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
     lateinit var locationSettingsRequest: LocationSettingsRequest
     private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 2000
     private val FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS: Long = 2000
+
     @SuppressLint("MissingPermission")
     private fun locationRequest(){
-    /*    Wherebouts.instance().onChange(object : Workable<GPSPoint> {
-            override fun work(t: GPSPoint) {
-                if(coordinateAPI == null) return
-                val location = t.location ?: return
-
-                satelliteCount = 10
-                val df = DecimalFormat("#.######")
-
-                lat = df.format(location.latitude)
-                lon = df.format(location.longitude)
-
-                speed = (location.speed * 3.6).toInt()
-
-                accuracy = location.accuracy
-
-                coordinate = MyLocation(location.latitude, location.longitude, speed!!)
-
-                currentLocation = location
-
-                if(protocol.token==null) return
-
-                while (coordinateBuffer.isNotEmpty() && protocol.isConnected)
-                {
-                    val lastIndex = coordinateBuffer.lastIndex
-                    val coordinate = coordinateBuffer.removeAt(lastIndex)
-                    coordinateAPI?.sendCoordinateRequest(
-                        coordinate.lat,
-                        coordinate.lon,
-                        credentials!!.imei,
-                        coordinate.speed,
-                        satelliteCount!!,
-                        coordinate.accuracy
-                    )
-                }
-
-                if(oldSpeed ==0 && speed==0 || oldLocation == GeoPoint(location)) return
-
-                oldSpeed = speed
-                oldLocation = GeoPoint(location)
-
-                if(!protocol.isConnected)
-                {
-                    coordinateBuffer.add(
-                        Coordinate(
-                            lat!!,
-                            lon!!,
-                            speed!!,
-                            satelliteCount!!,
-                            accuracy!!
-                        )
-                    )
-                    return
-                }
-
-                coordinateAPI?.sendCoordinateRequest(
-                    lat!!,
-                    lon!!,
-                    credentials!!.imei,
-                    speed!!,
-                    satelliteCount!!,
-                    accuracy!!
-                )
-            }
-        }
-        )*/
         locationRequest.interval = UPDATE_INTERVAL_IN_MILLISECONDS
         locationRequest.fastestInterval = FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS
-        locationRequest.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         val builder = LocationSettingsRequest.Builder()
         builder.addLocationRequest(locationRequest)
         locationSettingsRequest = builder.build()
