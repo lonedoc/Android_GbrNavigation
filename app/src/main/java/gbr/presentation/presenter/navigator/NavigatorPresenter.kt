@@ -24,6 +24,7 @@ class NavigatorPresenter:MvpPresenter<NavigatorView>() {
 
     val alarmInfo:AlarmInfo = AlarmInfo
     val info:Info = Info
+
     companion object{
         var arrived = false
     }
@@ -42,6 +43,7 @@ class NavigatorPresenter:MvpPresenter<NavigatorView>() {
         arrived = false
         val endPoint = GeoPoint(alarmInfo.lat!!.toDouble(),alarmInfo.lon!!.toDouble())
         val startPoint = GeoPoint(currentLocation)
+
         val routeServers = info.routeServers
 
         viewState.setMarker(alarmInfo.name,endPoint)

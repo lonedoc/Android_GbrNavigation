@@ -51,13 +51,22 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start)
 
-        start_rotateLoading.start()
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Предупреждение!")
+            .setMessage("Приложение имеет доступ к данным о местоположение устройства в фоновом режиме, т.е. даже если оно свернуто. Данные передаются на сервер для отображения месторасположения устройва на ситуационной карте, которая используется в вашем ЧОПе. Сотрудники ЧОПа, имующие доступ к ситуационной карте, видят где находится устройство.")
+            .setPositiveButton("Закрыть"){ dialog, which ->
+                checkPermission()
+                dialog.cancel()
+            }
+            .setCancelable(false)
+            .create()
+        dialog.show()
 
+        start_rotateLoading.start()
         context = this
         isAlive = true
         createAlarmChannel()
         createConnectionChannel()
-
     }
 
     override fun onResume() {

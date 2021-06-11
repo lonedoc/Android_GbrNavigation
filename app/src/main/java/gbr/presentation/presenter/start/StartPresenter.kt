@@ -45,7 +45,6 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
     override fun onFirstViewAttach() {
         super.onFirstViewAttach()
         viewState.setText("Проверка разрешений...")
-        viewState.checkPermission()
 
         EventBus.getDefault().register(this)
     }

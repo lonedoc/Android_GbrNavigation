@@ -35,7 +35,7 @@ class AlarmActivity:MvpAppCompatActivity(),AlarmView {
         setContentView(R.layout.activity_alarm)
         setSupportActionBar(new_alarm_toolbar)
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         send_Arrived.setOnClickListener { presenter.sendArrived() }
 

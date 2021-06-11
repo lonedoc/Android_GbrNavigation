@@ -37,6 +37,7 @@ class ObjectInfoPresenter:MvpPresenter<ObjectInfoView>() {
     fun takeApplyAlarmTime(time: CurrentTime){
         viewState.setObjectTimeApplyAlarm(time.currentTime)
     }
+
     @Subscribe(threadMode = ThreadMode.MAIN,sticky = true)
     fun takeArrivedTime(time: AlarmPresenter.ArrivedTime){
         viewState.setObjectTimeArrived(time.arrivedTime)

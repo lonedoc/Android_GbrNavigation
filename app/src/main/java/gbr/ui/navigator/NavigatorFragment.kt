@@ -314,6 +314,8 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
     }
 
     private fun navitelNavigator() {
+        //TODO проверка на null
+        if(alarmInfo.lat==null || alarmInfo.lon==null) return
         val uri = Uri.parse("google.navigation:ll=${alarmInfo.lat},${alarmInfo.lon}")
         var intent = Intent(Intent.ACTION_VIEW,uri)
         intent.setPackage("com.navitel")
@@ -326,6 +328,7 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
     }
 
     private fun yandexNavigator() {
+        if(alarmInfo.lat==null || alarmInfo.lon==null) return
         yandexNavigator.buildRoute(activity!!,alarmInfo.lat!!,alarmInfo.lon!!)
 //        yandexNavigator.tryBuildRoute(activity!!,alarmInfo.lat!!,alarmInfo.lon!!)
     }

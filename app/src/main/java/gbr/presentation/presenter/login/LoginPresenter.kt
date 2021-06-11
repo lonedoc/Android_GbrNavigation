@@ -52,8 +52,6 @@ class LoginPresenter: MvpPresenter<LoginView>(), OnServerStatusListener, OnAcces
 
         val address = preferences.serverAddress
         val port = preferences.serverPort
-        val imei = preferences.imei
-        val fcmtoken = preferences.fcmtoken
 
         if(address.count()>2)
             viewState.visibilityAddButton(View.GONE)

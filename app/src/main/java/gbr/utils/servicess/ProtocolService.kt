@@ -201,32 +201,6 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
 
         isStarted = true
 
-/*        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-        try {
-            isGPSLocationEnable = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        }catch (e:java.lang.Exception){
-            e.printStackTrace()
-        }
-
-        try {
-            isInternetLocationEnable = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-        }catch (e:java.lang.Exception){
-            e.printStackTrace()
-        }
-
-
-        if(isInternetLocationEnable)
-        {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,2000,10F,this)
-        }
-        else
-            if (isGPSLocationEnable)
-            {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,2000,10F,this)
-            }*/
-
-
         locationRequest()
 
         wakeLock()
@@ -377,6 +351,7 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
     {
         Log.d("Service", "onDestroy")
         Wherebouts.instance().stop()
+
         wakeLock?.let {
             if (it.isHeld) {
                 it.release()
