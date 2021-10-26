@@ -327,6 +327,7 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
 
     private fun yandexNavigator() {
         yandexNavigator.buildRoute(activity!!,alarmInfo.lat!!,alarmInfo.lon!!)
+//        yandexNavigator.tryBuildRoute(activity!!,alarmInfo.lat!!,alarmInfo.lon!!)
     }
 
 }
