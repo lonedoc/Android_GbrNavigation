@@ -13,21 +13,22 @@ import java.security.Signature;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 
+private const val PRIVATE_KEY =
+    "-----BEGIN RSA PRIVATE KEY-----\n" +
+    "MIIBPQIBAAJBAMtE4ilZBK1K3lWn0NzOxik2e+QzrGkuk/gy3b93mBywcOVk2rqg\n" +
+    "x1CeV5vlBkIhA8rZrnKZs37ME+4c+RTELAECAwEAAQJBAIPa2xoXNIF032SQx1t0\n" +
+    "hfaV8SfGnUBdhn6qAE4DNhjk8uJv1Gwja4j1DTB1izvk03ojlSYiyS/8sO80xhht\n" +
+    "cAECIQDx2CBxjtAotXSKpmOAEVb3aUc+/wMAfbAawNVcPAN90QIhANcqu9e1QhKh\n" +
+    "53muGD2I2iR5hT1jQgMmdRdDNoblWmcxAiEAseDgRAXhrv9/v3cQWiLmz0T85SXV\n" +
+    "xGetvo+0nol5m/ECIQC9bjAGTtwmz0edRvqsYim7Zwk47IQXheocWt5MkOuwYQIh\n" +
+    "ANdFEe1xQyJoxyy3F7I7pk68qFnV9yTQtjUWHeEbYMSQ\n" +
+    "-----END RSA PRIVATE KEY-----\n"
 
 class YandexNavigator {
-    private val PRIVATE_KEY: String = "-----BEGIN RSA PRIVATE KEY-----\n" +
-            "MIIBPQIBAAJBAMtE4ilZBK1K3lWn0NzOxik2e+QzrGkuk/gy3b93mBywcOVk2rqg\n" +
-            "x1CeV5vlBkIhA8rZrnKZs37ME+4c+RTELAECAwEAAQJBAIPa2xoXNIF032SQx1t0\n" +
-            "hfaV8SfGnUBdhn6qAE4DNhjk8uJv1Gwja4j1DTB1izvk03ojlSYiyS/8sO80xhht\n" +
-            "cAECIQDx2CBxjtAotXSKpmOAEVb3aUc+/wMAfbAawNVcPAN90QIhANcqu9e1QhKh\n" +
-            "53muGD2I2iR5hT1jQgMmdRdDNoblWmcxAiEAseDgRAXhrv9/v3cQWiLmz0T85SXV\n" +
-            "xGetvo+0nol5m/ECIQC9bjAGTtwmz0edRvqsYim7Zwk47IQXheocWt5MkOuwYQIh\n" +
-            "ANdFEe1xQyJoxyy3F7I7pk68qFnV9yTQtjUWHeEbYMSQ\n" +
-            "-----END RSA PRIVATE KEY-----\n"
 
     fun sha256rsa(key: String, data: String): String? {
         val trimmedKey = key
-            .replace(Regex("-----\\w+ PRIVATE KEY-----"), "")
+            .replace(Regex("-----(\\w+ )*PRIVATE KEY-----"), "")
             .replace(Regex("\\s"), "")
 
         return try {
@@ -45,7 +46,6 @@ class YandexNavigator {
         }
     }
 
-    // Формирует URI с подписью и запускает Яндекс.Навигатор.
     fun buildRoute(context: Context, latitude: String, longitude: String) {
         var uri = Uri.parse("yandexnavi://build_route_on_map").buildUpon()
             .appendQueryParameter("lat_to", latitude)
@@ -77,4 +77,5 @@ class YandexNavigator {
         playMarket.data = Uri.parse("market://details?id=ru.yandex.yandexnavi")
         context.startActivity(playMarket)
     }
+
 }
