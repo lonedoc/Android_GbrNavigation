@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.SystemClock
+import android.util.Log
 import android.view.View
 import gbr.presentation.presenter.navigator.NavigatorPresenter
 import gbr.presentation.view.alarm.AlarmView
@@ -80,7 +81,15 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
         }
         else
         {
-            arrivedLoop()
+            if(info.dist==0 || info.dist==null){
+                viewState.showToastMessage("Автоприбытие отключено")
+                viewState.stateArrived(true)
+            }
+            else
+            {
+                arrivedLoop()
+            }
+
         }
 
         alarmApply()
@@ -112,6 +121,7 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
     var arrived = false
     private fun arrivedLoop() {
         thread {
+            val distance = info.dist!!
             while(!arrived)
             {
                 val myCoordinate = ProtocolService.coordinate
@@ -123,7 +133,8 @@ class AlarmPresenter: MvpPresenter<AlarmView>(),OnStatusListener,OnAlarmListener
 
                 if(myCoordinate.lat==0.toDouble() && myCoordinate.lon==0.toDouble()) continue
 
-                val distance = 100
+
+                Log.d("Distance",distance.toString())
 
                 val endPoint = GeoPoint(alarmInfo.lat!!.toDouble(),alarmInfo.lon!!.toDouble())
 
