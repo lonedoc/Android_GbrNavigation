@@ -61,9 +61,10 @@ class MainActivity:MvpAppCompatActivity(),MainView {
         setContentView(R.layout.activity_main)
         setSupportActionBar(main_toolbar)
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         presenter.context(applicationContext)
+
         this.alertSound = MediaPlayer.create(
             this,
             Uri.parse("android.resource://" + application.packageName + "/" + R.raw.alarm_sound)
@@ -303,10 +304,8 @@ class MainActivity:MvpAppCompatActivity(),MainView {
 
     override fun setCenter(center: GeoPoint) {
         runOnUiThread {
-
             main_mapView.controller.animateTo(center)
             main_mapView.controller.setZoom(15.0)
-
         }
     }
 

@@ -52,8 +52,6 @@ class LoginPresenter: MvpPresenter<LoginView>(), OnServerStatusListener, OnAcces
 
         val address = preferences.serverAddress
         val port = preferences.serverPort
-        val imei = preferences.imei
-        val fcmtoken = preferences.fcmtoken
 
         if(address.count()>2)
             viewState.visibilityAddButton(View.GONE)
@@ -318,6 +316,13 @@ class LoginPresenter: MvpPresenter<LoginView>(), OnServerStatusListener, OnAcces
 
         Info.status(auth.status)
         Info.call(auth.call)
+        if(auth.cityCard.pcsinfo.dist!=null || auth.cityCard.pcsinfo.dist!=""){
+            Info.dist(auth.cityCard.pcsinfo.dist.toInt())
+        }
+        else
+        {
+            Info.dist=0
+        }
         Info.statusList(auth.statusList)
         Info.nameGBR(auth.namegbr)
         Info.routeServers(auth.routeServerList)

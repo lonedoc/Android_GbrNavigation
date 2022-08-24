@@ -28,18 +28,6 @@ class FragmentObjectInfo:MvpAppCompatFragment(), ObjectInfoView {
     ): View? {
         rootView = inflater.inflate(R.layout.fragment_objectinfo,container,false)
 
-/*        bReport = rootView.findViewById(R.id.new_card_send_reports)!!
-        bArrived = rootView.findViewById(R.id.new_card_send_arrived)!!
-
-        bArrived.setOnClickListener {
-            EventBus.getDefault().post(CardEvent("Arrived"))
-            setStateArrivedButton(false)
-            setStateReportButton(true)
-        }
-        bReport.setOnClickListener {
-            EventBus.getDefault().post(CardEvent("Report"))
-            setStateReportButton(false)
-        }*/
         return rootView
     }
 

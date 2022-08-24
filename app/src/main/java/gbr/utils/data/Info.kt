@@ -7,6 +7,7 @@ object Info {
     var call:String? = null
     var status:String? = null
     var nameGBR:String? = null
+    var dist:Int?=null
     var statusList:ArrayList<StatusList>? = null
     var routeServers:ArrayList<String>? = null
     var reportsList: ArrayList<String>? = null
@@ -14,6 +15,9 @@ object Info {
     fun call(call:String)
     {
         this.call = call
+    }
+    fun dist(dist:Int){
+        this.dist = dist
     }
     fun status(status:String)
     {

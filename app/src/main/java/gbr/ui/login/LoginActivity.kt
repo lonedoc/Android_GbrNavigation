@@ -35,6 +35,8 @@ class LoginActivity:MvpAppCompatActivity(),LoginView,ValidateAddress {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
+
+
         new_login_port.setOnTextChanged { str -> presenter.validatePort(str.toString()) }
 
         new_login_port.setOnFocusChangeListener { _, hasFocus ->
