@@ -11,7 +11,8 @@ interface CoordinateAPI:TextMessageWatcher, DestroyableAPI {
         imei: String,
         speed: Int,
         satelliteCount: Int,
-        accuracy: Float
+        accuracy: Float,
+        bearing:Int
     )
 
 }

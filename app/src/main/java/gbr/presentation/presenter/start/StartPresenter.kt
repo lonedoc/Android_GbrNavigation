@@ -207,13 +207,18 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
 
         Info.status(auth.status)
         Info.call(auth.call)
-        if(auth.cityCard.pcsinfo.dist!=null || auth.cityCard.pcsinfo.dist!=""){
-            Info.dist(auth.cityCard.pcsinfo.dist.toInt())
-        }
-        else
-        {
+        try{
+            if(auth.cityCard.pcsinfo.dist!=""){
+                Info.dist(auth.cityCard.pcsinfo.dist.toInt())
+            }
+            else
+            {
+                Info.dist=0
+            }
+        }catch (e:Exception){
             Info.dist=0
         }
+
         Info.statusList(auth.statusList)
         Info.nameGBR(auth.namegbr)
         Info.routeServers(auth.routeServerList)

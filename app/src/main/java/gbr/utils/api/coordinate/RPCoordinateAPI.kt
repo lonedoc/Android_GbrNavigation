@@ -18,7 +18,8 @@ class RPCoordinateAPI(
         imei:String,
         speed: Int,
         satelliteCount: Int,
-        accuracy: Float
+        accuracy: Float,
+        bearing:Int
     ) {
         val message = JSONObject()
         message.put("\$c$", "gbrkobra")
@@ -29,6 +30,7 @@ class RPCoordinateAPI(
         message.put("speed",speed)
         message.put("accuracy",accuracy)
         message.put("gpsCount",satelliteCount)
+        message.put("bearing",bearing)
 
 
         Log.d("Coordinate",message.toString())

@@ -47,6 +47,7 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
     private var oldCoordinate:GeoPoint? = null
     private var speed:Int? = null
     private var satelliteCount:Int? = null
+    private var bearing:Int? = null
     private var accuracy:Float? = null
 
     data class Coordinate(
@@ -54,7 +55,8 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
         val lon: String,
         val speed: Int,
         val satelliteCount: Int,
-        val accuracy: Float
+        val accuracy: Float,
+        val bearing:Int
     )
 
     data class MyLocation(
@@ -236,7 +238,7 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
                 speed = (location.speed * 3.6).toInt()
 
                 accuracy = location.accuracy
-
+                bearing = location.bearing.toInt()
                 coordinate = MyLocation(location.latitude, location.longitude, speed!!)
 
                 currentLocation = location
@@ -253,7 +255,8 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
                         credentials!!.imei,
                         coordinate.speed,
                         satelliteCount!!,
-                        coordinate.accuracy
+                        coordinate.accuracy,
+                        coordinate.bearing
                     )
                 }
 
@@ -270,7 +273,8 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
                             lon!!,
                             speed!!,
                             satelliteCount!!,
-                            accuracy!!
+                            accuracy!!,
+                            bearing!!
                         )
                     )
                     return
@@ -282,7 +286,8 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
                     credentials!!.imei,
                     speed!!,
                     satelliteCount!!,
-                    accuracy!!
+                    accuracy!!,
+                    bearing!!
                 )
             }
         }
