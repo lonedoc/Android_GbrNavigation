@@ -82,7 +82,7 @@ class NotificationService {
             .setUsage(AudioAttributes.USAGE_NOTIFICATION)
             .build()
 
-        val statusSound = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + BuildConfig.APPLICATION_ID + "/" + R.raw.alarm_sound);
+        val statusSound = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + BuildConfig.APPLICATION_ID + "/" + R.raw.alarm_sound)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(

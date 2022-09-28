@@ -6,5 +6,4 @@ data class Location (
     val accuracy:Float,
     val speed:Float,
     val satelliteCount:Int?
-){
-}
+)

@@ -52,6 +52,7 @@
 
         <activity android:name="gbr.ui.start.StartActivity"
             android:keepScreenOn="true"
+            android:exported="true"
             >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

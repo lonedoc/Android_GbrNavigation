@@ -36,7 +36,4 @@ class PersonalCardPresenter:MvpPresenter<gbr.presentation.view.personalcard.Pers
             viewState.setInvisibleHome()
         }
     }
-    override fun onDestroy() {
-        super.onDestroy()
-    }
 }

@@ -1,5 +1,6 @@
 package rubegprotocol
 
+import android.annotation.SuppressLint
 import android.util.Log
 import org.json.JSONObject
 import ru.rubeg38.rubegprotocol.*
@@ -434,6 +435,7 @@ class RubegProtocol {
         return sameMessageNumber && samePacketsCount && samePacketNumber
     }
 
+    @SuppressLint("SuspiciousIndentation")
     private fun handleData(packet: DataPacket) {
 
         val messageNumber = packet.headers.messageNumber

@@ -28,7 +28,7 @@
             android:src="@drawable/ic_add"
             android:backgroundTint="@android:color/transparent"
             android:onClick="onClickListener"
-            />
+            android:contentDescription="@string/addobject" />
 
         <ImageButton
             android:id="@+id/new_login_remove"
@@ -42,7 +42,7 @@
             android:src="@drawable/ic_remove"
             android:backgroundTint="@android:color/transparent"
             android:onClick="onClickListener"
-            />
+            android:contentDescription="@string/removeobject" />
 
         <RelativeLayout
             android:id="@+id/relativeLayout2"

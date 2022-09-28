@@ -135,11 +135,6 @@ class NavigatorFragment:MvpAppCompatFragment(),NavigatorView {
         super.onPause()
         isAlive = false
     }
-    override fun onStop() {
-        super.onStop()
-
-
-    }
 
     override fun initMapView() {
         Log.d("initMapView","Init")

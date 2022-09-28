@@ -30,7 +30,4 @@ class ResponsiblePresenter:MvpPresenter<ResponsibleView>() {
     fun dialTheNumber(name:String,position:String,mobileNumber:String,workNumber:String,homeNumber:String){
         viewState.showPersonalCard(name,position,mobileNumber,workNumber,homeNumber)
     }
-    override fun onDestroy() {
-        super.onDestroy()
-    }
 }

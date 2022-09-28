@@ -5,14 +5,14 @@ import android.content.Intent
 import android.content.pm.ResolveInfo
 import androidx.core.content.ContextCompat.startActivity
 
-import android.net.Uri;
-import android.util.Base64;
+import android.net.Uri
+import android.util.Base64
 
-import java.math.BigInteger;
-import java.security.KeyFactory;
-import java.security.Signature;
-import java.security.spec.EncodedKeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
+import java.math.BigInteger
+import java.security.KeyFactory
+import java.security.Signature
+import java.security.spec.EncodedKeySpec
+import java.security.spec.PKCS8EncodedKeySpec
 
 
 class YandexNavigator {

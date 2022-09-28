@@ -445,8 +445,4 @@ class MainActivity:MvpAppCompatActivity(),MainView {
     override fun onBackPressed() {
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-    }
-
 }

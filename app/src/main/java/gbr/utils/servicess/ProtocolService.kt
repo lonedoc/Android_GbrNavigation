@@ -153,6 +153,7 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
     private var connectionLost = false
     private var internetLost = false
 
+    @SuppressLint("SuspiciousIndentation")
     override fun onConnectionLost() {
 
         if(getConnectionType(this) == 1)
@@ -232,10 +233,10 @@ class ProtocolService: Service(),ConnectionWatcher,OnAuthListener {
                 satelliteCount = 10
                 val df = DecimalFormat("#.######")
 
-                lat = df.format(location.latitude)
-                lon = df.format(location.longitude)
+                lat = df.format(location?.latitude)
+                lon = df.format(location?.longitude)
 
-                speed = (location.speed * 3.6).toInt()
+                speed = (location?.speed!! * 3.6).toInt()
 
                 accuracy = location.accuracy
                 bearing = location.bearing.toInt()

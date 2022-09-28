@@ -203,7 +203,7 @@ class StartPresenter:MvpPresenter<StartView>(),OnServerStatusListener,OnAccessLi
     }
 
     override fun onAuthDataReceived(auth: AuthInfo) {
-        Log.d("Auth",auth.call)
+        Log.d("Auth",auth.toString())
 
         Info.status(auth.status)
         Info.call(auth.call)

@@ -2,7 +2,8 @@ package gbr.presentation.presenter.login
 
 import android.util.Log
 import android.view.View
-import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.iid.FirebaseInstanceIdReceiver
+import com.google.firebase.messaging.FirebaseMessaging
 import gbr.presentation.view.login.LoginView
 import gbr.utils.PrefsUtils
 import gbr.utils.adapters.login.AdapterIpAddresses
@@ -287,16 +288,18 @@ class LoginPresenter: MvpPresenter<LoginView>(), OnServerStatusListener, OnAcces
         var token: String? = null
         var timeOut = 0
         if (!preferences.containsFcmToken) {
-            FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
-                token = it.token
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                token = task.result
             }
-        } else {
-            token = preferences.fcmtoken!!
         }
+            else
+            {
+                token = preferences.fcmtoken!!
+            }
         while (token == null && timeOut <10000) {
 
             timeOut++
-            Thread.sleep(1)
+            sleep(1)
         }
 
         return token

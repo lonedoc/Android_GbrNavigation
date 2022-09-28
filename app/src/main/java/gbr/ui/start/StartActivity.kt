@@ -207,6 +207,7 @@ class StartActivity:MvpAppCompatActivity(),StartView,GpsCallback {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if(grantResults.isEmpty()) return
 
         when{

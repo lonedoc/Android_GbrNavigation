@@ -100,7 +100,7 @@ class MobNavigatorPresenter:MvpPresenter<MobNavigatorView>() {
                 val objectLocation = objectLocation
                 Log.d("ObjectLocation","${objectLocation!!.distanceToAsDouble(road.mRouteHigh.last())}")
                 when{
-                    objectLocation!!.distanceToAsDouble(GeoPoint(currentLocation)) <= distance && distance(road) == null->{
+                    objectLocation.distanceToAsDouble(GeoPoint(currentLocation)) <= distance && distance(road) == null->{
                         viewState.showToastMessage("Вы прибыли на место")
                         viewState.clearOverlay(roadOverlay)
                         return@thread
@@ -109,8 +109,8 @@ class MobNavigatorPresenter:MvpPresenter<MobNavigatorView>() {
                         viewState.recreateTrack(roadOverlay)
                         return@thread
                     }
-                    objectLocation!!.distanceToAsDouble(road.mRouteHigh.last()) > 50->{
-                        viewState.setMarker(alarmInfo.name, objectLocation!!)
+                    objectLocation.distanceToAsDouble(road.mRouteHigh.last()) > 50->{
+                        viewState.setMarker(alarmInfo.name, objectLocation)
                         viewState.recreateTrack(roadOverlay)
                         return@thread
                     }

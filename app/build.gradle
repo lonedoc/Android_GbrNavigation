@@ -20,8 +20,8 @@ android {
         applicationId "kobramob.rubeg38.ru.gbrnavigation"
         minSdkVersion 21
         targetSdkVersion 32
-        versionCode 81
-        versionName "2.1.0"
+        versionCode 82
+        versionName "2.1.1"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         javaCompileOptions {
@@ -101,7 +101,7 @@ dependencies {
     implementation 'com.gabrielittner.ktlint:ktlint-rules:0.3.0'
     implementation 'org.redundent:kotlin-xml-builder:1.5.1'
 
-    implementation "android.arch.work:work-runtime:1.0.1"
+    implementation 'androidx.work:work-runtime-ktx:2.7.1'
 
     implementation 'com.google.android.gms:play-services-location:20.0.0'
     //you can use newer GMS version if you need

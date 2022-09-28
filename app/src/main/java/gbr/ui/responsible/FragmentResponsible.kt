@@ -67,11 +67,4 @@ class FragmentResponsible:MvpAppCompatFragment(),ResponsibleView {
         return rootView
     }
 
-    override fun onResume() {
-        super.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-    }
 }
