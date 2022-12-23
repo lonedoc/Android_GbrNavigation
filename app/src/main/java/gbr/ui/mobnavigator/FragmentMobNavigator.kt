@@ -78,7 +78,7 @@ class FragmentMobNavigator:MvpAppCompatFragment(), MobNavigatorView {
     }
 
     override fun initOverlays() {
-        if (mapView.overlays.count() >= 1)
+        if (mapView.overlays.isNotEmpty())
             mapView.overlays.clear()
 
         locationOverlay = initLocationOverlay()
